@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earth Day Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh}
+
+/* ── TAB NAV ── */
+.tab-bar{display:flex;background:white;border-bottom:.5px solid #e4e4e2;position:sticky;top:0;z-index:50}
+.tab-btn{flex:1;padding:14px 8px;font-family:'Lato',sans-serif;font-size:.82rem;font-weight:700;border:none;background:transparent;cursor:pointer;color:#888;border-bottom:3px solid transparent;transition:all .15s}
+.tab-btn.active{color:#639922;border-bottom-color:#639922}
+.tab-btn:hover{color:#639922}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ══════════════
+   TREE TAB
+══════════════ */
+.tree-wrap{display:flex;flex-direction:column;height:calc(100vh - 48px);padding:14px 14px 12px}
+.hdr{text-align:center;margin-bottom:10px;flex-shrink:0}
+.hdr h1{font-family:'Playfair Display',serif;font-size:clamp(1rem,3vw,1.7rem);font-weight:700;color:#1a1a1a}
+.hdr p{font-size:.72rem;color:#888;margin-top:2px}
+.cv{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.13)}
+.cv canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.lvs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:10px;flex-shrink:0}
+.lb{display:flex;flex-direction:column;align-items:center;padding:7px 10px 6px;border-radius:10px;background:#e8e8e6;border:2px solid #ccc;min-width:82px;flex:1;max-width:130px;transition:all .5s;position:relative;overflow:hidden}
+.lb.on{border-color:transparent;box-shadow:0 3px 14px rgba(0,0,0,.14)}
+.lb.cur{transform:translateY(-3px);box-shadow:0 5px 20px rgba(0,0,0,.2)}
+.lbf{position:absolute;inset:0;background:var(--c);transform:translateY(100%);transition:transform .9s cubic-bezier(.34,1.2,.64,1);z-index:0}
+.lb.on .lbf{transform:translateY(0)}
+.li{font-size:1.2rem;position:relative;z-index:1;margin-bottom:2px}
+.ln{font-family:'Playfair Display',serif;font-size:clamp(.6rem,1.4vw,.78rem);font-weight:700;position:relative;z-index:1;color:#1a1a1a;transition:color .4s}
+.lp{font-size:clamp(.54rem,1.1vw,.64rem);font-weight:700;letter-spacing:.4px;position:relative;z-index:1;color:#888;transition:color .4s;margin-top:1px}
+.lck{position:absolute;top:4px;right:6px;font-size:.62rem;z-index:2}
+.lb.on .ln,.lb.on .lp{color:rgba(255,255,255,.92)}
+
+/* ══════════════
+   LOG TAB
+══════════════ */
+.log-wrap{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+
+/* gate */
+.gate{background:white;border-radius:16px;border:.5px solid #e4e4e2;padding:36px 28px;text-align:center}
+.gate h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:#1a1a1a;margin-bottom:8px}
+.gate p{font-size:.88rem;color:#888;margin-bottom:22px;line-height:1.6}
+.gate-row{display:flex;gap:10px;max-width:400px;margin:0 auto}
+.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:'Lato',sans-serif;font-size:.9rem;color:#1a1a1a;outline:none}
+.gate-row input:focus{border-color:#639922}
+.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:'Lato',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-go:hover{background:#4e7a1a}
+.gate-err{color:#c0392b;font-size:.8rem;margin-top:8px;min-height:18px}
+.prev-users{margin-top:18px;max-width:400px;margin-left:auto;margin-right:auto;text-align:left}
+.prev-lbl{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:'Lato',sans-serif}
+.chip:hover{border-color:#639922;color:#639922}
+
+/* who bar */
+.who-bar{background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.who-name{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a;font-weight:700}
+.who-meta{font-size:.75rem;color:#888;margin-top:1px}
+.who-btns{display:flex;gap:7px}
+.btn-xs{padding:5px 12px;border-radius:8px;font-family:'Lato',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
+.btn-xs:hover{background:#e8e8e6}
+.btn-xs.red{background:#fff5f5;border-color:#f5c6c6;color:#c0392b}
+.btn-xs.red:hover{background:#fee2e2}
+
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat{background:white;border-radius:12px;padding:12px;text-align:center;border:.5px solid #e4e4e2}
+.stat-n{font-size:24px;font-weight:700;line-height:1}
+.stat-l{font-size:10px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+.sg{color:#639922}.st{color:#1D9E75}.sa{color:#BA7517}
+
+/* level */
+.lv-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
+.lv-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:11px}
+.pb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
+.pb-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
+.pb-meta{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.ms-row{display:flex;justify-content:space-between;margin-top:11px}
+.ms{text-align:center;font-size:9px;color:#aaa}
+.ms.on{color:#27500A;font-weight:700}
+.ms-dot{width:7px;height:7px;border-radius:50%;background:#ddd;margin:0 auto 3px}
+.ms.on .ms-dot{background:#639922}
+.ms.cur .ms-dot{background:#639922;box-shadow:0 0 0 3px #EAF3DE}
+.ms.cur{color:#27500A;font-weight:700}
+
+/* cats */
+.cats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.cat-pill{padding:6px 14px;border-radius:999px;border:1px solid #ddd;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#555;font-family:'Lato',sans-serif}
+.cat-pill:hover{border-color:#639922;color:#639922}
+.cat-pill.active{background:#639922;border-color:#639922;color:white}
+.filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.ftag{padding:3px 10px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:10px;cursor:pointer;color:#888;font-family:'Lato',sans-serif}
+.ftag.active{background:#1a1a1a;border-color:#1a1a1a;color:white}
+.panel{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ptitle{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a}
+.psub{font-size:11px;color:#aaa}
+.act-list{display:flex;flex-direction:column;gap:5px}
+.act{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer}
+.act:hover{background:#f0f0ee}
+.act.done{background:#EAF3DE;border-color:#97C459}
+.chk{width:18px;height:18px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.act.done .chk{background:#639922;border-color:#639922}
+.tick{width:7px;height:4px;border-left:2px solid white;border-bottom:2px solid white;transform:rotate(-45deg) translateY(-1px);opacity:0}
+.act.done .tick{opacity:1}
+.act-body{flex:1;min-width:0}
+.act-text{font-size:12px;color:#1a1a1a;line-height:1.4}
+.act.done .act-text{color:#27500A}
+.act-tag{font-size:10px;color:#aaa;margin-top:1px}
+.act.done .act-tag{color:#3B6D11}
+.act-pts{font-size:11px;font-weight:700;color:#aaa;flex-shrink:0}
+.act.done .act-pts{color:#639922}
+.no-cat{display:flex;align-items:center;justify-content:center;height:110px;border:.5px dashed #ddd;border-radius:10px}
+.no-cat p{font-size:12px;color:#bbb}
+
+/* team */
+.team-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
+.team-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:12px}
+.team-big{font-size:2rem;font-weight:700;color:#639922;line-height:1}
+.team-sub{font-size:.78rem;color:#888;margin-top:2px;margin-bottom:12px}
+.tpb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
+.tpb-fill{height:100%;border-radius:999px;background:#639922;transition:width .6s}
+.tpb-lbl{font-size:10px;color:#aaa;text-align:right;margin-bottom:10px}
+.mlist{display:flex;flex-direction:column;gap:5px}
+.mrow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f7f7f5;border-radius:8px;border:.5px solid #ebebeb}
+.mname{font-size:12px;font-weight:700;color:#1a1a1a;min-width:100px;flex-shrink:0}
+.mbar-wrap{flex:1;height:4px;background:#eee;border-radius:999px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
+.mpts{font-size:11px;font-weight:700;color:#639922;min-width:45px;text-align:right;flex-shrink:0}
+.macts{font-size:10px;color:#aaa;min-width:55px;text-align:right;flex-shrink:0}
+.you-tag{font-size:9px;padding:1px 6px;background:#EAF3DE;color:#27500A;border-radius:999px;font-weight:700;flex-shrink:0}
+
+/* activity log */
+.log-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px}
+.log-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
+.log-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f0f0ee;font-size:12px;color:#666;gap:7px}
+.log-entry:last-child{border-bottom:none}
+.le-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.le-cat{font-size:10px;padding:1px 7px;border-radius:999px;background:#EAF3DE;color:#27500A;flex-shrink:0}
+.le-pts{color:#639922;font-weight:700;flex-shrink:0;font-size:11px}
+.empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;z-index:300;padding:16px}
+.modal{background:white;border-radius:16px;padding:26px;max-width:340px;width:100%;text-align:center}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:#1a1a1a;margin-bottom:7px}
+.modal p{font-size:.84rem;color:#666;margin-bottom:20px;line-height:1.5}
+.modal-btns{display:flex;gap:9px}
+.btn-cancel{flex:1;padding:9px;background:#f0f0ee;border:.5px solid #ddd;border-radius:9px;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:#555}
+.btn-del{flex:1;padding:9px;background:#c0392b;border:none;border-radius:9px;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:white}
+
+.badge-easy{background:#E1F5EE;color:#085041}
+.badge-medium{background:#FAEEDA;color:#633806}
+.badge-family{background:#EEEDFE;color:#3C3489}
+.badge-group{background:#FBEAF0;color:#72243E}
+.badge{font-size:9px;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:3px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('tree')">&#127795; Team Tree</button>
+  <button class="tab-btn" onclick="showTab('log')">&#128203; Log My Activity</button>
+</div>
+
+<!-- TREE TAB -->
+<div class="tab-pane active" id="tab-tree">
+  <div class="tree-wrap">
+    <div class="hdr">
+      <h1>Earth Day Participation</h1>
+      <p>Color rises as your team earns impact points</p>
+    </div>
+    <div class="cv">
+      <canvas id="C0"></canvas>
+      <canvas id="C1"></canvas>
+    </div>
+    <div class="lvs" id="LV"></div>
+  </div>
+</div>
+
+<!-- LOG TAB -->
+<div class="tab-pane" id="tab-log">
+  <div class="log-wrap">
+
+    <!-- GATE -->
+    <div id="gate-page">
+      <div class="gate">
+        <h2>&#127757; Earth Day Activity Log</h2>
+        <p>Enter your name to log eco actions and add points to the team tree</p>
+        <div class="gate-row">
+          <input type="text" id="name-in" placeholder="Your full name" maxlength="60" />
+          <button class="btn-go" onclick="startSession()">Start</button>
+        </div>
+        <div class="gate-err" id="gate-err"></div>
+        <div class="prev-users" id="prev-users" style="display:none">
+          <div class="prev-lbl">Return as:</div>
+          <div class="chip-row" id="chip-row"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div class="hidden" id="app-page">
+      <div class="who-bar">
+        <div>
+          <div class="who-name" id="who-name"></div>
+          <div class="who-meta" id="who-meta"></div>
+        </div>
+        <div class="who-btns">
+          <button class="btn-xs" onclick="switchUser()">Switch user</button>
+          <button class="btn-xs red" onclick="showReset()">Reset my points</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat"><div class="stat-n sg" id="s-pts">0</div><div class="stat-l">My points</div></div>
+        <div class="stat"><div class="stat-n st" id="s-acts">0</div><div class="stat-l">Actions done</div></div>
+        <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">Seedling</div><div class="stat-l">My level</div></div>
+      </div>
+
+      <div class="lv-card">
+        <h3>My level progress</h3>
+        <div class="pb-wrap"><div class="pb-fill" id="pb" style="width:0%"></div></div>
+        <div class="pb-meta"><span id="pb-lbl">0 / 10 pts to Sprout</span><span id="pb-pct">0%</span></div>
+        <div class="ms-row">
+          <div class="ms cur" id="ms0"><div class="ms-dot"></div>Seedling<br>0</div>
+          <div class="ms" id="ms1"><div class="ms-dot"></div>Sprout<br>10</div>
+          <div class="ms" id="ms2"><div class="ms-dot"></div>Grower<br>25</div>
+          <div class="ms" id="ms3"><div class="ms-dot"></div>Guardian<br>50</div>
+          <div class="ms" id="ms4"><div class="ms-dot"></div>Champion<br>100</div>
+        </div>
+      </div>
+
+      <div class="cats" id="cats"></div>
+      <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
+
+      <div class="team-card">
+        <h3>Team total</h3>
+        <div class="team-big" id="team-total">0</div>
+        <div class="team-sub" id="team-sub">0 participants</div>
+        <div class="tpb-wrap"><div class="tpb-fill" id="tpb" style="width:0%"></div></div>
+        <div class="tpb-lbl" id="tpb-lbl">0 / 100 pts team goal</div>
+        <div class="mlist" id="mlist"></div>
+      </div>
+
+      <div class="log-card">
+        <h3>My activity log</h3>
+        <div id="my-log"><div class="empty">No activities logged yet</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="modal-bg hidden" id="modal">
+  <div class="modal">
+    <h3>Reset your points?</h3>
+    <p id="modal-msg">This will clear all your logged activities and points. The team total will update automatically.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="hideReset()">Cancel</button>
+      <button class="btn-del" onclick="doReset()">Yes, reset mine</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   SHARED DATA KEY
+   Both the tree and the log read/write the
+   SAME JavaScript variable: teamData.
+   No cross-iframe localStorage issues.
+   Everything lives in one file, one origin.
+═══════════════════════════════════════════ */
+var STORE_KEY  = 'ed_team_v1';
+var TEAM_GOAL  = 100;
+var SP_SITE    = 'https://YOUR-ORG.sharepoint.com/sites/YOUR-SITE';
+var SP_LIST    = 'EarthDayParticipation';
+var SP_PTSCOL  = 'Points';
+var SYNC_SEC   = 30;
+
+/* in-memory team object — loaded once from localStorage */
+var teamData = {members:{}};
+
+function loadTeam(){
+  try{
+    var s=localStorage.getItem(STORE_KEY);
+    if(s) teamData=JSON.parse(s);
+    else teamData={members:{}};
+  }catch(e){ teamData={members:{}}; }
+}
+
+function saveTeam(){
+  try{ localStorage.setItem(STORE_KEY,JSON.stringify(teamData)); }catch(e){}
+  /* immediately refresh the tree whenever data changes */
+  updateTreePts();
+}
+
+function slug(n){
+  return n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+}
+
+function getUser(name){
+  var k=slug(name);
+  if(!teamData.members[k])
+    teamData.members[k]={name:name,pts:0,acts:0,done:{},log:[]};
+  return teamData.members[k];
+}
+
+function teamTotal(){
+  var t=0, keys=Object.keys(teamData.members);
+  for(var i=0;i<keys.length;i++) t+=teamData.members[keys[i]].pts||0;
+  return t;
+}
+
+/* ═══════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════ */
+function showTab(id){
+  document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+id).classList.add('active');
+  var btns=document.querySelectorAll('.tab-btn');
+  for(var i=0;i<btns.length;i++){
+    if(btns[i].textContent.toLowerCase().indexOf(id)!==-1) btns[i].classList.add('active');
+  }
+  if(id==='tree'){ resizeTree(); }
+}
+
+/* ═══════════════════════════════════════════
+   TREE CANVAS
+═══════════════════════════════════════════ */
+var LVS=[
+  {n:'Seedling',e:'&#127807;',p:0,  c:'#66bb6a'},
+  {n:'Sprout',  e:'&#127807;',p:10, c:'#26a69a'},
+  {n:'Grower',  e:'&#127795;',p:25, c:'#42a5f5'},
+  {n:'Guardian',e:'&#128737;',p:50, c:'#ab47bc'},
+  {n:'Champion',e:'&#127942;',p:100,c:'#ffa726'}
+];
+function glvT(p){var l=LVS[0];for(var i=0;i<LVS.length;i++){if(p>=LVS[i].p)l=LVS[i];}return l;}
+
+var treePts=0, aT=0, tT=0;
+var C0=document.getElementById('C0'), C1=document.getElementById('C1');
+var X0=C0.getContext('2d'), X1=C1.getContext('2d');
+var TW=0, TH=0, TD=1;
+
+/* called whenever teamData changes — instantly updates tree */
+function updateTreePts(){
+  var total=Math.min(teamTotal(), TEAM_GOAL);
+  if(total!==treePts){ treePts=total; tT=treePts/TEAM_GOAL; renderBadges(); }
+}
+
+function resizeTree(){
+  var r=C0.parentElement.getBoundingClientRect();
+  TD=Math.min(window.devicePixelRatio||1,2);
+  TW=r.width; TH=r.height;
+  [C0,C1].forEach(function(c){c.width=TW*TD;c.height=TH*TD;});
+  X0.setTransform(TD,0,0,TD,0,0);
+  X1.setTransform(TD,0,0,TD,0,0);
+}
+
+function rng(seed){
+  var x=(seed^0xdeadbeef)>>>0;
+  return function(){x=Math.imul(x^x>>>15,x|1);x^=x+Math.imul(x^x>>>7,x|61);return((x^x>>>14)>>>0)/4294967296;};
+}
+
+function drawScene(ctx,bw){
+  if(!TW||!TH)return;
+  ctx.clearRect(0,0,TW,TH);
+  var sg=ctx.createLinearGradient(0,0,0,TH*.65);
+  sg.addColorStop(0,bw?'#bfbfbf':'#b3d9f5'); sg.addColorStop(1,bw?'#dfdfdf':'#d9f0d0');
+  ctx.fillStyle=sg; ctx.fillRect(0,0,TW,TH*.65);
+  if(!bw){var sg2=ctx.createRadialGradient(TW*.82,TH*.1,0,TW*.82,TH*.1,42);sg2.addColorStop(0,'rgba(255,248,180,1)');sg2.addColorStop(.5,'rgba(255,220,60,.5)');sg2.addColorStop(1,'rgba(255,200,0,0)');ctx.fillStyle=sg2;ctx.beginPath();ctx.arc(TW*.82,TH*.1,42,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle=bw?'#c5c5c5':'#fff066'; ctx.beginPath(); ctx.arc(TW*.82,TH*.1,16,0,Math.PI*2); ctx.fill();
+  var clouds=[[TW*.12,TH*.11,.88],[TW*.44,TH*.07,.7],[TW*.67,TH*.13,.58]];
+  var blobs=[[-18,2,19],[0,-8,24],[18,2,19],[-30,8,14],[30,8,13]];
+  for(var ci=0;ci<clouds.length;ci++) for(var bi=0;bi<blobs.length;bi++){ctx.beginPath();ctx.arc(clouds[ci][0]+blobs[bi][0]*clouds[ci][2],clouds[ci][1]+blobs[bi][1]*clouds[ci][2],blobs[bi][2]*clouds[ci][2],0,Math.PI*2);ctx.fillStyle=bw?'rgba(255,255,255,.68)':'rgba(255,255,255,.86)';ctx.fill();}
+  var hills=bw?[['#b5b5b5',.60],['#c8c8c8',.65]]:[['#5a9e38',.60],['#78b84e',.65]];
+  for(var hi=0;hi<hills.length;hi++){ctx.fillStyle=hills[hi][0];ctx.beginPath();ctx.moveTo(0,TH*hills[hi][1]);for(var hx=0;hx<=TW;hx+=16){var hy=TH*hills[hi][1]-Math.sin(hx/TW*Math.PI)*TH*.1-Math.sin(hx/TW*Math.PI*3)*TH*.04;if(hx===0)ctx.moveTo(hx,hy);else ctx.lineTo(hx,hy);}ctx.lineTo(TW,TH);ctx.lineTo(0,TH);ctx.closePath();ctx.fill();}
+  var gY=TH*.72;
+  var gg=ctx.createLinearGradient(0,gY,0,TH);gg.addColorStop(0,bw?'#989898':'#6ab040');gg.addColorStop(.2,bw?'#7e7e7e':'#559030');gg.addColorStop(1,bw?'#5e5e5e':'#3a6820');
+  ctx.fillStyle=gg;ctx.beginPath();ctx.moveTo(0,gY);ctx.bezierCurveTo(TW*.3,gY-9,TW*.7,gY-9,TW,gY);ctx.lineTo(TW,TH);ctx.lineTo(0,TH);ctx.closePath();ctx.fill();
+  ctx.fillStyle=bw?'rgba(255,255,255,.07)':'rgba(255,255,255,.11)';ctx.beginPath();ctx.moveTo(0,gY);ctx.bezierCurveTo(TW*.3,gY-9,TW*.7,gY-9,TW,gY);ctx.lineTo(TW,gY+13);ctx.bezierCurveTo(TW*.7,gY+4,TW*.3,gY+4,0,gY+13);ctx.closePath();ctx.fill();
+  var gr=rng(42);
+  for(var i=0;i<55;i++){var gx=gr()*TW,gy2=gY+3+gr()*TH*.22,gh=6+gr()*13,lean=(gr()-.5)*.7,v=68+gr()*38|0;ctx.strokeStyle=bw?'rgb('+v+','+v+','+v+')':'rgb('+(40+gr()*40|0)+','+(100+gr()*54|0)+','+(25+gr()*24|0)+')';ctx.lineWidth=.7+gr()*1.3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(gx,gy2);ctx.quadraticCurveTo(gx+lean*gh*.6,gy2-gh*.44,gx+lean*gh,gy2-gh);ctx.stroke();}
+  var fr=rng(33);
+  var fcB=[['#ddd','#aaa'],['#ccc','#999'],['#e8e8e8','#bbb'],['#d5d5d5','#a0a0a0'],['#ebebeb','#c5c5c5']];
+  var fcC=[['#f7b8ce','#e91e8c'],['#fde1c8','#ff8f00'],['#fff9c4','#fbc02d'],['#e1bee7','#9c27b0'],['#b2ebf2','#00838f']];
+  var fc=bw?fcB:fcC;
+  for(var i=0;i<22;i++){var fx=fr()*TW,fy=gY+6+fr()*TH*.22,sh=9+fr()*13,pr=2+fr()*2.4,fl=fc[i%fc.length];ctx.save();ctx.globalAlpha=.65+fr()*.34;var sv=95+fr()*58|0;ctx.strokeStyle=bw?'rgb('+sv+','+sv+','+sv+')':'#3a8c2a';ctx.lineWidth=1.1;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(fx,fy);ctx.quadraticCurveTo(fx+(fr()-.5)*7,fy-sh*.5,fx,fy-sh);ctx.stroke();for(var fp=0;fp<5;fp++){var pa=(fp/5)*Math.PI*2,pv=160+fp*14|0;var r2=bw?pv:parseInt(fl[0].slice(1,3),16),g2=bw?pv:parseInt(fl[0].slice(3,5),16),b2=bw?pv:parseInt(fl[0].slice(5,7),16);ctx.fillStyle='rgb('+r2+','+g2+','+b2+')';ctx.beginPath();ctx.ellipse(fx+Math.cos(pa)*pr*1.6,fy-sh+Math.sin(pa)*pr*1.6,pr*1.1,pr*.64,pa,0,Math.PI*2);ctx.fill();}ctx.fillStyle=bw?'#e8e8e8':fl[1];ctx.beginPath();ctx.arc(fx,fy-sh,pr*.64,0,Math.PI*2);ctx.fill();ctx.restore();}
+  var tx=TW*.58,tb=gY+3;
+  function br(x1,y1,a,l,w,d){
+    if(l<2||d>11)return;
+    var rr=rng(d*31+l|0),x2=x1+Math.cos(a)*l,y2=y1+Math.sin(a)*l,dv=Math.max(0,1-w/14),bv=35+dv*54|0;
+    ctx.strokeStyle=bw?'rgb('+bv+','+bv+','+bv+')'  :'rgb('+(48+dv*44|0)+','+(28+dv*21|0)+','+(8+dv*7|0)+')';
+    ctx.lineWidth=Math.max(w,.5);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    if(l<10){var lr=rng(d*17+l*3|0);for(var k=0;k<3+Math.floor(lr()*5);k++){var lx=x2+(lr()-.5)*21,ly=y2+(lr()-.5)*17,ls=5+lr()*9,la=lr()*Math.PI*2;ctx.save();ctx.translate(lx,ly);ctx.rotate(la);var lv2=65+lr()*68|0,lc=bw?[lv2,lv2,lv2]:(k%3===0?[40,130,35]:(k%3===1?[65,158,55]:[100,188,74]));ctx.fillStyle='rgb('+lc[0]+','+lc[1]+','+lc[2]+')';ctx.globalAlpha=.65+lr()*.34;ctx.beginPath();ctx.ellipse(0,0,ls,ls*.42,0,0,Math.PI*2);ctx.fill();ctx.restore();}if(!bw){var br2=rng(d*19+l*7|0);for(var bb=0;bb<Math.floor(br2()*3);bb++){var bx2=x2+(br2()-.5)*24,by2=y2+(br2()-.5)*19;ctx.save();ctx.fillStyle=['#f9a8d4','#fce7f3','#fbcfe8'][bb%3];ctx.globalAlpha=.7+br2()*.28;ctx.beginPath();ctx.arc(bx2,by2,2.4+br2()*2.4,0,Math.PI*2);ctx.fill();ctx.restore();}}return;}
+    var sh2=.66+rr()*.07;
+    br(x2,y2,a-(.32+rr()*.23),l*sh2,w*.62,d+1);br(x2,y2,a+(.28+rr()*.19),l*sh2,w*.57,d+1);
+    if(rr()>.3)br(x2,y2,a+(rr()-.5)*.12,l*(sh2*.88),w*.44,d+1);
+  }
+  br(tx,tb,-Math.PI/2+.05,TH*.33,16,0);
+  var rd=rng(99);
+  var roots=[[tx,tb,tx-88,tb+15,10],[tx,tb,tx+73,tb+13,9],[tx,tb,tx-49,tb+21,6],[tx,tb,tx+103,tb+11,5]];
+  for(var ri=0;ri<roots.length;ri++){var ro=roots[ri],cpx=(ro[0]+ro[2])/2+(rd()-.5)*17,cpy=(ro[1]+ro[3])/2+rd()*12+7;ctx.strokeStyle=bw?'rgb(45,45,45)':'rgb(45,25,8)';ctx.lineWidth=ro[4];ctx.lineCap='round';ctx.beginPath();ctx.moveTo(ro[0],ro[1]);ctx.quadraticCurveTo(cpx,cpy,ro[2],ro[3]);ctx.stroke();}
+  if(!bw){var bfx=TW*.22,bfy=TH*.46;ctx.save();ctx.globalAlpha=.84;ctx.fillStyle='#f48fb1';ctx.beginPath();ctx.ellipse(bfx-12,bfy-4,14,9,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(bfx+12,bfy-4,14,9,.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(bfx-7,bfy+7,9,6,-.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(bfx+7,bfy+7,9,6,.3,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ad1457';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(bfx,bfy-11);ctx.lineTo(bfx,bfy+14);ctx.stroke();ctx.restore();}
+  var birds=[[TW*.14,TH*.16,9],[TW*.23,TH*.11,7],[TW*.74,TH*.1,8]];
+  for(var bdi=0;bdi<birds.length;bdi++){var bd=birds[bdi],bvv=bw?65:25;ctx.strokeStyle=bw?'rgb('+bvv+','+bvv+','+bvv+')':'rgba(25,35,100,.74)';ctx.lineWidth=1.3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(bd[0]-bd[2],bd[1]);ctx.quadraticCurveTo(bd[0]-bd[2]*.25,bd[1]-bd[2]*.54,bd[0],bd[1]);ctx.quadraticCurveTo(bd[0]+bd[2]*.25,bd[1]-bd[2]*.54,bd[0]+bd[2],bd[1]);ctx.stroke();}
+  var lv=glvT(treePts);
+  ctx.font='700 '+Math.max(10,TH*.025)+'px Lato,sans-serif';
+  ctx.fillStyle=bw?'rgba(40,40,40,.36)':'rgba(20,60,20,.4)';
+  ctx.textAlign='left';
+  ctx.fillText(lv.n+'  '+treePts+' / '+TEAM_GOAL+' pts',11,TH-11);
+}
+
+function doBW(){ drawScene(X0,true); }
+function doCol(){ drawScene(X1,false); }
+
+function applyMask(t){
+  if(!TW||!TH)return;
+  X1.clearRect(0,0,TW,TH); doCol();
+  var fy=(TH+10)+((-10)-(TH+10))*t, E=22;
+  X1.save(); X1.globalCompositeOperation='destination-out';
+  if(fy-E>0){X1.fillStyle='rgba(0,0,0,1)';X1.fillRect(0,0,TW,fy-E);}
+  var fd=X1.createLinearGradient(0,fy-E,0,fy+E);
+  fd.addColorStop(0,'rgba(0,0,0,1)'); fd.addColorStop(1,'rgba(0,0,0,0)');
+  X1.beginPath(); X1.moveTo(0,0); X1.lineTo(0,fy);
+  for(var x=0;x<=TW;x+=2) X1.lineTo(x,fy+Math.sin((x/TW)*Math.PI*4+Date.now()/900)*5);
+  X1.lineTo(TW,0); X1.closePath(); X1.fillStyle=fd; X1.fill(); X1.restore();
+}
+
+(function loop(){ var d=tT-aT; aT+=Math.abs(d)>.0008?d*.045:d; applyMask(aT); doBW(); requestAnimationFrame(loop); })();
+
+function renderBadges(){
+  var lv=glvT(treePts), row=document.getElementById('LV'); row.innerHTML='';
+  for(var i=0;i<LVS.length;i++){
+    var l=LVS[i], on=treePts>=l.p, cur=lv.n===l.n, div=document.createElement('div');
+    div.className='lb'+(on?' on':'')+(cur?' cur':'');
+    div.style.setProperty('--c',l.c);
+    div.innerHTML='<div class="lbf"></div><span class="li">'+l.e+'</span><span class="ln">'+l.n+'</span><span class="lp">'+l.p+' pts</span>'+(cur?'<span class="lck">&#11088;</span>':(on?'<span class="lck">&#10004;</span>':''));
+    row.appendChild(div);
+  }
+}
+
+/* optional SharePoint sync — adds to team total from list */
+function syncSP(){
+  try{
+    var url=SP_SITE.replace(/\/$/,'')+'/_api/web/lists/getbytitle(\''+encodeURIComponent(SP_LIST)+'\')/items?$select='+SP_PTSCOL+'&$top=5000';
+    var xhr=new XMLHttpRequest(); xhr.open('GET',url,true);
+    xhr.setRequestHeader('Accept','application/json;odata=verbose'); xhr.withCredentials=true;
+    xhr.onload=function(){
+      if(xhr.status!==200)return;
+      try{
+        var data=JSON.parse(xhr.responseText);
+        var items=data.d&&data.d.results?data.d.results:[];
+        var total=0; for(var i=0;i<items.length;i++) total+=(parseInt(items[i][SP_PTSCOL])||0);
+        total=Math.min(total,TEAM_GOAL);
+        if(total!==treePts){treePts=total;tT=treePts/TEAM_GOAL;renderBadges();}
+      }catch(e){}
+    };
+    xhr.send();
+  }catch(e){}
+}
+
+window.addEventListener('resize',function(){ resizeTree(); doBW(); });
+if(typeof ResizeObserver!=='undefined'){
+  new ResizeObserver(function(){ resizeTree(); doBW(); }).observe(document.querySelector('.cv'));
+}
+
+/* ═══════════════════════════════════════════
+   ACTIVITY LOG — LEVELS & DATA
+═══════════════════════════════════════════ */
+var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
+var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
+var CATS=[
+  {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
+    {text:'Unplug unused devices for a week',tag:'quick win',pts:3},
+    {text:'Switch to LED bulbs in 3+ fixtures',tag:'quick win',pts:4},
+    {text:'Run a home energy audit',tag:'medium effort',pts:5},
+    {text:'Line-dry laundry instead of the dryer',tag:'quick win',pts:3},
+    {text:'Set thermostat 2 degrees lower or higher seasonally',tag:'quick win',pts:2},
+    {text:'Install a smart power strip',tag:'medium effort',pts:4},
+    {text:'Switch to a green energy provider or plan',tag:'medium effort',pts:8},
+    {text:'Seal drafty windows or doors',tag:'medium effort',pts:5},
+    {text:'Take shorter showers for one week',tag:'quick win',pts:3},
+    {text:'Fix a leaky faucet',tag:'medium effort',pts:4},
+    {text:'Install a low-flow showerhead',tag:'medium effort',pts:5},
+    {text:'Set up a rain barrel for garden watering',tag:'weekend project',pts:7},
+    {text:'Switch to cold-water laundry settings',tag:'quick win',pts:2},
+    {text:'Replace paper towels with reusable cloths',tag:'quick win',pts:3},
+    {text:'Switch to concentrated or refillable cleaning products',tag:'quick win',pts:3},
+    {text:'Insulate your water heater',tag:'weekend project',pts:6},
+    {text:'Get a home solar or battery storage quote',tag:'medium effort',pts:5},
+    {text:'Use a programmable thermostat',tag:'medium effort',pts:5}
+  ]},
+  {id:'food',name:'Food & Waste',badge:'Easy',bc:'badge-easy',actions:[
+    {text:'Cook a fully plant-based meal',tag:'quick win',pts:3},
+    {text:'Shop at a local farmers market',tag:'quick win',pts:4},
+    {text:'Start a compost bin',tag:'weekend project',pts:6},
+    {text:'Go zero food waste for 3 days',tag:'medium effort',pts:5},
+    {text:'Bring reusable bags all week',tag:'quick win',pts:2},
+    {text:'Plan meals to reduce food waste for 1 week',tag:'medium effort',pts:4},
+    {text:'Buy in bulk to reduce packaging',tag:'quick win',pts:3},
+    {text:'Try a meatless Monday for a month',tag:'medium effort',pts:6},
+    {text:'Grow a herb or vegetable from seed',tag:'weekend project',pts:5},
+    {text:'Switch to a reusable water bottle or coffee cup',tag:'quick win',pts:2},
+    {text:'Cancel one food delivery for a homemade meal',tag:'quick win',pts:2},
+    {text:'Donate unexpired pantry items to a food bank',tag:'medium effort',pts:4},
+    {text:'Choose sustainably certified seafood',tag:'quick win',pts:3},
+    {text:'Switch to loose-leaf tea or coffee to cut pod waste',tag:'quick win',pts:3},
+    {text:'Host a zero-waste dinner party',tag:'weekend project',pts:7},
+    {text:'Freeze food before it expires for 2 weeks',tag:'quick win',pts:3},
+    {text:'Audit your recycling and learn what your city accepts',tag:'quick win',pts:2},
+    {text:'Try a community fridge or free food share',tag:'medium effort',pts:4}
+  ]},
+  {id:'nature',name:'Nature & Outdoors',badge:'Family',bc:'badge-family',actions:[
+    {text:'Nature scavenger hunt with kids',tag:'family fun',pts:3},
+    {text:'Plant a pollinator flower or native herb',tag:'family fun',pts:5},
+    {text:'15-minute litter pickup in your neighborhood',tag:'quick win',pts:4},
+    {text:'Build a backyard bird feeder',tag:'family fun',pts:4},
+    {text:'Visit a local nature preserve or trail',tag:'family fun',pts:3},
+    {text:'Create a pollinator garden patch',tag:'weekend project',pts:8},
+    {text:'Build or install a bee or bat house',tag:'weekend project',pts:7},
+    {text:'Identify 5 local bird species using an app',tag:'quick win',pts:2},
+    {text:'Remove invasive plant species from your yard',tag:'medium effort',pts:5},
+    {text:'Take a guided nature walk or eco-tour',tag:'family fun',pts:3},
+    {text:'Start a backyard wildlife log for a week',tag:'family fun',pts:3},
+    {text:'Plant a tree in your yard or community',tag:'weekend project',pts:8},
+    {text:'Switch part of your lawn to native ground cover',tag:'weekend project',pts:7},
+    {text:'Create a sensory nature space with kids',tag:'family fun',pts:3},
+    {text:'Join a citizen science project such as iNaturalist or eBird',tag:'medium effort',pts:5},
+    {text:'Collect and dry wildflower seeds to share',tag:'medium effort',pts:4},
+    {text:'Photograph and identify 10 local plant species',tag:'family fun',pts:4},
+    {text:'Swap part of your lawn mowing for a wild patch',tag:'quick win',pts:3}
+  ]},
+  {id:'transport',name:'Transport & Travel',badge:'Medium',bc:'badge-medium',actions:[
+    {text:'Walk or bike instead of driving for 3 trips',tag:'quick win',pts:4},
+    {text:'Use public transit for your commute for a week',tag:'medium effort',pts:6},
+    {text:'Carpool with a colleague for a week',tag:'medium effort',pts:5},
+    {text:'Work from home an extra day to cut commuting',tag:'quick win',pts:3},
+    {text:'Check your tire pressure to improve fuel economy',tag:'quick win',pts:2},
+    {text:'Plan errands in one trip to reduce driving',tag:'quick win',pts:2},
+    {text:'Try an e-bike or scooter rental for a week',tag:'medium effort',pts:5},
+    {text:'Offset a recent flight through a verified program',tag:'medium effort',pts:5},
+    {text:'Research or test drive an EV or hybrid',tag:'medium effort',pts:4},
+    {text:'Take a train instead of flying for a regional trip',tag:'weekend project',pts:8},
+    {text:'Park and walk instead of circling for a close spot',tag:'quick win',pts:2},
+    {text:'Avoid idling and turn off the engine when parked',tag:'quick win',pts:2},
+    {text:'Choose a staycation or local destination for a trip',tag:'medium effort',pts:6}
+  ]},
+  {id:'community',name:'Community Action',badge:'Group',bc:'badge-group',actions:[
+    {text:'Organize a neighborhood cleanup event',tag:'group project',pts:10},
+    {text:'Plant a tree in your community',tag:'group project',pts:8},
+    {text:'Run a clothing or e-waste collection drive',tag:'group project',pts:9},
+    {text:'Share an eco-tip with 5 people this week',tag:'quick win',pts:3},
+    {text:'Partner with a local school on a garden project',tag:'group project',pts:10},
+    {text:'Organize a seed swap in your neighborhood',tag:'group project',pts:6},
+    {text:'Write to your local representative about an environmental issue',tag:'medium effort',pts:5},
+    {text:'Volunteer with a local environmental nonprofit',tag:'medium effort',pts:7},
+    {text:'Host a documentary screening about climate or nature',tag:'medium effort',pts:5},
+    {text:'Start or join a community garden',tag:'group project',pts:9},
+    {text:'Mentor a young person on environmental awareness',tag:'medium effort',pts:6},
+    {text:'Set up a little library of sustainability books',tag:'weekend project',pts:5},
+    {text:'Advocate for a recycling or composting program at work',tag:'medium effort',pts:6},
+    {text:'Create a sustainability bulletin board at work or school',tag:'quick win',pts:3},
+    {text:'Donate to an environmental organization',tag:'quick win',pts:4},
+    {text:'Organize a buy-nothing or swap event in your building',tag:'group project',pts:7}
+  ]},
+  {id:'mindset',name:'Learning & Mindset',badge:'Easy',bc:'badge-easy',actions:[
+    {text:'Watch a nature or climate documentary',tag:'quick win',pts:2},
+    {text:'Read one article about local environmental issues',tag:'quick win',pts:2},
+    {text:'Calculate your household carbon footprint',tag:'medium effort',pts:4},
+    {text:'Listen to an environmental podcast episode',tag:'quick win',pts:2},
+    {text:'Follow 3 credible environmental organizations online',tag:'quick win',pts:2},
+    {text:'Teach a child about recycling or composting',tag:'family fun',pts:3},
+    {text:'Read a book about sustainability or climate',tag:'medium effort',pts:5},
+    {text:'Take a free online course on climate or ecology',tag:'medium effort',pts:6},
+    {text:'Journal your daily eco-actions for a week',tag:'medium effort',pts:4},
+    {text:'Spend 30 minutes in nature with no screens',tag:'quick win',pts:2},
+    {text:'Have a family conversation about sustainability goals',tag:'family fun',pts:3},
+    {text:'Research the environmental policies of your city',tag:'medium effort',pts:3},
+    {text:'Explore your local watershed or water source',tag:'family fun',pts:3}
+  ]}
+];
+
+var currentUser='', activeCat=null, activeTag='all';
+
+function glvL(p){var l=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(p>=LEVELS[i].min)l=LEVELS[i];}return l;}
+function nlvL(p){for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].min>p)return LEVELS[i];}return null;}
+
+/* ── GATE ── */
+function refreshGate(){
+  var keys=Object.keys(teamData.members);
+  var wrap=document.getElementById('prev-users');
+  var row=document.getElementById('chip-row');
+  if(!keys.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  var h='';
+  for(var i=0;i<keys.length;i++){
+    var m=teamData.members[keys[i]];
+    h+='<button class="chip" data-name="'+m.name+'">'+m.name+' ('+m.pts+' pts)</button>';
+  }
+  row.innerHTML=h;
+  var chips=document.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++){
+    chips[i].addEventListener('click',function(){
+      document.getElementById('name-in').value=this.dataset.name;
+      startSession();
+    });
+  }
+}
+
+function startSession(){
+  var n=document.getElementById('name-in').value.trim();
+  if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
+  currentUser=n;
+  getUser(n); /* ensure record exists */
+  saveTeam();
+  try{localStorage.setItem('ed_last_user',n);}catch(e){}
+  document.getElementById('gate-page').classList.add('hidden');
+  document.getElementById('app-page').classList.remove('hidden');
+  activeCat=null; activeTag='all';
+  renderAll();
+}
+
+function switchUser(){
+  currentUser=''; activeCat=null; activeTag='all';
+  document.getElementById('app-page').classList.add('hidden');
+  document.getElementById('gate-page').classList.remove('hidden');
+  document.getElementById('name-in').value='';
+  document.getElementById('gate-err').textContent='';
+  refreshGate();
+}
+
+/* ── RESET ── */
+function showReset(){
+  document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s activities and points. The tree updates immediately.";
+  document.getElementById('modal').classList.remove('hidden');
+}
+function hideReset(){document.getElementById('modal').classList.add('hidden');}
+function doReset(){
+  hideReset();
+  var k=slug(currentUser);
+  teamData.members[k]={name:currentUser,pts:0,acts:0,done:{},log:[]};
+  saveTeam(); /* also calls updateTreePts() */
+  activeCat=null; activeTag='all';
+  renderAll();
+}
+
+/* ── RENDER ── */
+function renderAll(){
+  var d=getUser(currentUser);
+  document.getElementById('who-name').textContent=d.name;
+  document.getElementById('who-meta').textContent=d.pts+' points  \u00b7  '+d.acts+' actions completed';
+  document.getElementById('s-pts').textContent=d.pts;
+  document.getElementById('s-acts').textContent=d.acts;
+  var lv=glvL(d.pts), nx=nlvL(d.pts);
+  document.getElementById('s-lvl').textContent=lv.name;
+  var pct=0, lbl='Max level reached!';
+  if(nx){pct=Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100); lbl=d.pts+' / '+nx.min+' pts to '+nx.name;} else pct=100;
+  document.getElementById('pb').style.width=pct+'%';
+  document.getElementById('pb-lbl').textContent=lbl;
+  document.getElementById('pb-pct').textContent=pct+'%';
+  for(var i=0;i<LEVELS.length;i++){var el=document.getElementById('ms'+i);el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');}
+  renderCats(d); renderPanel(d); renderTeamSection(); renderMyLog(d);
+}
+
+function renderTeamSection(){
+  var keys=Object.keys(teamData.members);
+  var total=0, list=[];
+  for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];total+=m.pts||0;list.push({name:m.name,pts:m.pts||0,acts:m.acts||0});}
+  list.sort(function(a,b){return b.pts-a.pts;});
+  var pct=Math.min(Math.round(total/TEAM_GOAL*100),100);
+  document.getElementById('team-total').textContent=total;
+  document.getElementById('team-sub').textContent=list.length+(list.length===1?' participant':' participants');
+  document.getElementById('tpb').style.width=pct+'%';
+  document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
+  var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
+  var h='';
+  for(var i=0;i<list.length;i++){var m=list[i],isMe=m.name.toLowerCase()===currentUser.toLowerCase(),bp=Math.round(m.pts/maxPts*100);h+='<div class="mrow"><span class="mname">'+m.name+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';}
+  document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
+}
+
+function renderCats(d){
+  var h='';
+  for(var i=0;i<CATS.length;i++){var c=CATS[i];h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>';}
+  document.getElementById('cats').innerHTML=h;
+  var pills=document.querySelectorAll('.cat-pill');
+  for(var i=0;i<pills.length;i++){pills[i].addEventListener('click',function(){var id=this.dataset.id;for(var j=0;j<CATS.length;j++){if(CATS[j].id===id){activeCat=CATS[j];break;}}activeTag='all';var d=getUser(currentUser);renderCats(d);renderPanel(d);});}
+}
+
+function renderPanel(d){
+  if(!activeCat){document.getElementById('panel').innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';return;}
+  var cat=activeCat;
+  var tags=['all'];for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
+  var filtered=[];for(var i=0;i<cat.actions.length;i++){if(activeTag==='all'||cat.actions[i].tag===activeTag)filtered.push(cat.actions[i]);}
+  var dc=0;for(var i=0;i<cat.actions.length;i++){if(d.done[cat.id+'_'+i])dc++;}
+  var h='<div class="ph"><span class="ptitle">'+cat.name+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div>';
+  h+='<div class="filter-row">';
+  for(var i=0;i<tags.length;i++) h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
+  h+='</div><div class="act-list">';
+  for(var i=0;i<filtered.length;i++){var a=filtered[i],idx=cat.actions.indexOf(a),key=cat.id+'_'+idx,isDone=!!d.done[key];h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'+':'')+a.pts+' pts</span></div>';}
+  h+='</div>';
+  document.getElementById('panel').innerHTML=h;
+  var ftags=document.querySelectorAll('.ftag');
+  for(var i=0;i<ftags.length;i++) ftags[i].addEventListener('click',function(){activeTag=this.dataset.tag;renderPanel(getUser(currentUser));});
+  var acts=document.querySelectorAll('.act');
+  for(var i=0;i<acts.length;i++){
+    acts[i].addEventListener('click',function(){
+      var d=getUser(currentUser);
+      var key=this.dataset.key; if(d.done[key])return;
+      var p=parseInt(this.dataset.pts), txt=this.dataset.text;
+      d.done[key]=true; d.pts+=p; d.acts+=1;
+      d.log.push({text:txt,pts:p,catId:activeCat.id});
+      saveTeam(); /* saves + instantly updates tree */
+      renderAll();
+    });
+  }
+}
+
+function renderMyLog(d){
+  var el=document.getElementById('my-log');
+  if(!d.log||!d.log.length){el.innerHTML='<div class="empty">No activities logged yet</div>';return;}
+  var h='';
+  for(var i=d.log.length-1;i>=0;i--) h+='<div class="log-entry"><span class="le-text">'+d.log[i].text+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
+  el.innerHTML=h;
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+document.getElementById('name-in').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13)startSession();});
+
+function init(){
+  resizeTree();
+  if(!TW||!TH){setTimeout(init,100);return;}
+  loadTeam();
+  updateTreePts();
+  renderBadges();
+  doBW();
+  refreshGate();
+  try{var last=localStorage.getItem('ed_last_user');if(last)document.getElementById('name-in').value=last;}catch(e){}
+  setInterval(syncSP, SYNC_SEC*1000);
+}
+
+if(document.fonts&&document.fonts.ready){
+  document.fonts.ready.then(function(){setTimeout(init,60);});
+} else {
+  window.addEventListener('load',function(){setTimeout(init,60);});
+}
+</script>
+</body>
+</html>
