@@ -3,20 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Earth Day – Log Your Activity</title>
+<title>Earth Day Activity Log</title>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:28px 16px 48px}
-.page{max-width:760px;margin:0 auto}
-.top{text-align:center;margin-bottom:28px}
-.top h1{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,4vw,2.1rem);font-weight:700;color:#1a1a1a;letter-spacing:-.3px}
-.top p{margin-top:6px;font-size:.9rem;color:#666;font-weight:300}
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0 0 48px}
+.page{max-width:760px;margin:0 auto;padding:28px 16px 0}
+
+/* GATE */
+.gate{background:white;border-radius:16px;border:.5px solid #e4e4e2;padding:40px 32px;text-align:center}
+.gate h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:#1a1a1a;margin-bottom:8px}
+.gate p{font-size:.9rem;color:#888;margin-bottom:24px;line-height:1.6}
+.gate-row{display:flex;gap:10px;max-width:400px;margin:0 auto}
+.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:'Lato',sans-serif;font-size:.95rem;color:#1a1a1a;outline:none}
+.gate-row input:focus{border-color:#639922}
+.btn-start{padding:11px 22px;background:#639922;color:white;border:none;border-radius:10px;font-family:'Lato',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-start:hover{background:#4e7a1a}
+.gate-err{color:#c0392b;font-size:.82rem;margin-top:10px;min-height:18px}
+.existing-users{margin-top:20px;text-align:left;max-width:400px;margin-left:auto;margin-right:auto}
+.existing-users p{font-size:.8rem;color:#aaa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.user-chip-list{display:flex;flex-wrap:wrap;gap:6px}
+.user-chip{padding:5px 14px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.82rem;color:#555;cursor:pointer;font-family:'Lato',sans-serif}
+.user-chip:hover{border-color:#639922;color:#639922;background:white}
+
+/* WHO BAR */
+.who-bar{background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.who-name{font-family:'Playfair Display',serif;font-size:1rem;color:#1a1a1a;font-weight:700}
+.who-meta{font-size:.78rem;color:#888;margin-top:2px}
+.who-btns{display:flex;gap:8px}
+.btn-sm{padding:6px 14px;border-radius:8px;font-family:'Lato',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
+.btn-sm:hover{background:#e8e8e6}
+.btn-sm.red{background:#fff5f5;border-color:#f5c6c6;color:#c0392b}
+.btn-sm.red:hover{background:#fee2e2}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
 .stat{background:white;border-radius:12px;padding:14px;text-align:center;border:.5px solid #e4e4e2}
 .stat-n{font-size:26px;font-weight:700;line-height:1}
 .stat-l{font-size:11px;color:#888;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
 .g{color:#639922}.t{color:#1D9E75}.a{color:#BA7517}
+
+/* LEVEL */
 .level-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:18px 22px;margin-bottom:20px}
 .level-card h3{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a;margin-bottom:12px}
 .prog-wrap{height:10px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:6px}
@@ -29,22 +56,24 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:2
 .ms.on .ms-dot{background:#639922}
 .ms.cur .ms-dot{background:#639922;box-shadow:0 0 0 3px #EAF3DE}
 .ms.cur{color:#27500A;font-weight:700}
+
+/* CATEGORIES */
 .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.cat-pill{padding:7px 16px;border-radius:999px;border:1px solid #ddd;background:white;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;color:#555;font-family:'Lato',sans-serif}
+.cat-pill{padding:7px 16px;border-radius:999px;border:1px solid #ddd;background:white;font-size:13px;font-weight:700;cursor:pointer;color:#555;font-family:'Lato',sans-serif}
 .cat-pill:hover{border-color:#639922;color:#639922}
 .cat-pill.active{background:#639922;border-color:#639922;color:white}
 .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.ftag{padding:4px 12px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:11px;cursor:pointer;color:#888;font-family:'Lato',sans-serif;transition:all .1s}
+.ftag{padding:4px 12px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:11px;cursor:pointer;color:#888;font-family:'Lato',sans-serif}
 .ftag.active{background:#1a1a1a;border-color:#1a1a1a;color:white}
 .panel{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:18px 22px;margin-bottom:20px}
 .panel-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .panel-title{font-family:'Playfair Display',serif;font-size:1rem;color:#1a1a1a}
 .panel-sub{font-size:12px;color:#aaa}
 .act-list{display:flex;flex-direction:column;gap:6px}
-.act{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer;transition:background .1s}
+.act{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer}
 .act:hover{background:#f0f0ee}
 .act.done{background:#EAF3DE;border-color:#97C459}
-.chk{width:20px;height:20px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chk{width:20px;height:20px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .act.done .chk{background:#639922;border-color:#639922}
 .tick{width:8px;height:5px;border-left:2px solid white;border-bottom:2px solid white;transform:rotate(-45deg) translateY(-1px);opacity:0}
 .act.done .tick{opacity:1}
@@ -55,6 +84,27 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:2
 .act.done .act-tag{color:#3B6D11}
 .act-pts{font-size:12px;font-weight:700;color:#aaa;flex-shrink:0}
 .act.done .act-pts{color:#639922}
+.no-cat{display:flex;align-items:center;justify-content:center;height:120px;border:.5px dashed #ddd;border-radius:12px}
+.no-cat p{font-size:13px;color:#bbb}
+
+/* TEAM TOTAL */
+.team-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:18px 22px;margin-bottom:20px}
+.team-card h3{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a;margin-bottom:14px}
+.team-big{font-size:2.2rem;font-weight:700;color:#639922;line-height:1}
+.team-sub{font-size:.82rem;color:#888;margin-top:3px;margin-bottom:14px}
+.team-prog-wrap{height:10px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:6px}
+.team-prog-bar{height:100%;border-radius:999px;background:#639922;transition:width .6s ease}
+.team-prog-lbl{font-size:11px;color:#aaa;text-align:right;margin-bottom:12px}
+.member-list{display:flex;flex-direction:column;gap:6px}
+.member-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f7f7f5;border-radius:8px;border:.5px solid #ebebeb}
+.member-name{font-size:13px;font-weight:700;color:#1a1a1a;min-width:110px;flex-shrink:0}
+.member-bar-wrap{flex:1;height:5px;background:#eee;border-radius:999px;overflow:hidden}
+.member-bar-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
+.member-pts{font-size:12px;font-weight:700;color:#639922;min-width:50px;text-align:right;flex-shrink:0}
+.member-acts{font-size:11px;color:#aaa;min-width:60px;text-align:right;flex-shrink:0}
+.you-tag{font-size:10px;padding:2px 7px;background:#EAF3DE;color:#27500A;border-radius:999px;font-weight:700;flex-shrink:0}
+
+/* LOG */
 .log-panel{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:18px 22px}
 .log-panel h3{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a;margin-bottom:12px}
 .log-entry{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:.5px solid #f0f0ee;font-size:13px;color:#666;gap:8px}
@@ -63,30 +113,65 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:2
 .log-entry .lc{font-size:11px;padding:2px 8px;border-radius:999px;background:#EAF3DE;color:#27500A;flex-shrink:0}
 .log-entry .lp{color:#639922;font-weight:700;flex-shrink:0;font-size:12px}
 .empty{font-size:13px;color:#bbb;font-style:italic;padding:10px 0}
-.no-cat{display:flex;align-items:center;justify-content:center;height:120px;border:.5px dashed #ddd;border-radius:12px}
-.no-cat p{font-size:13px;color:#bbb}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:white;border-radius:16px;padding:28px;max-width:360px;width:100%;text-align:center}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:#1a1a1a;margin-bottom:8px}
+.modal p{font-size:.88rem;color:#666;margin-bottom:22px;line-height:1.55}
+.modal-btns{display:flex;gap:10px}
+.btn-cancel{flex:1;padding:10px;background:#f0f0ee;border:.5px solid #ddd;border-radius:10px;font-family:'Lato',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;color:#555}
+.btn-confirm{flex:1;padding:10px;background:#c0392b;border:none;border-radius:10px;font-family:'Lato',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;color:white}
+
 .badge-easy{background:#E1F5EE;color:#085041}
 .badge-medium{background:#FAEEDA;color:#633806}
 .badge-family{background:#EEEDFE;color:#3C3489}
 .badge-group{background:#FBEAF0;color:#72243E}
-.badge{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700}
+.badge{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:4px}
+.hidden{display:none}
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="top">
-    <h1>🌍 Earth Day Activity Log</h1>
-    <p>Select a category, check off your actions, and earn impact points</p>
+
+<!-- NAME GATE -->
+<div class="page" id="gate-page">
+  <div class="gate">
+    <h2>&#127757; Earth Day Activity Log</h2>
+    <p>Enter your name to log your eco actions and contribute points to the team</p>
+    <div class="gate-row">
+      <input type="text" id="name-in" placeholder="Your full name" maxlength="60" />
+      <button class="btn-start" onclick="startSession()">Start</button>
+    </div>
+    <div class="gate-err" id="gate-err"></div>
+    <div class="existing-users" id="existing-users" style="display:none">
+      <p>Return as:</p>
+      <div class="user-chip-list" id="user-chip-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="page hidden" id="app-page">
+
+  <div class="who-bar">
+    <div>
+      <div class="who-name" id="who-name"></div>
+      <div class="who-meta" id="who-meta"></div>
+    </div>
+    <div class="who-btns">
+      <button class="btn-sm" onclick="switchUser()">Switch user</button>
+      <button class="btn-sm red" onclick="showReset()">Reset my points</button>
+    </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-n g" id="s-pts">0</div><div class="stat-l">Impact points</div></div>
+    <div class="stat"><div class="stat-n g" id="s-pts">0</div><div class="stat-l">My points</div></div>
     <div class="stat"><div class="stat-n t" id="s-acts">0</div><div class="stat-l">Actions done</div></div>
-    <div class="stat"><div class="stat-n a" id="s-lvl" style="font-size:18px">Seedling</div><div class="stat-l">Your level</div></div>
+    <div class="stat"><div class="stat-n a" id="s-lvl" style="font-size:18px">Seedling</div><div class="stat-l">My level</div></div>
   </div>
 
   <div class="level-card">
-    <h3>Level progress</h3>
+    <h3>My level progress</h3>
     <div class="prog-wrap"><div class="prog-bar" id="prog" style="width:0%"></div></div>
     <div class="prog-meta"><span id="prog-lbl">0 / 10 pts to Sprout</span><span id="prog-pct">0%</span></div>
     <div class="ms-row">
@@ -99,25 +184,44 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:2
   </div>
 
   <div class="cats" id="cats"></div>
+  <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
 
-  <div class="panel" id="panel">
-    <div class="no-cat"><p>Select a category above to see activities</p></div>
+  <div class="team-card">
+    <h3>Team total</h3>
+    <div class="team-big" id="team-total">0</div>
+    <div class="team-sub" id="team-sub">0 participants</div>
+    <div class="team-prog-wrap"><div class="team-prog-bar" id="team-prog" style="width:0%"></div></div>
+    <div class="team-prog-lbl" id="team-lbl">0 / 100 pts team goal</div>
+    <div class="member-list" id="member-list"></div>
   </div>
 
   <div class="log-panel">
-    <h3>Activity log</h3>
+    <h3>My activity log</h3>
     <div id="log"><div class="empty">No activities logged yet</div></div>
+  </div>
+
+</div>
+
+<!-- RESET MODAL -->
+<div class="modal-bg hidden" id="modal">
+  <div class="modal">
+    <h3>Reset your points?</h3>
+    <p id="modal-msg">This will clear all your logged activities and points. The team total will update automatically. This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="hideReset()">Cancel</button>
+      <button class="btn-confirm" onclick="doReset()">Yes, reset mine</button>
+    </div>
   </div>
 </div>
 
 <script>
-const CATS=[
+var CATS=[
   {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Unplug unused devices for a week',tag:'quick win',pts:3},
     {text:'Switch to LED bulbs in 3+ fixtures',tag:'quick win',pts:4},
     {text:'Run a home energy audit',tag:'medium effort',pts:5},
     {text:'Line-dry laundry instead of the dryer',tag:'quick win',pts:3},
-    {text:'Set thermostat 2° lower or higher seasonally',tag:'quick win',pts:2},
+    {text:'Set thermostat 2 degrees lower or higher seasonally',tag:'quick win',pts:2},
     {text:'Install a smart power strip',tag:'medium effort',pts:4},
     {text:'Switch to a green energy provider or plan',tag:'medium effort',pts:8},
     {text:'Seal drafty windows or doors',tag:'medium effort',pts:5},
@@ -130,7 +234,7 @@ const CATS=[
     {text:'Switch to concentrated or refillable cleaning products',tag:'quick win',pts:3},
     {text:'Insulate your water heater',tag:'weekend project',pts:6},
     {text:'Get a home solar or battery storage quote',tag:'medium effort',pts:5},
-    {text:'Use a programmable thermostat',tag:'medium effort',pts:5},
+    {text:'Use a programmable thermostat',tag:'medium effort',pts:5}
   ]},
   {id:'food',name:'Food & Waste',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Cook a fully plant-based meal',tag:'quick win',pts:3},
@@ -149,8 +253,8 @@ const CATS=[
     {text:'Switch to loose-leaf tea or coffee to cut pod waste',tag:'quick win',pts:3},
     {text:'Host a zero-waste dinner party',tag:'weekend project',pts:7},
     {text:'Freeze food before it expires for 2 weeks',tag:'quick win',pts:3},
-    {text:'Audit your recycling — learn what your city accepts',tag:'quick win',pts:2},
-    {text:'Try a community fridge or free food share',tag:'medium effort',pts:4},
+    {text:'Audit your recycling and learn what your city accepts',tag:'quick win',pts:2},
+    {text:'Try a community fridge or free food share',tag:'medium effort',pts:4}
   ]},
   {id:'nature',name:'Nature & Outdoors',badge:'Family',bc:'badge-family',actions:[
     {text:'Nature scavenger hunt with kids',tag:'family fun',pts:3},
@@ -167,25 +271,25 @@ const CATS=[
     {text:'Plant a tree in your yard or community',tag:'weekend project',pts:8},
     {text:'Switch part of your lawn to native ground cover',tag:'weekend project',pts:7},
     {text:'Create a sensory nature space with kids',tag:'family fun',pts:3},
-    {text:'Join a citizen science project (iNaturalist, eBird)',tag:'medium effort',pts:5},
+    {text:'Join a citizen science project such as iNaturalist or eBird',tag:'medium effort',pts:5},
     {text:'Collect and dry wildflower seeds to share',tag:'medium effort',pts:4},
     {text:'Photograph and identify 10 local plant species',tag:'family fun',pts:4},
-    {text:'Swap part of your lawn mowing for a wild patch',tag:'quick win',pts:3},
+    {text:'Swap part of your lawn mowing for a wild patch',tag:'quick win',pts:3}
   ]},
   {id:'transport',name:'Transport & Travel',badge:'Medium',bc:'badge-medium',actions:[
     {text:'Walk or bike instead of driving for 3 trips',tag:'quick win',pts:4},
     {text:'Use public transit for your commute for a week',tag:'medium effort',pts:6},
     {text:'Carpool with a colleague for a week',tag:'medium effort',pts:5},
     {text:'Work from home an extra day to cut commuting',tag:'quick win',pts:3},
-    {text:'Check your tire pressure (improves fuel economy)',tag:'quick win',pts:2},
+    {text:'Check your tire pressure to improve fuel economy',tag:'quick win',pts:2},
     {text:'Plan errands in one trip to reduce driving',tag:'quick win',pts:2},
     {text:'Try an e-bike or scooter rental for a week',tag:'medium effort',pts:5},
     {text:'Offset a recent flight through a verified program',tag:'medium effort',pts:5},
     {text:'Research or test drive an EV or hybrid',tag:'medium effort',pts:4},
     {text:'Take a train instead of flying for a regional trip',tag:'weekend project',pts:8},
     {text:'Park and walk instead of circling for a close spot',tag:'quick win',pts:2},
-    {text:'Avoid idling — turn off the engine when parked',tag:'quick win',pts:2},
-    {text:'Choose a staycation or local destination for a trip',tag:'medium effort',pts:6},
+    {text:'Avoid idling and turn off the engine when parked',tag:'quick win',pts:2},
+    {text:'Choose a staycation or local destination for a trip',tag:'medium effort',pts:6}
   ]},
   {id:'community',name:'Community Action',badge:'Group',bc:'badge-group',actions:[
     {text:'Organize a neighborhood cleanup event',tag:'group project',pts:10},
@@ -203,7 +307,7 @@ const CATS=[
     {text:'Advocate for a recycling or composting program at work',tag:'medium effort',pts:6},
     {text:'Create a sustainability bulletin board at work or school',tag:'quick win',pts:3},
     {text:'Donate to an environmental organization',tag:'quick win',pts:4},
-    {text:'Organize a buy-nothing or swap event in your building',tag:'group project',pts:7},
+    {text:'Organize a buy-nothing or swap event in your building',tag:'group project',pts:7}
   ]},
   {id:'mindset',name:'Learning & Mindset',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Watch a nature or climate documentary',tag:'quick win',pts:2},
@@ -218,87 +322,262 @@ const CATS=[
     {text:'Spend 30 minutes in nature with no screens',tag:'quick win',pts:2},
     {text:'Have a family conversation about sustainability goals',tag:'family fun',pts:3},
     {text:'Research the environmental policies of your city',tag:'medium effort',pts:3},
-    {text:'Explore your local watershed or water source',tag:'family fun',pts:3},
-  ]},
+    {text:'Explore your local watershed or water source',tag:'family fun',pts:3}
+  ]}
 ];
 
-const LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
-const CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
+var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
+var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
+var TEAM_GOAL=100;
 
-let pts=0,acts=0,done={},log=[],activeCat=null,activeTag='all';
+var currentUser='';
+var activeCat=null;
+var activeTag='all';
 
-function glv(p){let l=LEVELS[0];for(const x of LEVELS){if(p>=x.min)l=x;}return l;}
-function nlv(p){for(const x of LEVELS){if(x.min>p)return x;}return null;}
+/* ─── STORAGE ───
+   Single shared key: ed_team_v1
+   Structure: { members: { 'slug': { name, pts, acts, done, log } } }
+   The tree display reads this same key to sum all pts.
+*/
+var STORE_KEY='ed_team_v1';
 
-function save(){try{localStorage.setItem('ed_log_v1',JSON.stringify({pts,acts,done,log}));}catch(e){}}
-function load(){try{const s=localStorage.getItem('ed_log_v1');if(s){const d=JSON.parse(s);pts=d.pts||0;acts=d.acts||0;done=d.done||{};log=d.log||[];}}catch(e){}}
+function loadTeam(){
+  try{var s=localStorage.getItem(STORE_KEY);if(s)return JSON.parse(s);}catch(e){}
+  return {members:{}};
+}
 
-function updateStats(){
-  document.getElementById('s-pts').textContent=pts;
-  document.getElementById('s-acts').textContent=acts;
-  const lv=glv(pts),nx=nlv(pts);
+function saveTeam(t){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(t));}catch(e){}
+}
+
+function slug(name){
+  return name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+}
+
+function getOrCreateUser(name){
+  var t=loadTeam();
+  var k=slug(name);
+  if(!t.members[k]) t.members[k]={name:name,pts:0,acts:0,done:{},log:[]};
+  return {team:t,key:k,data:t.members[k]};
+}
+
+/* ─── LEVELS ─── */
+function glv(p){var l=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(p>=LEVELS[i].min)l=LEVELS[i];}return l;}
+function nlv(p){for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].min>p)return LEVELS[i];}return null;}
+
+/* ─── GATE ─── */
+function refreshGate(){
+  var t=loadTeam();
+  var keys=Object.keys(t.members);
+  var wrap=document.getElementById('existing-users');
+  var list=document.getElementById('user-chip-list');
+  if(keys.length===0){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  var h='';
+  for(var i=0;i<keys.length;i++){
+    var m=t.members[keys[i]];
+    h+='<button class="user-chip" data-name="'+m.name+'">'+m.name+' ('+m.pts+' pts)</button>';
+  }
+  list.innerHTML=h;
+  var chips=document.querySelectorAll('.user-chip');
+  for(var i=0;i<chips.length;i++){
+    chips[i].addEventListener('click',function(){
+      document.getElementById('name-in').value=this.dataset.name;
+      startSession();
+    });
+  }
+}
+
+function startSession(){
+  var n=document.getElementById('name-in').value.trim();
+  if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
+  currentUser=n;
+  var r=getOrCreateUser(n);
+  saveTeam(r.team);
+  try{localStorage.setItem('ed_last_user',n);}catch(e){}
+  document.getElementById('gate-page').classList.add('hidden');
+  document.getElementById('app-page').classList.remove('hidden');
+  activeCat=null; activeTag='all';
+  renderAll();
+}
+
+function switchUser(){
+  currentUser='';
+  activeCat=null; activeTag='all';
+  document.getElementById('app-page').classList.add('hidden');
+  document.getElementById('gate-page').classList.remove('hidden');
+  document.getElementById('name-in').value='';
+  document.getElementById('gate-err').textContent='';
+  refreshGate();
+}
+
+/* ─── RESET ─── */
+function showReset(){
+  document.getElementById('modal-msg').textContent=
+    'This will clear all of '+currentUser+"'s logged activities and points. The team total will update automatically. This cannot be undone.";
+  document.getElementById('modal').classList.remove('hidden');
+}
+function hideReset(){document.getElementById('modal').classList.add('hidden');}
+function doReset(){
+  hideReset();
+  var t=loadTeam();
+  var k=slug(currentUser);
+  t.members[k]={name:currentUser,pts:0,acts:0,done:{},log:[]};
+  saveTeam(t);
+  activeCat=null; activeTag='all';
+  renderAll();
+}
+
+/* ─── RENDER ALL ─── */
+function renderAll(){
+  var r=getOrCreateUser(currentUser);
+  var d=r.data;
+  document.getElementById('who-name').textContent=d.name;
+  document.getElementById('who-meta').textContent=d.pts+' points  \u00b7  '+d.acts+' actions completed';
+  document.getElementById('s-pts').textContent=d.pts;
+  document.getElementById('s-acts').textContent=d.acts;
+  var lv=glv(d.pts), nx=nlv(d.pts);
   document.getElementById('s-lvl').textContent=lv.name;
-  let pct=0,lbl='Max level reached!';
-  if(nx){pct=Math.round(((pts-lv.min)/(nx.min-lv.min))*100);lbl=pts+' / '+nx.min+' pts to '+nx.name;}
+  var pct=0, lbl='Max level reached!';
+  if(nx){pct=Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100); lbl=d.pts+' / '+nx.min+' pts to '+nx.name;}
   else pct=100;
   document.getElementById('prog').style.width=pct+'%';
   document.getElementById('prog-lbl').textContent=lbl;
   document.getElementById('prog-pct').textContent=pct+'%';
-  LEVELS.forEach((l,i)=>{
-    const el=document.getElementById('ms'+i);
-    el.className='ms'+(pts>=l.min?(lv.name===l.name?' cur':' on'):'');
-  });
+  for(var i=0;i<LEVELS.length;i++){
+    var el=document.getElementById('ms'+i);
+    el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');
+  }
+  renderCats(d);
+  renderPanel(d);
+  renderTeam(r.team);
+  renderLog(d);
 }
 
-function updateLog(){
-  const el=document.getElementById('log');
-  if(!log.length){el.innerHTML='<div class="empty">No activities logged yet</div>';return;}
-  el.innerHTML=log.slice().reverse().map(e=>
-    `<div class="log-entry"><span class="lt">${e.text}</span><span class="lc">${CAT_NAMES[e.catId]||e.catId}</span><span class="lp">+${e.pts} pts</span></div>`
-  ).join('');
+/* ─── TEAM SECTION ─── */
+function renderTeam(t){
+  var keys=Object.keys(t.members);
+  var total=0;
+  var list=[];
+  for(var i=0;i<keys.length;i++){
+    var m=t.members[keys[i]];
+    total+=m.pts||0;
+    list.push({name:m.name,pts:m.pts||0,acts:m.acts||0});
+  }
+  list.sort(function(a,b){return b.pts-a.pts;});
+  var pct=Math.min(Math.round(total/TEAM_GOAL*100),100);
+  document.getElementById('team-total').textContent=total;
+  document.getElementById('team-sub').textContent=list.length+(list.length===1?' participant':' participants');
+  document.getElementById('team-prog').style.width=pct+'%';
+  document.getElementById('team-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
+  var maxPts=list.length>0?list[0].pts:1; if(maxPts<1)maxPts=1;
+  var h='';
+  for(var i=0;i<list.length;i++){
+    var m=list[i];
+    var isMe=m.name.toLowerCase()===currentUser.toLowerCase();
+    var bp=Math.round(m.pts/maxPts*100);
+    h+='<div class="member-row">'
+      +'<span class="member-name">'+m.name+(isMe?' <span class="you-tag">you</span>':'')+'</span>'
+      +'<div class="member-bar-wrap"><div class="member-bar-fill" style="width:'+bp+'%"></div></div>'
+      +'<span class="member-pts">'+m.pts+' pts</span>'
+      +'<span class="member-acts">'+m.acts+' actions</span>'
+      +'</div>';
+  }
+  document.getElementById('member-list').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
 
-function renderPanel(){
+/* ─── CATEGORIES ─── */
+function renderCats(d){
+  var h='';
+  for(var i=0;i<CATS.length;i++){
+    var c=CATS[i];
+    h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'
+      +c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>';
+  }
+  document.getElementById('cats').innerHTML=h;
+  var pills=document.querySelectorAll('.cat-pill');
+  for(var i=0;i<pills.length;i++){
+    pills[i].addEventListener('click',function(){
+      var id=this.dataset.id;
+      for(var j=0;j<CATS.length;j++){if(CATS[j].id===id){activeCat=CATS[j];break;}}
+      activeTag='all';
+      var r=getOrCreateUser(currentUser);
+      renderCats(r.data); renderPanel(r.data);
+    });
+  }
+}
+
+/* ─── ACTIVITY PANEL ─── */
+function renderPanel(d){
   if(!activeCat){document.getElementById('panel').innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';return;}
-  const cat=activeCat;
-  const tags=['all',...new Set(cat.actions.map(a=>a.tag))];
-  const filtered=activeTag==='all'?cat.actions:cat.actions.filter(a=>a.tag===activeTag);
-  const doneCount=cat.actions.filter((_,i)=>done[cat.id+'_'+i]).length;
-  let h=`<div class="panel-hdr"><span class="panel-title">${cat.name}</span><span class="panel-sub">${doneCount} of ${cat.actions.length} done</span></div>`;
-  h+=`<div class="filter-row">${tags.map(t=>`<button class="ftag${activeTag===t?' active':''}" data-tag="${t}">${t==='all'?'All':t}</button>`).join('')}</div>`;
-  h+=`<div class="act-list">${filtered.map(a=>{
-    const idx=cat.actions.indexOf(a),key=cat.id+'_'+idx,isDone=!!done[key];
-    return `<div class="act${isDone?' done':''}" data-key="${key}" data-pts="${a.pts}" data-text="${a.text.replace(/"/g,'&quot;')}">
-      <div class="chk"><div class="tick"></div></div>
-      <div class="act-body"><div class="act-text">${a.text}</div><div class="act-tag">${a.tag}</div></div>
-      <span class="act-pts">${isDone?'+':''}${a.pts} pts</span>
-    </div>`;
-  }).join('')}</div>`;
+  var cat=activeCat;
+  var tags=['all'];
+  for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
+  var filtered=[];
+  for(var i=0;i<cat.actions.length;i++){if(activeTag==='all'||cat.actions[i].tag===activeTag)filtered.push(cat.actions[i]);}
+  var dc=0;
+  for(var i=0;i<cat.actions.length;i++){if(d.done[cat.id+'_'+i])dc++;}
+  var h='<div class="panel-hdr"><span class="panel-title">'+cat.name+'</span><span class="panel-sub">'+dc+' of '+cat.actions.length+' done</span></div>';
+  h+='<div class="filter-row">';
+  for(var i=0;i<tags.length;i++){
+    h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
+  }
+  h+='</div><div class="act-list">';
+  for(var i=0;i<filtered.length;i++){
+    var a=filtered[i], idx=cat.actions.indexOf(a), key=cat.id+'_'+idx, isDone=!!d.done[key];
+    h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'">'
+      +'<div class="chk"><div class="tick"></div></div>'
+      +'<div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div>'
+      +'<span class="act-pts">'+(isDone?'+':'')+a.pts+' pts</span></div>';
+  }
+  h+='</div>';
   document.getElementById('panel').innerHTML=h;
-  document.querySelectorAll('.ftag').forEach(b=>b.addEventListener('click',function(){activeTag=this.dataset.tag;renderPanel();}));
-  document.querySelectorAll('.act').forEach(el=>el.addEventListener('click',function(){
-    const key=this.dataset.key;if(done[key])return;
-    const p=parseInt(this.dataset.pts),txt=this.dataset.text;
-    done[key]=true;pts+=p;acts+=1;
-    log.push({text:txt,pts:p,catId:activeCat.id});
-    save();updateStats();updateLog();renderCats();renderPanel();
-  }));
+  var ftags=document.querySelectorAll('.ftag');
+  for(var i=0;i<ftags.length;i++){
+    ftags[i].addEventListener('click',function(){
+      activeTag=this.dataset.tag;
+      renderPanel(getOrCreateUser(currentUser).data);
+    });
+  }
+  var actEls=document.querySelectorAll('.act');
+  for(var i=0;i<actEls.length;i++){
+    actEls[i].addEventListener('click',function(){
+      var r=getOrCreateUser(currentUser);
+      var d=r.data;
+      var key=this.dataset.key; if(d.done[key])return;
+      var p=parseInt(this.dataset.pts), txt=this.dataset.text;
+      d.done[key]=true; d.pts+=p; d.acts+=1;
+      d.log.push({text:txt,pts:p,catId:activeCat.id});
+      saveTeam(r.team);
+      renderAll();
+    });
+  }
 }
 
-function renderCats(){
-  const el=document.getElementById('cats');
-  el.innerHTML=CATS.map(c=>{
-    const dc=c.actions.filter((_,i)=>done[c.id+'_'+i]).length;
-    return `<button class="cat-pill${activeCat&&activeCat.id===c.id?' active':''}" data-id="${c.id}">${c.name} <span class="badge ${c.bc}" style="margin-left:4px">${c.badge}</span></button>`;
-  }).join('');
-  document.querySelectorAll('.cat-pill').forEach(b=>b.addEventListener('click',function(){
-    activeCat=CATS.find(c=>c.id===this.dataset.id);activeTag='all';renderCats();renderPanel();
-  }));
+/* ─── LOG ─── */
+function renderLog(d){
+  var el=document.getElementById('log');
+  if(!d.log||!d.log.length){el.innerHTML='<div class="empty">No activities logged yet</div>';return;}
+  var h='';
+  for(var i=d.log.length-1;i>=0;i--){
+    h+='<div class="log-entry"><span class="lt">'+d.log[i].text+'</span><span class="lc">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="lp">+'+d.log[i].pts+' pts</span></div>';
+  }
+  el.innerHTML=h;
 }
 
-load();
-/* Wait for full page layout before rendering */
-function init(){renderCats();updateStats();updateLog();}
+/* ─── INIT ─── */
+document.getElementById('name-in').addEventListener('keydown',function(e){
+  if(e.key==='Enter'||e.keyCode===13) startSession();
+});
+
+function init(){
+  refreshGate();
+  try{
+    var last=localStorage.getItem('ed_last_user');
+    if(last) document.getElementById('name-in').value=last;
+  }catch(e){}
+}
+
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){setTimeout(init,50);});
 } else {
