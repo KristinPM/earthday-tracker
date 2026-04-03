@@ -331,7 +331,7 @@ function init(){
   if(!W || !H){ setTimeout(init, 100); return; }
   doBW(); badges();
   syncRemote();
-  setInterval(syncRemote, 15000);
+  setInterval(syncRemote, 8000);
 }
 
 if(document.fonts && document.fonts.ready){
