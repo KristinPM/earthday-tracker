@@ -218,7 +218,7 @@ var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK'
 
 var LOCAL_KEY  = 'ed_team_v1';
 var TEAM_GOAL  = 100;
-var POLL_MS    = 15000;
+var POLL_MS    = 8000;
 var pollTimer  = null;
 var teamData   = {members:{}};
 var currentUser = '';
@@ -282,7 +282,13 @@ function startPoll() {
       try {
         var r = JSON.parse(xhr.responseText);
         var d = (r && r.members) ? r : (r && r.record) ? r.record : null;
-        if (d && d.members) { teamData = d; if (currentUser) renderTeam(); }
+        if (d && d.members) {
+          teamData = d;
+          if (currentUser) {
+            /* Full re-render so new employees and their points appear immediately */
+            renderAll();
+          }
+        }
       } catch(e) {}
     };
     xhr.send();
@@ -444,15 +450,19 @@ function refreshGate(){
 function startSession(){
   var n=document.getElementById('name-in').value.trim();
   if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
-  currentUser=n; getUser(n);
-  saveData(function(){
-    try{localStorage.setItem('ed_last_user',n);}catch(e){}
-    document.getElementById('gate-page').classList.add('hidden');
-    document.getElementById('app-page').classList.remove('hidden');
-    updateNotice();
-    activeCat=null; activeTag='all';
-    renderAll();
-    startPoll();
+  currentUser=n;
+  /* Load latest data from JSONbin first so we see all employees */
+  loadData(function(){
+    getUser(n);
+    saveData(function(){
+      try{localStorage.setItem('ed_last_user',n);}catch(e){}
+      document.getElementById('gate-page').classList.add('hidden');
+      document.getElementById('app-page').classList.remove('hidden');
+      updateNotice();
+      activeCat=null; activeTag='all';
+      renderAll();
+      startPoll();
+    });
   });
 }
 
