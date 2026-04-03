@@ -69,22 +69,24 @@ function applyTotal(total){var capped=Math.min(total,SP_GOAL);if(capped!==pts){p
 
 /* ── JSONbin poll — cross-device sync ── */
 function pollRemote(){
-  if(!JSONBIN_ID||!JSONBIN_KEY) return pollLocal();
+  if(!JSONBIN_ID||!JSONBIN_KEY){ pollLocal(); return; }
   var xhr=new XMLHttpRequest();
   xhr.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   xhr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   xhr.setRequestHeader('X-Bin-Meta','false');
+  xhr.timeout=8000;
   xhr.onload=function(){
     try{
       var parsed=JSON.parse(xhr.responseText);
-      var d=(parsed&&parsed.members)?parsed:(parsed&&parsed.record&&parsed.record.members?parsed.record:null);
+      var d=(parsed&&parsed.members)?parsed:(parsed&&parsed.record?parsed.record:null);
       if(d&&d.members){
         var total=0,keys=Object.keys(d.members);
         for(var i=0;i<keys.length;i++) total+=d.members[keys[i]].pts||0;
         applyTotal(total);
       }
-    }catch(e){}
+    }catch(e){ pollLocal(); }
   };
+  xhr.ontimeout=function(){ pollLocal(); };
   xhr.onerror=function(){ pollLocal(); };
   xhr.send();
 }
