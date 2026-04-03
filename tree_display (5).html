@@ -303,10 +303,15 @@ function syncRemote(){
         var d = null;
         if(parsed && parsed.members) d = parsed;
         else if(parsed && parsed.record && parsed.record.members) d = parsed.record;
-        if(d){ applyPts(sumMembers(d)); return; }
+        /* only update if we got real data with at least one member
+           this prevents resetting to 0 on empty/failed reads */
+        if(d && Object.keys(d.members).length > 0){
+          applyPts(sumMembers(d));
+          return;
+        }
       }catch(ex){}
     }
-    syncLocal();
+    /* do NOT call syncLocal() on failure — keep current pts displayed */
   };
   xhr.ontimeout = function(){ syncLocal(); };
   xhr.onerror   = function(){ syncLocal(); };
