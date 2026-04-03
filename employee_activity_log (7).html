@@ -7,51 +7,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0 0 48px}
+body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0 0 48px}
 .page{max-width:760px;margin:0 auto;padding:24px 16px 0}
-
-/* GATE */
 .gate{background:white;border-radius:16px;border:.5px solid #e4e4e2;padding:36px 28px;text-align:center}
-.gate h2{font-family:"Playfair Display",serif;font-size:1.4rem;color:#1a1a1a;margin-bottom:8px}
+.gate h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:#1a1a1a;margin-bottom:8px}
 .gate p{font-size:.88rem;color:#888;margin-bottom:22px;line-height:1.6}
 .gate-row{display:flex;gap:10px;max-width:400px;margin:0 auto}
-.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:"Lato",sans-serif;font-size:.9rem;color:#1a1a1a;outline:none}
+.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:'Lato',sans-serif;font-size:.9rem;color:#1a1a1a;outline:none}
 .gate-row input:focus{border-color:#639922}
-.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:"Lato",sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:'Lato',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
 .btn-go:hover{background:#4e7a1a}
 .gate-err{color:#c0392b;font-size:.8rem;margin-top:8px;min-height:18px}
 .prev-wrap{margin-top:18px;max-width:400px;margin-left:auto;margin-right:auto;text-align:left;display:none}
 .prev-lbl{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:"Lato",sans-serif}
+.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:'Lato',sans-serif}
 .chip:hover{border-color:#639922;color:#639922;background:white}
-
-/* WHO BAR */
 .who-bar{background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.who-left .who-name{font-family:"Playfair Display",serif;font-size:.95rem;color:#1a1a1a;font-weight:700}
+.who-left .who-name{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a;font-weight:700}
 .who-left .who-meta{font-size:.75rem;color:#888;margin-top:1px}
-.who-btns{display:flex;gap:7px;align-items:center}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0}
-.sync-dot.ok{background:#639922}
-.sync-dot.busy{background:#f0a500;animation:pulse .8s infinite}
-.sync-dot.err{background:#c0392b}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.sync-lbl{font-size:.7rem;color:#aaa}
-.btn-xs{padding:5px 12px;border-radius:8px;font-family:"Lato",sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
+.who-btns{display:flex;gap:7px}
+.btn-xs{padding:5px 12px;border-radius:8px;font-family:'Lato',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
 .btn-xs:hover{background:#e8e8e6}
 .btn-xs.red{background:#fff5f5;border-color:#f5c6c6;color:#c0392b}
 .btn-xs.red:hover{background:#fee2e2}
-
-/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
 .stat{background:white;border-radius:12px;padding:13px;text-align:center;border:.5px solid #e4e4e2}
 .stat-n{font-size:24px;font-weight:700;line-height:1}
 .stat-l{font-size:10px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
 .sg{color:#639922}.st{color:#1D9E75}.sa{color:#BA7517}
-
-/* LEVEL */
 .lv-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
-.lv-card h3{font-family:"Playfair Display",serif;font-size:.9rem;color:#1a1a1a;margin-bottom:11px}
+.lv-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:11px}
 .pb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
 .pb-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
 .pb-meta{display:flex;justify-content:space-between;font-size:11px;color:#888}
@@ -62,18 +48,16 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 .ms.on .ms-dot{background:#639922}
 .ms.cur .ms-dot{background:#639922;box-shadow:0 0 0 3px #EAF3DE}
 .ms.cur{color:#27500A;font-weight:700}
-
-/* CATS */
 .cats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-.cat-pill{padding:6px 14px;border-radius:999px;border:1px solid #ddd;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#555;font-family:"Lato",sans-serif}
+.cat-pill{padding:6px 14px;border-radius:999px;border:1px solid #ddd;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#555;font-family:'Lato',sans-serif}
 .cat-pill:hover{border-color:#639922;color:#639922}
 .cat-pill.active{background:#639922;border-color:#639922;color:white}
 .filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-.ftag{padding:3px 10px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:10px;cursor:pointer;color:#888;font-family:"Lato",sans-serif}
+.ftag{padding:3px 10px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:10px;cursor:pointer;color:#888;font-family:'Lato',sans-serif}
 .ftag.active{background:#1a1a1a;border-color:#1a1a1a;color:white}
 .panel{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
 .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.ptitle{font-family:"Playfair Display",serif;font-size:.95rem;color:#1a1a1a}
+.ptitle{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a}
 .psub{font-size:11px;color:#aaa}
 .act-list{display:flex;flex-direction:column;gap:5px}
 .act{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer}
@@ -92,10 +76,8 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 .act.done .act-pts{color:#639922}
 .no-cat{display:flex;align-items:center;justify-content:center;height:110px;border:.5px dashed #ddd;border-radius:10px}
 .no-cat p{font-size:12px;color:#bbb}
-
-/* TEAM */
 .team-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
-.team-card h3{font-family:"Playfair Display",serif;font-size:.9rem;color:#1a1a1a;margin-bottom:12px}
+.team-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:12px}
 .team-big{font-size:2rem;font-weight:700;color:#639922;line-height:1}
 .team-sub{font-size:.78rem;color:#888;margin-top:2px;margin-bottom:12px}
 .tpb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
@@ -109,50 +91,40 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 .mpts{font-size:11px;font-weight:700;color:#639922;min-width:45px;text-align:right;flex-shrink:0}
 .macts{font-size:10px;color:#aaa;min-width:55px;text-align:right;flex-shrink:0}
 .you-tag{font-size:9px;padding:1px 6px;background:#EAF3DE;color:#27500A;border-radius:999px;font-weight:700;flex-shrink:0}
-
-/* LOG */
 .log-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px}
-.log-card h3{font-family:"Playfair Display",serif;font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
+.log-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
 .log-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f0f0ee;font-size:12px;color:#666;gap:7px}
 .log-entry:last-child{border-bottom:none}
 .le-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .le-cat{font-size:10px;padding:1px 7px;border-radius:999px;background:#EAF3DE;color:#27500A;flex-shrink:0}
 .le-pts{color:#639922;font-weight:700;flex-shrink:0;font-size:11px}
 .empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
-
-/* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
 .modal{background:white;border-radius:16px;padding:26px;max-width:340px;width:100%;text-align:center}
-.modal h3{font-family:"Playfair Display",serif;font-size:1.05rem;color:#1a1a1a;margin-bottom:7px}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:#1a1a1a;margin-bottom:7px}
 .modal p{font-size:.84rem;color:#666;margin-bottom:20px;line-height:1.5}
 .modal-btns{display:flex;gap:9px}
-.btn-cancel{flex:1;padding:9px;background:#f0f0ee;border:.5px solid #ddd;border-radius:9px;font-family:"Lato",sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:#555}
-.btn-del{flex:1;padding:9px;background:#c0392b;border:none;border-radius:9px;font-family:"Lato",sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:white}
-
+.btn-cancel{flex:1;padding:9px;background:#f0f0ee;border:.5px solid #ddd;border-radius:9px;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:#555}
+.btn-del{flex:1;padding:9px;background:#c0392b;border:none;border-radius:9px;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:white}
 .badge-easy{background:#E1F5EE;color:#085041}
 .badge-medium{background:#FAEEDA;color:#633806}
 .badge-family{background:#EEEDFE;color:#3C3489}
 .badge-group{background:#FBEAF0;color:#72243E}
 .badge{font-size:9px;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:3px}
 .hidden{display:none}
-.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:12px}
-.spinner{width:36px;height:36px;border:3px solid #eee;border-top-color:#639922;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-overlay p{font-size:.9rem;color:#639922;font-weight:700}
+.sync-bar{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:.72rem;margin-bottom:14px}
+.sync-bar.ok{background:#e8f5e9;color:#2e7d32}
+.sync-bar.busy{background:#fff8e1;color:#f57f17}
+.sync-bar.err{background:#fff3e0;color:#e65100}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
 </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading">
-  <div class="spinner"></div>
-  <p>Loading team data...</p>
-</div>
-
-<!-- GATE -->
-<div class="page hidden" id="gate-page">
+<div class="page" id="gate-page">
   <div class="gate">
     <h2>&#127757; Earth Day Activity Log</h2>
-    <p>Enter your name to log eco actions and add points to the shared team tree</p>
+    <p>Enter your name to log eco actions and earn points for the team</p>
     <div class="gate-row">
       <input type="text" id="name-in" placeholder="Your full name" maxlength="60" />
       <button class="btn-go" onclick="startSession()">Start</button>
@@ -165,16 +137,18 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
   </div>
 </div>
 
-<!-- APP -->
 <div class="page hidden" id="app-page">
+  <div id="sync-bar" class="sync-bar ok">
+    <span class="sync-dot"></span>
+    <span id="sync-msg">Points saved locally &mdash; visible to all on this device</span>
+  </div>
+
   <div class="who-bar">
     <div class="who-left">
       <div class="who-name" id="who-name"></div>
       <div class="who-meta" id="who-meta"></div>
     </div>
     <div class="who-btns">
-      <div class="sync-dot" id="sync-dot"></div>
-      <span class="sync-lbl" id="sync-lbl">Syncing...</span>
       <button class="btn-xs" onclick="switchUser()">Switch user</button>
       <button class="btn-xs red" onclick="showReset()">Reset my points</button>
     </div>
@@ -203,7 +177,7 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
   <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
 
   <div class="team-card">
-    <h3>Team total <span style="font-size:.7rem;color:#aaa;font-family:Lato,sans-serif;font-weight:400">(all employees, all devices)</span></h3>
+    <h3>Team total <span style="font-size:.7rem;color:#aaa;font-family:Lato,sans-serif;font-weight:400" id="team-scope">(this device)</span></h3>
     <div class="team-big" id="team-total">0</div>
     <div class="team-sub" id="team-sub">0 participants</div>
     <div class="tpb-wrap"><div class="tpb-fill" id="tpb" style="width:0%"></div></div>
@@ -217,11 +191,10 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
   </div>
 </div>
 
-<!-- RESET MODAL -->
 <div class="modal-bg hidden" id="modal">
   <div class="modal">
     <h3>Reset your points?</h3>
-    <p id="modal-msg">This will clear all your activities and points across all devices.</p>
+    <p id="modal-msg">This will clear all your logged activities and points.</p>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="hideReset()">Cancel</button>
       <button class="btn-del" onclick="doReset()">Yes, reset mine</button>
@@ -230,256 +203,300 @@ body{font-family:"Lato",sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   SHARED CLOUD STORAGE
-   Uses window.storage API (Anthropic artifact storage)
-   which is shared across ALL users and devices.
-   The key "earthday_team_v1" holds the entire team object.
-   Both the log and the tree read/write this same key.
-═══════════════════════════════════════════════════ */
-var CLOUD_KEY  = "earthday_team_v1";
+/* ═══════════════════════════════════════════════════════
+   STORAGE STRATEGY
+   This file works in two modes automatically:
+
+   MODE 1 — JSONbin.io (FREE, cross-device, real-time)
+   Set JSONBIN_ID and JSONBIN_KEY below.
+   Sign up free at jsonbin.io, create a bin, copy the ID
+   and your Master Key. All employees share the same bin.
+   The tree display reads the same bin every 10 seconds.
+
+   MODE 2 — localStorage fallback (same device only)
+   If no JSONbin key is set, falls back to localStorage.
+   Works for demos on a single device.
+═══════════════════════════════════════════════════════ */
+
+/* ── CONFIGURE THESE FOR CROSS-DEVICE SYNC ── */
+var JSONBIN_ID  = '69cfe99336566621a877ae8f';  
+var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';  
+/* ─────────────────────────────────────────── */
+
+var LOCAL_KEY  = 'ed_team_v1';
 var TEAM_GOAL  = 100;
-var POLL_MS    = 10000; /* poll cloud every 10 seconds */
+var POLL_MS    = 12000;
+var USE_REMOTE = !!(JSONBIN_ID && JSONBIN_KEY);
 
 var teamData   = {members:{}};
-var currentUser = "";
+var currentUser = '';
 var activeCat   = null;
-var activeTag   = "all";
+var activeTag   = 'all';
 var pollTimer   = null;
-var isSaving    = false;
 
-/* ── sync status UI ── */
-function setSyncStatus(state, msg) {
-  var dot = document.getElementById("sync-dot");
-  var lbl = document.getElementById("sync-lbl");
-  if (!dot) return;
-  dot.className = "sync-dot " + state;
-  lbl.textContent = msg || "";
+/* ── SYNC STATUS ── */
+function setSyncUI(state, msg) {
+  var bar = document.getElementById('sync-bar');
+  var txt = document.getElementById('sync-msg');
+  if (!bar) return;
+  bar.className = 'sync-bar ' + state;
+  txt.textContent = msg;
+  var scope = document.getElementById('team-scope');
+  if (scope) scope.textContent = USE_REMOTE ? '(all employees, all devices)' : '(this device only)';
 }
 
-/* ── CLOUD LOAD ── */
-function cloudLoad(cb) {
-  setSyncStatus("busy", "Syncing...");
-  window.storage.get(CLOUD_KEY, true)
-    .then(function(result) {
-      if (result && result.value) {
-        try {
-          var parsed = JSON.parse(result.value);
-          if (parsed && parsed.members) teamData = parsed;
-        } catch(e) {}
+/* ── REMOTE LOAD (JSONbin) ── */
+function remoteLoad(cb) {
+  setSyncUI('busy', 'Loading team data...');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+  xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+  xhr.setRequestHeader('X-Bin-Meta', 'false');
+  xhr.onload = function() {
+    try {
+      var parsed = JSON.parse(xhr.responseText);
+      if (parsed && parsed.members) {
+        teamData = parsed;
+      } else if (parsed && parsed.record && parsed.record.members) {
+        teamData = parsed.record;
       }
-      setSyncStatus("ok", "Live");
-      if (cb) cb();
-    })
-    .catch(function() {
-      setSyncStatus("err", "Offline");
-      if (cb) cb();
-    });
+      setSyncUI('ok', 'Live \u2014 synced across all devices');
+    } catch(e) {
+      setSyncUI('err', 'Could not load \u2014 using local data');
+    }
+    if (cb) cb();
+  };
+  xhr.onerror = function() {
+    setSyncUI('err', 'Offline \u2014 using local data');
+    if (cb) cb();
+  };
+  xhr.send();
 }
 
-/* ── CLOUD SAVE ── */
-function cloudSave(cb) {
-  if (isSaving) { if (cb) cb(); return; }
-  isSaving = true;
-  setSyncStatus("busy", "Saving...");
-  /* also save locally as fallback */
-  try { localStorage.setItem(CLOUD_KEY, JSON.stringify(teamData)); } catch(e) {}
-  window.storage.set(CLOUD_KEY, JSON.stringify(teamData), true)
-    .then(function() {
-      isSaving = false;
-      setSyncStatus("ok", "Saved");
-      if (cb) cb();
-    })
-    .catch(function() {
-      isSaving = false;
-      setSyncStatus("err", "Save failed");
-      if (cb) cb();
-    });
+/* ── REMOTE SAVE (JSONbin) ── */
+function remoteSave(cb) {
+  setSyncUI('busy', 'Saving...');
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+  xhr.onload = function() {
+    setSyncUI('ok', 'Saved \u2014 visible to all employees');
+    if (cb) cb();
+  };
+  xhr.onerror = function() {
+    setSyncUI('err', 'Save failed \u2014 saved locally only');
+    if (cb) cb();
+  };
+  xhr.send(JSON.stringify(teamData));
 }
 
-/* ── BACKGROUND POLL — picks up other users changes ── */
+/* ── LOCAL LOAD/SAVE ── */
+function localLoad() {
+  try {
+    var s = localStorage.getItem(LOCAL_KEY);
+    if (s) { var d = JSON.parse(s); if (d && d.members) teamData = d; }
+  } catch(e) {}
+  setSyncUI('ok', 'Saved locally \u2014 visible on this device only');
+}
+
+function localSave() {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
+  setSyncUI('ok', 'Saved locally \u2014 visible on this device only');
+}
+
+/* ── UNIFIED LOAD/SAVE ── */
+function loadData(cb) {
+  if (USE_REMOTE) remoteLoad(cb);
+  else { localLoad(); if (cb) cb(); }
+}
+
+function saveData(cb) {
+  if (USE_REMOTE) remoteSave(cb);
+  else { localSave(); if (cb) cb(); }
+}
+
+/* ── BACKGROUND POLL ── */
 function startPoll() {
+  if (!USE_REMOTE) return;
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(function() {
-    window.storage.get(CLOUD_KEY, true)
-      .then(function(result) {
-        if (result && result.value) {
-          try {
-            var parsed = JSON.parse(result.value);
-            if (parsed && parsed.members) {
-              teamData = parsed;
-              if (currentUser) renderTeam();
-            }
-          } catch(e) {}
-        }
-      })
-      .catch(function() {});
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+    xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+    xhr.setRequestHeader('X-Bin-Meta', 'false');
+    xhr.onload = function() {
+      try {
+        var parsed = JSON.parse(xhr.responseText);
+        var incoming = (parsed && parsed.members) ? parsed : (parsed && parsed.record && parsed.record.members ? parsed.record : null);
+        if (incoming) { teamData = incoming; if (currentUser) { renderTeam(); } }
+      } catch(e) {}
+    };
+    xhr.send();
   }, POLL_MS);
 }
 
 /* ── DATA HELPERS ── */
-function slug(n) { return n.toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,""); }
-
+function slug(n) { return n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); }
 function getUser(name) {
   var k = slug(name);
   if (!teamData.members[k]) teamData.members[k] = {name:name,pts:0,acts:0,done:{},log:[]};
   return teamData.members[k];
 }
-
 function teamTotal() {
   var t = 0, keys = Object.keys(teamData.members);
   for (var i = 0; i < keys.length; i++) t += teamData.members[keys[i]].pts || 0;
   return t;
 }
 
-var LEVELS = [{name:"Seedling",min:0},{name:"Sprout",min:10},{name:"Grower",min:25},{name:"Guardian",min:50},{name:"Champion",min:100}];
-var CAT_NAMES = {home:"Home & Energy",food:"Food & Waste",nature:"Nature & Outdoors",transport:"Transport & Travel",community:"Community Action",mindset:"Learning & Mindset"};
+var LEVELS = [{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
+var CAT_NAMES = {home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
 
 var CATS = [
-  {id:"home",name:"Home & Energy",badge:"Easy",bc:"badge-easy",actions:[
-    {text:"Unplug unused devices for a week",tag:"quick win",pts:3},
-    {text:"Switch to LED bulbs in 3+ fixtures",tag:"quick win",pts:4},
-    {text:"Run a home energy audit",tag:"medium effort",pts:5},
-    {text:"Line-dry laundry instead of the dryer",tag:"quick win",pts:3},
-    {text:"Set thermostat 2 degrees lower or higher seasonally",tag:"quick win",pts:2},
-    {text:"Install a smart power strip",tag:"medium effort",pts:4},
-    {text:"Switch to a green energy provider or plan",tag:"medium effort",pts:8},
-    {text:"Seal drafty windows or doors",tag:"medium effort",pts:5},
-    {text:"Take shorter showers for one week",tag:"quick win",pts:3},
-    {text:"Fix a leaky faucet",tag:"medium effort",pts:4},
-    {text:"Install a low-flow showerhead",tag:"medium effort",pts:5},
-    {text:"Set up a rain barrel for garden watering",tag:"weekend project",pts:7},
-    {text:"Switch to cold-water laundry settings",tag:"quick win",pts:2},
-    {text:"Replace paper towels with reusable cloths",tag:"quick win",pts:3},
-    {text:"Switch to concentrated or refillable cleaning products",tag:"quick win",pts:3},
-    {text:"Insulate your water heater",tag:"weekend project",pts:6},
-    {text:"Get a home solar or battery storage quote",tag:"medium effort",pts:5},
-    {text:"Use a programmable thermostat",tag:"medium effort",pts:5}
+  {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
+    {text:'Unplug unused devices for a week',tag:'quick win',pts:3},
+    {text:'Switch to LED bulbs in 3+ fixtures',tag:'quick win',pts:4},
+    {text:'Run a home energy audit',tag:'medium effort',pts:5},
+    {text:'Line-dry laundry instead of the dryer',tag:'quick win',pts:3},
+    {text:'Set thermostat 2 degrees lower or higher seasonally',tag:'quick win',pts:2},
+    {text:'Install a smart power strip',tag:'medium effort',pts:4},
+    {text:'Switch to a green energy provider or plan',tag:'medium effort',pts:8},
+    {text:'Seal drafty windows or doors',tag:'medium effort',pts:5},
+    {text:'Take shorter showers for one week',tag:'quick win',pts:3},
+    {text:'Fix a leaky faucet',tag:'medium effort',pts:4},
+    {text:'Install a low-flow showerhead',tag:'medium effort',pts:5},
+    {text:'Set up a rain barrel for garden watering',tag:'weekend project',pts:7},
+    {text:'Switch to cold-water laundry settings',tag:'quick win',pts:2},
+    {text:'Replace paper towels with reusable cloths',tag:'quick win',pts:3},
+    {text:'Switch to concentrated or refillable cleaning products',tag:'quick win',pts:3},
+    {text:'Insulate your water heater',tag:'weekend project',pts:6},
+    {text:'Get a home solar or battery storage quote',tag:'medium effort',pts:5},
+    {text:'Use a programmable thermostat',tag:'medium effort',pts:5}
   ]},
-  {id:"food",name:"Food & Waste",badge:"Easy",bc:"badge-easy",actions:[
-    {text:"Cook a fully plant-based meal",tag:"quick win",pts:3},
-    {text:"Shop at a local farmers market",tag:"quick win",pts:4},
-    {text:"Start a compost bin",tag:"weekend project",pts:6},
-    {text:"Go zero food waste for 3 days",tag:"medium effort",pts:5},
-    {text:"Bring reusable bags all week",tag:"quick win",pts:2},
-    {text:"Plan meals to reduce food waste for 1 week",tag:"medium effort",pts:4},
-    {text:"Buy in bulk to reduce packaging",tag:"quick win",pts:3},
-    {text:"Try a meatless Monday for a month",tag:"medium effort",pts:6},
-    {text:"Grow a herb or vegetable from seed",tag:"weekend project",pts:5},
-    {text:"Switch to a reusable water bottle or coffee cup",tag:"quick win",pts:2},
-    {text:"Cancel one food delivery for a homemade meal",tag:"quick win",pts:2},
-    {text:"Donate unexpired pantry items to a food bank",tag:"medium effort",pts:4},
-    {text:"Choose sustainably certified seafood",tag:"quick win",pts:3},
-    {text:"Switch to loose-leaf tea or coffee to cut pod waste",tag:"quick win",pts:3},
-    {text:"Host a zero-waste dinner party",tag:"weekend project",pts:7},
-    {text:"Freeze food before it expires for 2 weeks",tag:"quick win",pts:3},
-    {text:"Audit your recycling and learn what your city accepts",tag:"quick win",pts:2},
-    {text:"Try a community fridge or free food share",tag:"medium effort",pts:4}
+  {id:'food',name:'Food & Waste',badge:'Easy',bc:'badge-easy',actions:[
+    {text:'Cook a fully plant-based meal',tag:'quick win',pts:3},
+    {text:'Shop at a local farmers market',tag:'quick win',pts:4},
+    {text:'Start a compost bin',tag:'weekend project',pts:6},
+    {text:'Go zero food waste for 3 days',tag:'medium effort',pts:5},
+    {text:'Bring reusable bags all week',tag:'quick win',pts:2},
+    {text:'Plan meals to reduce food waste for 1 week',tag:'medium effort',pts:4},
+    {text:'Buy in bulk to reduce packaging',tag:'quick win',pts:3},
+    {text:'Try a meatless Monday for a month',tag:'medium effort',pts:6},
+    {text:'Grow a herb or vegetable from seed',tag:'weekend project',pts:5},
+    {text:'Switch to a reusable water bottle or coffee cup',tag:'quick win',pts:2},
+    {text:'Cancel one food delivery for a homemade meal',tag:'quick win',pts:2},
+    {text:'Donate unexpired pantry items to a food bank',tag:'medium effort',pts:4},
+    {text:'Choose sustainably certified seafood',tag:'quick win',pts:3},
+    {text:'Switch to loose-leaf tea or coffee to cut pod waste',tag:'quick win',pts:3},
+    {text:'Host a zero-waste dinner party',tag:'weekend project',pts:7},
+    {text:'Freeze food before it expires for 2 weeks',tag:'quick win',pts:3},
+    {text:'Audit your recycling and learn what your city accepts',tag:'quick win',pts:2},
+    {text:'Try a community fridge or free food share',tag:'medium effort',pts:4}
   ]},
-  {id:"nature",name:"Nature & Outdoors",badge:"Family",bc:"badge-family",actions:[
-    {text:"Nature scavenger hunt with kids",tag:"family fun",pts:3},
-    {text:"Plant a pollinator flower or native herb",tag:"family fun",pts:5},
-    {text:"15-minute litter pickup in your neighborhood",tag:"quick win",pts:4},
-    {text:"Build a backyard bird feeder",tag:"family fun",pts:4},
-    {text:"Visit a local nature preserve or trail",tag:"family fun",pts:3},
-    {text:"Create a pollinator garden patch",tag:"weekend project",pts:8},
-    {text:"Build or install a bee or bat house",tag:"weekend project",pts:7},
-    {text:"Identify 5 local bird species using an app",tag:"quick win",pts:2},
-    {text:"Remove invasive plant species from your yard",tag:"medium effort",pts:5},
-    {text:"Take a guided nature walk or eco-tour",tag:"family fun",pts:3},
-    {text:"Start a backyard wildlife log for a week",tag:"family fun",pts:3},
-    {text:"Plant a tree in your yard or community",tag:"weekend project",pts:8},
-    {text:"Switch part of your lawn to native ground cover",tag:"weekend project",pts:7},
-    {text:"Create a sensory nature space with kids",tag:"family fun",pts:3},
-    {text:"Join a citizen science project such as iNaturalist or eBird",tag:"medium effort",pts:5},
-    {text:"Collect and dry wildflower seeds to share",tag:"medium effort",pts:4},
-    {text:"Photograph and identify 10 local plant species",tag:"family fun",pts:4},
-    {text:"Swap part of your lawn mowing for a wild patch",tag:"quick win",pts:3}
+  {id:'nature',name:'Nature & Outdoors',badge:'Family',bc:'badge-family',actions:[
+    {text:'Nature scavenger hunt with kids',tag:'family fun',pts:3},
+    {text:'Plant a pollinator flower or native herb',tag:'family fun',pts:5},
+    {text:'15-minute litter pickup in your neighborhood',tag:'quick win',pts:4},
+    {text:'Build a backyard bird feeder',tag:'family fun',pts:4},
+    {text:'Visit a local nature preserve or trail',tag:'family fun',pts:3},
+    {text:'Create a pollinator garden patch',tag:'weekend project',pts:8},
+    {text:'Build or install a bee or bat house',tag:'weekend project',pts:7},
+    {text:'Identify 5 local bird species using an app',tag:'quick win',pts:2},
+    {text:'Remove invasive plant species from your yard',tag:'medium effort',pts:5},
+    {text:'Take a guided nature walk or eco-tour',tag:'family fun',pts:3},
+    {text:'Start a backyard wildlife log for a week',tag:'family fun',pts:3},
+    {text:'Plant a tree in your yard or community',tag:'weekend project',pts:8},
+    {text:'Switch part of your lawn to native ground cover',tag:'weekend project',pts:7},
+    {text:'Create a sensory nature space with kids',tag:'family fun',pts:3},
+    {text:'Join a citizen science project such as iNaturalist or eBird',tag:'medium effort',pts:5},
+    {text:'Collect and dry wildflower seeds to share',tag:'medium effort',pts:4},
+    {text:'Photograph and identify 10 local plant species',tag:'family fun',pts:4},
+    {text:'Swap part of your lawn mowing for a wild patch',tag:'quick win',pts:3}
   ]},
-  {id:"transport",name:"Transport & Travel",badge:"Medium",bc:"badge-medium",actions:[
-    {text:"Walk or bike instead of driving for 3 trips",tag:"quick win",pts:4},
-    {text:"Use public transit for your commute for a week",tag:"medium effort",pts:6},
-    {text:"Carpool with a colleague for a week",tag:"medium effort",pts:5},
-    {text:"Work from home an extra day to cut commuting",tag:"quick win",pts:3},
-    {text:"Check your tire pressure to improve fuel economy",tag:"quick win",pts:2},
-    {text:"Plan errands in one trip to reduce driving",tag:"quick win",pts:2},
-    {text:"Try an e-bike or scooter rental for a week",tag:"medium effort",pts:5},
-    {text:"Offset a recent flight through a verified program",tag:"medium effort",pts:5},
-    {text:"Research or test drive an EV or hybrid",tag:"medium effort",pts:4},
-    {text:"Take a train instead of flying for a regional trip",tag:"weekend project",pts:8},
-    {text:"Park and walk instead of circling for a close spot",tag:"quick win",pts:2},
-    {text:"Avoid idling and turn off the engine when parked",tag:"quick win",pts:2},
-    {text:"Choose a staycation or local destination for a trip",tag:"medium effort",pts:6}
+  {id:'transport',name:'Transport & Travel',badge:'Medium',bc:'badge-medium',actions:[
+    {text:'Walk or bike instead of driving for 3 trips',tag:'quick win',pts:4},
+    {text:'Use public transit for your commute for a week',tag:'medium effort',pts:6},
+    {text:'Carpool with a colleague for a week',tag:'medium effort',pts:5},
+    {text:'Work from home an extra day to cut commuting',tag:'quick win',pts:3},
+    {text:'Check your tire pressure to improve fuel economy',tag:'quick win',pts:2},
+    {text:'Plan errands in one trip to reduce driving',tag:'quick win',pts:2},
+    {text:'Try an e-bike or scooter rental for a week',tag:'medium effort',pts:5},
+    {text:'Offset a recent flight through a verified program',tag:'medium effort',pts:5},
+    {text:'Research or test drive an EV or hybrid',tag:'medium effort',pts:4},
+    {text:'Take a train instead of flying for a regional trip',tag:'weekend project',pts:8},
+    {text:'Park and walk instead of circling for a close spot',tag:'quick win',pts:2},
+    {text:'Avoid idling and turn off the engine when parked',tag:'quick win',pts:2},
+    {text:'Choose a staycation or local destination for a trip',tag:'medium effort',pts:6}
   ]},
-  {id:"community",name:"Community Action",badge:"Group",bc:"badge-group",actions:[
-    {text:"Organize a neighborhood cleanup event",tag:"group project",pts:10},
-    {text:"Plant a tree in your community",tag:"group project",pts:8},
-    {text:"Run a clothing or e-waste collection drive",tag:"group project",pts:9},
-    {text:"Share an eco-tip with 5 people this week",tag:"quick win",pts:3},
-    {text:"Partner with a local school on a garden project",tag:"group project",pts:10},
-    {text:"Organize a seed swap in your neighborhood",tag:"group project",pts:6},
-    {text:"Write to your local representative about an environmental issue",tag:"medium effort",pts:5},
-    {text:"Volunteer with a local environmental nonprofit",tag:"medium effort",pts:7},
-    {text:"Host a documentary screening about climate or nature",tag:"medium effort",pts:5},
-    {text:"Start or join a community garden",tag:"group project",pts:9},
-    {text:"Mentor a young person on environmental awareness",tag:"medium effort",pts:6},
-    {text:"Set up a little library of sustainability books",tag:"weekend project",pts:5},
-    {text:"Advocate for a recycling or composting program at work",tag:"medium effort",pts:6},
-    {text:"Create a sustainability bulletin board at work or school",tag:"quick win",pts:3},
-    {text:"Donate to an environmental organization",tag:"quick win",pts:4},
-    {text:"Organize a buy-nothing or swap event in your building",tag:"group project",pts:7}
+  {id:'community',name:'Community Action',badge:'Group',bc:'badge-group',actions:[
+    {text:'Organize a neighborhood cleanup event',tag:'group project',pts:10},
+    {text:'Plant a tree in your community',tag:'group project',pts:8},
+    {text:'Run a clothing or e-waste collection drive',tag:'group project',pts:9},
+    {text:'Share an eco-tip with 5 people this week',tag:'quick win',pts:3},
+    {text:'Partner with a local school on a garden project',tag:'group project',pts:10},
+    {text:'Organize a seed swap in your neighborhood',tag:'group project',pts:6},
+    {text:'Write to your local representative about an environmental issue',tag:'medium effort',pts:5},
+    {text:'Volunteer with a local environmental nonprofit',tag:'medium effort',pts:7},
+    {text:'Host a documentary screening about climate or nature',tag:'medium effort',pts:5},
+    {text:'Start or join a community garden',tag:'group project',pts:9},
+    {text:'Mentor a young person on environmental awareness',tag:'medium effort',pts:6},
+    {text:'Set up a little library of sustainability books',tag:'weekend project',pts:5},
+    {text:'Advocate for a recycling or composting program at work',tag:'medium effort',pts:6},
+    {text:'Create a sustainability bulletin board at work or school',tag:'quick win',pts:3},
+    {text:'Donate to an environmental organization',tag:'quick win',pts:4},
+    {text:'Organize a buy-nothing or swap event in your building',tag:'group project',pts:7}
   ]},
-  {id:"mindset",name:"Learning & Mindset",badge:"Easy",bc:"badge-easy",actions:[
-    {text:"Watch a nature or climate documentary",tag:"quick win",pts:2},
-    {text:"Read one article about local environmental issues",tag:"quick win",pts:2},
-    {text:"Calculate your household carbon footprint",tag:"medium effort",pts:4},
-    {text:"Listen to an environmental podcast episode",tag:"quick win",pts:2},
-    {text:"Follow 3 credible environmental organizations online",tag:"quick win",pts:2},
-    {text:"Teach a child about recycling or composting",tag:"family fun",pts:3},
-    {text:"Read a book about sustainability or climate",tag:"medium effort",pts:5},
-    {text:"Take a free online course on climate or ecology",tag:"medium effort",pts:6},
-    {text:"Journal your daily eco-actions for a week",tag:"medium effort",pts:4},
-    {text:"Spend 30 minutes in nature with no screens",tag:"quick win",pts:2},
-    {text:"Have a family conversation about sustainability goals",tag:"family fun",pts:3},
-    {text:"Research the environmental policies of your city",tag:"medium effort",pts:3},
-    {text:"Explore your local watershed or water source",tag:"family fun",pts:3}
+  {id:'mindset',name:'Learning & Mindset',badge:'Easy',bc:'badge-easy',actions:[
+    {text:'Watch a nature or climate documentary',tag:'quick win',pts:2},
+    {text:'Read one article about local environmental issues',tag:'quick win',pts:2},
+    {text:'Calculate your household carbon footprint',tag:'medium effort',pts:4},
+    {text:'Listen to an environmental podcast episode',tag:'quick win',pts:2},
+    {text:'Follow 3 credible environmental organizations online',tag:'quick win',pts:2},
+    {text:'Teach a child about recycling or composting',tag:'family fun',pts:3},
+    {text:'Read a book about sustainability or climate',tag:'medium effort',pts:5},
+    {text:'Take a free online course on climate or ecology',tag:'medium effort',pts:6},
+    {text:'Journal your daily eco-actions for a week',tag:'medium effort',pts:4},
+    {text:'Spend 30 minutes in nature with no screens',tag:'quick win',pts:2},
+    {text:'Have a family conversation about sustainability goals',tag:'family fun',pts:3},
+    {text:'Research the environmental policies of your city',tag:'medium effort',pts:3},
+    {text:'Explore your local watershed or water source',tag:'family fun',pts:3}
   ]}
 ];
 
 function glv(p){var l=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(p>=LEVELS[i].min)l=LEVELS[i];}return l;}
 function nlv(p){for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].min>p)return LEVELS[i];}return null;}
 
-/* ── GATE ── */
 function refreshGate() {
   var keys = Object.keys(teamData.members);
-  var wrap = document.getElementById("prev-wrap");
-  if (!keys.length) { wrap.style.display = "none"; return; }
-  wrap.style.display = "block";
-  var h = "";
+  var wrap = document.getElementById('prev-wrap');
+  if (!keys.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  var h = '';
   for (var i = 0; i < keys.length; i++) {
     var m = teamData.members[keys[i]];
-    h += "<button class=\"chip\" data-name=\"" + m.name + "\">" + m.name + " (" + m.pts + " pts)</button>";
+    h += '<button class="chip" data-name="'+m.name+'">'+m.name+' ('+m.pts+' pts)</button>';
   }
-  document.getElementById("chip-row").innerHTML = h;
-  var chips = document.querySelectorAll(".chip");
+  document.getElementById('chip-row').innerHTML = h;
+  var chips = document.querySelectorAll('.chip');
   for (var i = 0; i < chips.length; i++) {
-    chips[i].addEventListener("click", function() {
-      document.getElementById("name-in").value = this.dataset.name;
+    chips[i].addEventListener('click', function() {
+      document.getElementById('name-in').value = this.dataset.name;
       startSession();
     });
   }
 }
 
 function startSession() {
-  var n = document.getElementById("name-in").value.trim();
-  if (!n) { document.getElementById("gate-err").textContent = "Please enter your name to continue."; return; }
+  var n = document.getElementById('name-in').value.trim();
+  if (!n) { document.getElementById('gate-err').textContent = 'Please enter your name to continue.'; return; }
   currentUser = n;
   getUser(n);
-  cloudSave(function() {
-    try { localStorage.setItem("ed_last_user", n); } catch(e) {}
-    document.getElementById("gate-page").classList.add("hidden");
-    document.getElementById("app-page").classList.remove("hidden");
-    activeCat = null; activeTag = "all";
+  saveData(function() {
+    try { localStorage.setItem('ed_last_user', n); } catch(e) {}
+    document.getElementById('gate-page').classList.add('hidden');
+    document.getElementById('app-page').classList.remove('hidden');
+    activeCat = null; activeTag = 'all';
     renderAll();
     startPoll();
   });
@@ -487,44 +504,42 @@ function startSession() {
 
 function switchUser() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  currentUser = ""; activeCat = null; activeTag = "all";
-  document.getElementById("app-page").classList.add("hidden");
-  document.getElementById("gate-page").classList.remove("hidden");
-  document.getElementById("name-in").value = "";
-  document.getElementById("gate-err").textContent = "";
+  currentUser = ''; activeCat = null; activeTag = 'all';
+  document.getElementById('app-page').classList.add('hidden');
+  document.getElementById('gate-page').classList.remove('hidden');
+  document.getElementById('name-in').value = '';
+  document.getElementById('gate-err').textContent = '';
   refreshGate();
 }
 
-/* ── RESET ── */
 function showReset() {
-  document.getElementById("modal-msg").textContent = "This will clear all of " + currentUser + "'s points across all devices. Cannot be undone.";
-  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById('modal-msg').textContent = 'This will clear all of '+currentUser+"'s activities and points. Cannot be undone.";
+  document.getElementById('modal').classList.remove('hidden');
 }
-function hideReset() { document.getElementById("modal").classList.add("hidden"); }
+function hideReset() { document.getElementById('modal').classList.add('hidden'); }
 function doReset() {
   hideReset();
   var k = slug(currentUser);
   teamData.members[k] = {name:currentUser,pts:0,acts:0,done:{},log:[]};
-  cloudSave(function() { activeCat = null; activeTag = "all"; renderAll(); });
+  saveData(function() { activeCat = null; activeTag = 'all'; renderAll(); });
 }
 
-/* ── RENDER ── */
 function renderAll() {
   var d = getUser(currentUser);
-  document.getElementById("who-name").textContent = d.name;
-  document.getElementById("who-meta").textContent = d.pts + " points  ·  " + d.acts + " actions completed";
-  document.getElementById("s-pts").textContent  = d.pts;
-  document.getElementById("s-acts").textContent = d.acts;
+  document.getElementById('who-name').textContent = d.name;
+  document.getElementById('who-meta').textContent = d.pts+' points  \u00b7  '+d.acts+' actions completed';
+  document.getElementById('s-pts').textContent  = d.pts;
+  document.getElementById('s-acts').textContent = d.acts;
   var lv = glv(d.pts), nx = nlv(d.pts);
-  document.getElementById("s-lvl").textContent = lv.name;
-  var pct = 0, lbl = "Max level reached!";
-  if (nx) { pct = Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100); lbl = d.pts+" / "+nx.min+" pts to "+nx.name; } else pct = 100;
-  document.getElementById("pb").style.width = pct + "%";
-  document.getElementById("pb-lbl").textContent = lbl;
-  document.getElementById("pb-pct").textContent = pct + "%";
+  document.getElementById('s-lvl').textContent = lv.name;
+  var pct = 0, lbl = 'Max level reached!';
+  if (nx) { pct = Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100); lbl = d.pts+' / '+nx.min+' pts to '+nx.name; } else pct = 100;
+  document.getElementById('pb').style.width = pct+'%';
+  document.getElementById('pb-lbl').textContent = lbl;
+  document.getElementById('pb-pct').textContent = pct+'%';
   for (var i = 0; i < LEVELS.length; i++) {
-    var el = document.getElementById("ms"+i);
-    el.className = "ms" + (d.pts>=LEVELS[i].min ? (lv.name===LEVELS[i].name?" cur":" on") : "");
+    var el = document.getElementById('ms'+i);
+    el.className = 'ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');
   }
   renderCats(d); renderPanel(d); renderTeam(); renderMyLog(d);
 }
@@ -534,85 +549,89 @@ function renderTeam() {
   for (var i = 0; i < keys.length; i++) { var m = teamData.members[keys[i]]; total += m.pts||0; list.push({name:m.name,pts:m.pts||0,acts:m.acts||0}); }
   list.sort(function(a,b){return b.pts-a.pts;});
   var pct = Math.min(Math.round(total/TEAM_GOAL*100),100);
-  document.getElementById("team-total").textContent = total;
-  document.getElementById("team-sub").textContent = list.length + (list.length===1?" participant":" participants");
-  document.getElementById("tpb").style.width = pct + "%";
-  document.getElementById("tpb-lbl").textContent = total + " / " + TEAM_GOAL + " pts team goal";
+  document.getElementById('team-total').textContent = total;
+  document.getElementById('team-sub').textContent = list.length+(list.length===1?' participant':' participants');
+  document.getElementById('tpb').style.width = pct+'%';
+  document.getElementById('tpb-lbl').textContent = total+' / '+TEAM_GOAL+' pts team goal';
   var maxPts = list.length && list[0].pts > 0 ? list[0].pts : 1;
-  var h = "";
+  var h = '';
   for (var i = 0; i < list.length; i++) {
     var m = list[i], isMe = m.name.toLowerCase()===currentUser.toLowerCase(), bp = Math.round(m.pts/maxPts*100);
-    h += "<div class=\"mrow\"><span class=\"mname\">" + m.name + (isMe?" <span class=\"you-tag\">you</span>":"") + "</span><div class=\"mbar-wrap\"><div class=\"mbar-fill\" style=\"width:"+bp+"%\"></div></div><span class=\"mpts\">" + m.pts + " pts</span><span class=\"macts\">" + m.acts + " actions</span></div>";
+    h += '<div class="mrow"><span class="mname">'+m.name+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';
   }
-  document.getElementById("mlist").innerHTML = h || "<div class=\"empty\">No participants yet</div>";
+  document.getElementById('mlist').innerHTML = h || '<div class="empty">No participants yet</div>';
 }
 
 function renderCats(d) {
-  var h = "";
-  for (var i = 0; i < CATS.length; i++) { var c = CATS[i]; h += "<button class=\"cat-pill" + (activeCat&&activeCat.id===c.id?" active":"") + "\" data-id=\"" + c.id + "\">" + c.name + " <span class=\"badge " + c.bc + "\">" + c.badge + "</span></button>"; }
-  document.getElementById("cats").innerHTML = h;
-  var pills = document.querySelectorAll(".cat-pill");
+  var h = '';
+  for (var i = 0; i < CATS.length; i++) { var c = CATS[i]; h += '<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>'; }
+  document.getElementById('cats').innerHTML = h;
+  var pills = document.querySelectorAll('.cat-pill');
   for (var i = 0; i < pills.length; i++) {
-    pills[i].addEventListener("click", function() {
+    pills[i].addEventListener('click', function() {
       var id = this.dataset.id;
       for (var j = 0; j < CATS.length; j++) { if (CATS[j].id===id) { activeCat=CATS[j]; break; } }
-      activeTag = "all"; var d = getUser(currentUser); renderCats(d); renderPanel(d);
+      activeTag = 'all'; var d = getUser(currentUser); renderCats(d); renderPanel(d);
     });
   }
 }
 
 function renderPanel(d) {
-  if (!activeCat) { document.getElementById("panel").innerHTML = "<div class=\"no-cat\"><p>Select a category above to see activities</p></div>"; return; }
+  if (!activeCat) { document.getElementById('panel').innerHTML = '<div class="no-cat"><p>Select a category above to see activities</p></div>'; return; }
   var cat = activeCat;
-  var tags = ["all"];
+  var tags = ['all'];
   for (var i = 0; i < cat.actions.length; i++) { if (tags.indexOf(cat.actions[i].tag)===-1) tags.push(cat.actions[i].tag); }
   var filtered = [];
-  for (var i = 0; i < cat.actions.length; i++) { if (activeTag==="all"||cat.actions[i].tag===activeTag) filtered.push(cat.actions[i]); }
-  var dc = 0; for (var i = 0; i < cat.actions.length; i++) { if (d.done[cat.id+"_"+i]) dc++; }
-  var h = "<div class=\"ph\"><span class=\"ptitle\">" + cat.name + "</span><span class=\"psub\">" + dc + " of " + cat.actions.length + " done</span></div>";
-  h += "<div class=\"filter-row\">";
-  for (var i = 0; i < tags.length; i++) h += "<button class=\"ftag" + (activeTag===tags[i]?" active":"") + "\" data-tag=\"" + tags[i] + "\">" + (tags[i]==="all"?"All":tags[i]) + "</button>";
-  h += "</div><div class=\"act-list\">";
+  for (var i = 0; i < cat.actions.length; i++) { if (activeTag==='all'||cat.actions[i].tag===activeTag) filtered.push(cat.actions[i]); }
+  var dc = 0; for (var i = 0; i < cat.actions.length; i++) { if (d.done[cat.id+'_'+i]) dc++; }
+  var h = '<div class="ph"><span class="ptitle">'+cat.name+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div>';
+  h += '<div class="filter-row">';
+  for (var i = 0; i < tags.length; i++) h += '<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
+  h += '</div><div class="act-list">';
   for (var i = 0; i < filtered.length; i++) {
-    var a = filtered[i], idx = cat.actions.indexOf(a), key = cat.id+"_"+idx, isDone = !!d.done[key];
-    h += "<div class=\"act" + (isDone?" done":"") + "\" data-key=\"" + key + "\" data-pts=\"" + a.pts + "\" data-text=\"" + a.text.replace(/"/g,"&quot;") + "\"><div class=\"chk\"><div class=\"tick\"></div></div><div class=\"act-body\"><div class=\"act-text\">" + a.text + "</div><div class=\"act-tag\">" + a.tag + "</div></div><span class=\"act-pts\">" + (isDone?"+":"") + a.pts + " pts</span></div>";
+    var a = filtered[i], idx = cat.actions.indexOf(a), key = cat.id+'_'+idx, isDone = !!d.done[key];
+    h += '<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'+':'')+a.pts+' pts</span></div>';
   }
-  h += "</div>";
-  document.getElementById("panel").innerHTML = h;
-  var ftags = document.querySelectorAll(".ftag");
-  for (var i = 0; i < ftags.length; i++) ftags[i].addEventListener("click", function() { activeTag = this.dataset.tag; renderPanel(getUser(currentUser)); });
-  var acts = document.querySelectorAll(".act");
+  h += '</div>';
+  document.getElementById('panel').innerHTML = h;
+  var ftags = document.querySelectorAll('.ftag');
+  for (var i = 0; i < ftags.length; i++) ftags[i].addEventListener('click', function() { activeTag = this.dataset.tag; renderPanel(getUser(currentUser)); });
+  var acts = document.querySelectorAll('.act');
   for (var i = 0; i < acts.length; i++) {
-    acts[i].addEventListener("click", function() {
+    acts[i].addEventListener('click', function() {
       var d = getUser(currentUser);
       var key = this.dataset.key; if (d.done[key]) return;
       var p = parseInt(this.dataset.pts), txt = this.dataset.text;
       d.done[key] = true; d.pts += p; d.acts += 1;
       d.log.push({text:txt,pts:p,catId:activeCat.id});
-      cloudSave(function() { renderAll(); });
+      saveData(function() { renderAll(); });
     });
   }
 }
 
 function renderMyLog(d) {
-  var el = document.getElementById("my-log");
-  if (!d.log||!d.log.length) { el.innerHTML = "<div class=\"empty\">No activities logged yet</div>"; return; }
-  var h = "";
-  for (var i = d.log.length-1; i >= 0; i--) h += "<div class=\"log-entry\"><span class=\"le-text\">" + d.log[i].text + "</span><span class=\"le-cat\">" + (CAT_NAMES[d.log[i].catId]||d.log[i].catId) + "</span><span class=\"le-pts\">+" + d.log[i].pts + " pts</span></div>";
+  var el = document.getElementById('my-log');
+  if (!d.log||!d.log.length) { el.innerHTML = '<div class="empty">No activities logged yet</div>'; return; }
+  var h = '';
+  for (var i = d.log.length-1; i >= 0; i--) h += '<div class="log-entry"><span class="le-text">'+d.log[i].text+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
   el.innerHTML = h;
 }
 
-/* ── INIT ── */
-document.getElementById("name-in").addEventListener("keydown", function(e) { if (e.key==="Enter"||e.keyCode===13) startSession(); });
+document.getElementById('name-in').addEventListener('keydown', function(e) { if (e.key==='Enter'||e.keyCode===13) startSession(); });
 
-window.addEventListener("load", function() {
-  cloudLoad(function() {
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("gate-page").classList.remove("hidden");
+function init() {
+  loadData(function() {
+    document.getElementById('gate-page').classList.remove('hidden');
     refreshGate();
-    try { var last = localStorage.getItem("ed_last_user"); if (last) document.getElementById("name-in").value = last; } catch(e) {}
+    try { var last = localStorage.getItem('ed_last_user'); if (last) document.getElementById('name-in').value = last; } catch(e) {}
   });
-});
+}
+
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(function() { setTimeout(init, 50); });
+} else {
+  window.addEventListener('load', function() { setTimeout(init, 50); });
+}
 </script>
 </body>
 </html>
