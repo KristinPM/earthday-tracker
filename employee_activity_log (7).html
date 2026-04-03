@@ -254,18 +254,56 @@ function loadData(cb) {
   xhr.send();
 }
 
-/* ── SAVE to JSONbin and localStorage ── */
+/* ── SAVE to JSONbin: read first, merge user, then write ──
+   This prevents two devices overwriting each other.
+   We fetch the latest bin, update only this user's entry,
+   then PUT the merged result back.
+── */
 function saveData(cb) {
+  /* always save locally for instant UI feedback */
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
   if (!hasRemote()) { if (cb) cb(); return; }
-  var xhr = new XMLHttpRequest();
-  xhr.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-  xhr.timeout = 8000;
-  xhr.onload = function() { if (cb) cb(); };
-  xhr.ontimeout = xhr.onerror = function() { if (cb) cb(); };
-  xhr.send(JSON.stringify(teamData));
+
+  /* Step 1: read current bin */
+  var rdr = new XMLHttpRequest();
+  rdr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+  rdr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+  rdr.setRequestHeader('X-Bin-Meta', 'false');
+  rdr.timeout = 8000;
+  rdr.onload = function() {
+    var merged = {members:{}};
+    /* parse whatever is already in the bin */
+    try {
+      var r = JSON.parse(rdr.responseText);
+      var existing = (r && r.members) ? r : (r && r.record && r.record.members ? r.record : null);
+      if (existing && existing.members) merged = existing;
+    } catch(e) {}
+
+    /* Step 2: overlay THIS user's latest data onto the merged object */
+    var k = slug(currentUser);
+    if (k && teamData.members[k]) {
+      merged.members[k] = teamData.members[k];
+    }
+
+    /* Update local teamData to reflect full merged picture */
+    teamData = merged;
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
+
+    /* Step 3: write merged data back to bin */
+    var wtr = new XMLHttpRequest();
+    wtr.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
+    wtr.setRequestHeader('Content-Type', 'application/json');
+    wtr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+    wtr.timeout = 8000;
+    wtr.onload = function() { if (cb) cb(); };
+    wtr.ontimeout = wtr.onerror = function() { if (cb) cb(); };
+    wtr.send(JSON.stringify(teamData));
+  };
+  rdr.ontimeout = rdr.onerror = function() {
+    /* bin read failed — write local data only, skip remote */
+    if (cb) cb();
+  };
+  rdr.send();
 }
 
 /* ── POLL for other users changes ── */
@@ -279,15 +317,14 @@ function startPoll() {
     xhr.setRequestHeader('X-Bin-Meta', 'false');
     xhr.timeout = 8000;
     xhr.onload = function() {
+      if (xhr.status !== 200) return;
       try {
         var r = JSON.parse(xhr.responseText);
         var d = (r && r.members) ? r : (r && r.record) ? r.record : null;
-        if (d && d.members) {
+        if (d && d.members && Object.keys(d.members).length > 0) {
           teamData = d;
-          if (currentUser) {
-            /* Full re-render so new employees and their points appear immediately */
-            renderAll();
-          }
+          try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e2) {}
+          if (currentUser) { renderAll(); }
         }
       } catch(e) {}
     };
