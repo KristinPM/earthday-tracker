@@ -112,11 +112,8 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 .badge-group{background:#FBEAF0;color:#72243E}
 .badge{font-size:9px;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:3px}
 .hidden{display:none}
-.sync-bar{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:.72rem;margin-bottom:14px}
-.sync-bar.ok{background:#e8f5e9;color:#2e7d32}
-.sync-bar.busy{background:#fff8e1;color:#f57f17}
-.sync-bar.err{background:#fff3e0;color:#e65100}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.notice{background:#e8f5e9;border-left:3px solid #639922;padding:10px 14px;border-radius:0 8px 8px 0;font-size:.78rem;color:#2e7d32;margin-bottom:14px;line-height:1.5}
+.notice a{color:#1b5e20;font-weight:700}
 </style>
 </head>
 <body>
@@ -138,9 +135,9 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 </div>
 
 <div class="page hidden" id="app-page">
-  <div id="sync-bar" class="sync-bar ok">
-    <span class="sync-dot"></span>
-    <span id="sync-msg">Points saved locally &mdash; visible to all on this device</span>
+
+  <div class="notice" id="sync-notice">
+    &#128994; Points saved on this device. To share across all employee devices, see setup instructions.
   </div>
 
   <div class="who-bar">
@@ -177,7 +174,7 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
   <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
 
   <div class="team-card">
-    <h3>Team total <span style="font-size:.7rem;color:#aaa;font-family:Lato,sans-serif;font-weight:400" id="team-scope">(this device)</span></h3>
+    <h3>Team total</h3>
     <div class="team-big" id="team-total">0</div>
     <div class="team-sub" id="team-sub">0 participants</div>
     <div class="tpb-wrap"><div class="tpb-fill" id="tpb" style="width:0%"></div></div>
@@ -203,138 +200,109 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════
-   STORAGE STRATEGY
-   This file works in two modes automatically:
+/* ═══════════════════════════════════════════════════
+   CROSS-DEVICE SYNC SETUP
+   This file works immediately with no setup needed
+   (localStorage mode — same device only).
 
-   MODE 1 — JSONbin.io (FREE, cross-device, real-time)
-   Set JSONBIN_ID and JSONBIN_KEY below.
-   Sign up free at jsonbin.io, create a bin, copy the ID
-   and your Master Key. All employees share the same bin.
-   The tree display reads the same bin every 10 seconds.
-
-   MODE 2 — localStorage fallback (same device only)
-   If no JSONbin key is set, falls back to localStorage.
-   Works for demos on a single device.
-═══════════════════════════════════════════════════════ */
-
-/* ── CONFIGURE THESE FOR CROSS-DEVICE SYNC ── */
-var JSONBIN_ID  = '69cfe99336566621a877ae8f';  
-var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';  
-/* ─────────────────────────────────────────── */
+   For cross-device sync, paste your JSONbin details:
+   1. Go to jsonbin.io and create a free account
+   2. Click New Bin, paste {"members":{}} and Save
+   3. Copy the Bin ID from the URL
+   4. Go to Account and copy your Master Key
+   5. Paste both below — same values in tree_display.html
+═══════════════════════════════════════════════════ */
+var JSONBIN_ID  = '69cfe99336566621a877ae8f';
+var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
+/* ═══════════════════════════════════════════════════ */
 
 var LOCAL_KEY  = 'ed_team_v1';
 var TEAM_GOAL  = 100;
-var POLL_MS    = 12000;
-var USE_REMOTE = !!(JSONBIN_ID && JSONBIN_KEY);
-
+var POLL_MS    = 15000;
+var pollTimer  = null;
 var teamData   = {members:{}};
 var currentUser = '';
 var activeCat   = null;
 var activeTag   = 'all';
-var pollTimer   = null;
 
-/* ── SYNC STATUS ── */
-function setSyncUI(state, msg) {
-  var bar = document.getElementById('sync-bar');
-  var txt = document.getElementById('sync-msg');
-  if (!bar) return;
-  bar.className = 'sync-bar ' + state;
-  txt.textContent = msg;
-  var scope = document.getElementById('team-scope');
-  if (scope) scope.textContent = USE_REMOTE ? '(all employees, all devices)' : '(this device only)';
-}
+function hasRemote() { return !!(JSONBIN_ID && JSONBIN_KEY); }
 
-/* ── REMOTE LOAD (JSONbin) ── */
-function remoteLoad(cb) {
-  setSyncUI('busy', 'Loading team data...');
+/* ── LOAD from JSONbin or localStorage ── */
+function loadData(cb) {
+  if (!hasRemote()) {
+    try {
+      var s = localStorage.getItem(LOCAL_KEY);
+      if (s) { var d = JSON.parse(s); if (d && d.members) teamData = d; }
+    } catch(e) {}
+    if (cb) cb();
+    return;
+  }
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
   xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
   xhr.setRequestHeader('X-Bin-Meta', 'false');
+  xhr.timeout = 8000;
   xhr.onload = function() {
     try {
-      var parsed = JSON.parse(xhr.responseText);
-      if (parsed && parsed.members) {
-        teamData = parsed;
-      } else if (parsed && parsed.record && parsed.record.members) {
-        teamData = parsed.record;
-      }
-      setSyncUI('ok', 'Live \u2014 synced across all devices');
-    } catch(e) {
-      setSyncUI('err', 'Could not load \u2014 using local data');
-    }
+      var r = JSON.parse(xhr.responseText);
+      var d = (r && r.members) ? r : (r && r.record) ? r.record : null;
+      if (d && d.members) teamData = d;
+    } catch(e) {}
     if (cb) cb();
   };
-  xhr.onerror = function() {
-    setSyncUI('err', 'Offline \u2014 using local data');
-    if (cb) cb();
-  };
+  xhr.ontimeout = xhr.onerror = function() { if (cb) cb(); };
   xhr.send();
 }
 
-/* ── REMOTE SAVE (JSONbin) ── */
-function remoteSave(cb) {
-  setSyncUI('busy', 'Saving...');
+/* ── SAVE to JSONbin and localStorage ── */
+function saveData(cb) {
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
+  if (!hasRemote()) { if (cb) cb(); return; }
   var xhr = new XMLHttpRequest();
   xhr.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-  xhr.onload = function() {
-    setSyncUI('ok', 'Saved \u2014 visible to all employees');
-    if (cb) cb();
-  };
-  xhr.onerror = function() {
-    setSyncUI('err', 'Save failed \u2014 saved locally only');
-    if (cb) cb();
-  };
+  xhr.timeout = 8000;
+  xhr.onload = function() { if (cb) cb(); };
+  xhr.ontimeout = xhr.onerror = function() { if (cb) cb(); };
   xhr.send(JSON.stringify(teamData));
 }
 
-/* ── LOCAL LOAD/SAVE ── */
-function localLoad() {
-  try {
-    var s = localStorage.getItem(LOCAL_KEY);
-    if (s) { var d = JSON.parse(s); if (d && d.members) teamData = d; }
-  } catch(e) {}
-  setSyncUI('ok', 'Saved locally \u2014 visible on this device only');
-}
-
-function localSave() {
-  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
-  setSyncUI('ok', 'Saved locally \u2014 visible on this device only');
-}
-
-/* ── UNIFIED LOAD/SAVE ── */
-function loadData(cb) {
-  if (USE_REMOTE) remoteLoad(cb);
-  else { localLoad(); if (cb) cb(); }
-}
-
-function saveData(cb) {
-  if (USE_REMOTE) remoteSave(cb);
-  else { localSave(); if (cb) cb(); }
-}
-
-/* ── BACKGROUND POLL ── */
+/* ── POLL for other users changes ── */
 function startPoll() {
-  if (!USE_REMOTE) return;
+  if (!hasRemote()) return;
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(function() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
     xhr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
     xhr.setRequestHeader('X-Bin-Meta', 'false');
+    xhr.timeout = 8000;
     xhr.onload = function() {
       try {
-        var parsed = JSON.parse(xhr.responseText);
-        var incoming = (parsed && parsed.members) ? parsed : (parsed && parsed.record && parsed.record.members ? parsed.record : null);
-        if (incoming) { teamData = incoming; if (currentUser) { renderTeam(); } }
+        var r = JSON.parse(xhr.responseText);
+        var d = (r && r.members) ? r : (r && r.record) ? r.record : null;
+        if (d && d.members) { teamData = d; if (currentUser) renderTeam(); }
       } catch(e) {}
     };
     xhr.send();
   }, POLL_MS);
+}
+
+function updateNotice() {
+  var el = document.getElementById('sync-notice');
+  if (!el) return;
+  if (hasRemote()) {
+    el.innerHTML = '&#128994; Cross-device sync active &mdash; points shared with all employees in real time.';
+    el.style.background = '#e8f5e9';
+    el.style.borderColor = '#639922';
+    el.style.color = '#2e7d32';
+  } else {
+    el.innerHTML = '&#128993; Local mode &mdash; points visible on this device only. To share across all devices, add your JSONbin ID and Key to the script.';
+    el.style.background = '#fff8e1';
+    el.style.borderColor = '#f9a825';
+    el.style.color = '#795548';
+  }
 }
 
 /* ── DATA HELPERS ── */
@@ -344,16 +312,10 @@ function getUser(name) {
   if (!teamData.members[k]) teamData.members[k] = {name:name,pts:0,acts:0,done:{},log:[]};
   return teamData.members[k];
 }
-function teamTotal() {
-  var t = 0, keys = Object.keys(teamData.members);
-  for (var i = 0; i < keys.length; i++) t += teamData.members[keys[i]].pts || 0;
-  return t;
-}
 
-var LEVELS = [{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
-var CAT_NAMES = {home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
-
-var CATS = [
+var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
+var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
+var CATS=[
   {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Unplug unused devices for a week',tag:'quick win',pts:3},
     {text:'Switch to LED bulbs in 3+ fixtures',tag:'quick win',pts:4},
@@ -467,171 +429,147 @@ var CATS = [
 function glv(p){var l=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(p>=LEVELS[i].min)l=LEVELS[i];}return l;}
 function nlv(p){for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].min>p)return LEVELS[i];}return null;}
 
-function refreshGate() {
-  var keys = Object.keys(teamData.members);
-  var wrap = document.getElementById('prev-wrap');
-  if (!keys.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-  var h = '';
-  for (var i = 0; i < keys.length; i++) {
-    var m = teamData.members[keys[i]];
-    h += '<button class="chip" data-name="'+m.name+'">'+m.name+' ('+m.pts+' pts)</button>';
-  }
-  document.getElementById('chip-row').innerHTML = h;
-  var chips = document.querySelectorAll('.chip');
-  for (var i = 0; i < chips.length; i++) {
-    chips[i].addEventListener('click', function() {
-      document.getElementById('name-in').value = this.dataset.name;
-      startSession();
-    });
-  }
+function refreshGate(){
+  var keys=Object.keys(teamData.members);
+  var wrap=document.getElementById('prev-wrap');
+  if(!keys.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  var h='';
+  for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];h+='<button class="chip" data-name="'+m.name+'">'+m.name+' ('+m.pts+' pts)</button>';}
+  document.getElementById('chip-row').innerHTML=h;
+  var chips=document.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++) chips[i].addEventListener('click',function(){document.getElementById('name-in').value=this.dataset.name;startSession();});
 }
 
-function startSession() {
-  var n = document.getElementById('name-in').value.trim();
-  if (!n) { document.getElementById('gate-err').textContent = 'Please enter your name to continue.'; return; }
-  currentUser = n;
-  getUser(n);
-  saveData(function() {
-    try { localStorage.setItem('ed_last_user', n); } catch(e) {}
+function startSession(){
+  var n=document.getElementById('name-in').value.trim();
+  if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
+  currentUser=n; getUser(n);
+  saveData(function(){
+    try{localStorage.setItem('ed_last_user',n);}catch(e){}
     document.getElementById('gate-page').classList.add('hidden');
     document.getElementById('app-page').classList.remove('hidden');
-    activeCat = null; activeTag = 'all';
+    updateNotice();
+    activeCat=null; activeTag='all';
     renderAll();
     startPoll();
   });
 }
 
-function switchUser() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  currentUser = ''; activeCat = null; activeTag = 'all';
+function switchUser(){
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  currentUser=''; activeCat=null; activeTag='all';
   document.getElementById('app-page').classList.add('hidden');
   document.getElementById('gate-page').classList.remove('hidden');
-  document.getElementById('name-in').value = '';
-  document.getElementById('gate-err').textContent = '';
+  document.getElementById('name-in').value='';
+  document.getElementById('gate-err').textContent='';
   refreshGate();
 }
 
-function showReset() {
-  document.getElementById('modal-msg').textContent = 'This will clear all of '+currentUser+"'s activities and points. Cannot be undone.";
+function showReset(){
+  document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s activities and points.";
   document.getElementById('modal').classList.remove('hidden');
 }
-function hideReset() { document.getElementById('modal').classList.add('hidden'); }
-function doReset() {
+function hideReset(){document.getElementById('modal').classList.add('hidden');}
+function doReset(){
   hideReset();
-  var k = slug(currentUser);
-  teamData.members[k] = {name:currentUser,pts:0,acts:0,done:{},log:[]};
-  saveData(function() { activeCat = null; activeTag = 'all'; renderAll(); });
+  var k=slug(currentUser);
+  teamData.members[k]={name:currentUser,pts:0,acts:0,done:{},log:[]};
+  saveData(function(){activeCat=null;activeTag='all';renderAll();});
 }
 
-function renderAll() {
-  var d = getUser(currentUser);
-  document.getElementById('who-name').textContent = d.name;
-  document.getElementById('who-meta').textContent = d.pts+' points  \u00b7  '+d.acts+' actions completed';
-  document.getElementById('s-pts').textContent  = d.pts;
-  document.getElementById('s-acts').textContent = d.acts;
-  var lv = glv(d.pts), nx = nlv(d.pts);
-  document.getElementById('s-lvl').textContent = lv.name;
-  var pct = 0, lbl = 'Max level reached!';
-  if (nx) { pct = Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100); lbl = d.pts+' / '+nx.min+' pts to '+nx.name; } else pct = 100;
-  document.getElementById('pb').style.width = pct+'%';
-  document.getElementById('pb-lbl').textContent = lbl;
-  document.getElementById('pb-pct').textContent = pct+'%';
-  for (var i = 0; i < LEVELS.length; i++) {
-    var el = document.getElementById('ms'+i);
-    el.className = 'ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');
-  }
-  renderCats(d); renderPanel(d); renderTeam(); renderMyLog(d);
+function renderAll(){
+  var d=getUser(currentUser);
+  document.getElementById('who-name').textContent=d.name;
+  document.getElementById('who-meta').textContent=d.pts+' points  \u00b7  '+d.acts+' actions completed';
+  document.getElementById('s-pts').textContent=d.pts;
+  document.getElementById('s-acts').textContent=d.acts;
+  var lv=glv(d.pts),nx=nlv(d.pts);
+  document.getElementById('s-lvl').textContent=lv.name;
+  var pct=0,lbl='Max level reached!';
+  if(nx){pct=Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100);lbl=d.pts+' / '+nx.min+' pts to '+nx.name;}else pct=100;
+  document.getElementById('pb').style.width=pct+'%';
+  document.getElementById('pb-lbl').textContent=lbl;
+  document.getElementById('pb-pct').textContent=pct+'%';
+  for(var i=0;i<LEVELS.length;i++){var el=document.getElementById('ms'+i);el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');}
+  renderCats(d);renderPanel(d);renderTeam();renderMyLog(d);
 }
 
-function renderTeam() {
-  var keys = Object.keys(teamData.members), total = 0, list = [];
-  for (var i = 0; i < keys.length; i++) { var m = teamData.members[keys[i]]; total += m.pts||0; list.push({name:m.name,pts:m.pts||0,acts:m.acts||0}); }
+function renderTeam(){
+  var keys=Object.keys(teamData.members),total=0,list=[];
+  for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];total+=m.pts||0;list.push({name:m.name,pts:m.pts||0,acts:m.acts||0});}
   list.sort(function(a,b){return b.pts-a.pts;});
-  var pct = Math.min(Math.round(total/TEAM_GOAL*100),100);
-  document.getElementById('team-total').textContent = total;
-  document.getElementById('team-sub').textContent = list.length+(list.length===1?' participant':' participants');
-  document.getElementById('tpb').style.width = pct+'%';
-  document.getElementById('tpb-lbl').textContent = total+' / '+TEAM_GOAL+' pts team goal';
-  var maxPts = list.length && list[0].pts > 0 ? list[0].pts : 1;
-  var h = '';
-  for (var i = 0; i < list.length; i++) {
-    var m = list[i], isMe = m.name.toLowerCase()===currentUser.toLowerCase(), bp = Math.round(m.pts/maxPts*100);
-    h += '<div class="mrow"><span class="mname">'+m.name+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';
-  }
-  document.getElementById('mlist').innerHTML = h || '<div class="empty">No participants yet</div>';
+  var pct=Math.min(Math.round(total/TEAM_GOAL*100),100);
+  document.getElementById('team-total').textContent=total;
+  document.getElementById('team-sub').textContent=list.length+(list.length===1?' participant':' participants');
+  document.getElementById('tpb').style.width=pct+'%';
+  document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
+  var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
+  var h='';
+  for(var i=0;i<list.length;i++){var m=list[i],isMe=m.name.toLowerCase()===currentUser.toLowerCase(),bp=Math.round(m.pts/maxPts*100);h+='<div class="mrow"><span class="mname">'+m.name+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';}
+  document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
 
-function renderCats(d) {
-  var h = '';
-  for (var i = 0; i < CATS.length; i++) { var c = CATS[i]; h += '<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>'; }
-  document.getElementById('cats').innerHTML = h;
-  var pills = document.querySelectorAll('.cat-pill');
-  for (var i = 0; i < pills.length; i++) {
-    pills[i].addEventListener('click', function() {
-      var id = this.dataset.id;
-      for (var j = 0; j < CATS.length; j++) { if (CATS[j].id===id) { activeCat=CATS[j]; break; } }
-      activeTag = 'all'; var d = getUser(currentUser); renderCats(d); renderPanel(d);
-    });
-  }
+function renderCats(d){
+  var h='';
+  for(var i=0;i<CATS.length;i++){var c=CATS[i];h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>';}
+  document.getElementById('cats').innerHTML=h;
+  var pills=document.querySelectorAll('.cat-pill');
+  for(var i=0;i<pills.length;i++) pills[i].addEventListener('click',function(){var id=this.dataset.id;for(var j=0;j<CATS.length;j++){if(CATS[j].id===id){activeCat=CATS[j];break;}}activeTag='all';var d=getUser(currentUser);renderCats(d);renderPanel(d);});
 }
 
-function renderPanel(d) {
-  if (!activeCat) { document.getElementById('panel').innerHTML = '<div class="no-cat"><p>Select a category above to see activities</p></div>'; return; }
-  var cat = activeCat;
-  var tags = ['all'];
-  for (var i = 0; i < cat.actions.length; i++) { if (tags.indexOf(cat.actions[i].tag)===-1) tags.push(cat.actions[i].tag); }
-  var filtered = [];
-  for (var i = 0; i < cat.actions.length; i++) { if (activeTag==='all'||cat.actions[i].tag===activeTag) filtered.push(cat.actions[i]); }
-  var dc = 0; for (var i = 0; i < cat.actions.length; i++) { if (d.done[cat.id+'_'+i]) dc++; }
-  var h = '<div class="ph"><span class="ptitle">'+cat.name+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div>';
-  h += '<div class="filter-row">';
-  for (var i = 0; i < tags.length; i++) h += '<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
-  h += '</div><div class="act-list">';
-  for (var i = 0; i < filtered.length; i++) {
-    var a = filtered[i], idx = cat.actions.indexOf(a), key = cat.id+'_'+idx, isDone = !!d.done[key];
-    h += '<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'+':'')+a.pts+' pts</span></div>';
-  }
-  h += '</div>';
-  document.getElementById('panel').innerHTML = h;
-  var ftags = document.querySelectorAll('.ftag');
-  for (var i = 0; i < ftags.length; i++) ftags[i].addEventListener('click', function() { activeTag = this.dataset.tag; renderPanel(getUser(currentUser)); });
-  var acts = document.querySelectorAll('.act');
-  for (var i = 0; i < acts.length; i++) {
-    acts[i].addEventListener('click', function() {
-      var d = getUser(currentUser);
-      var key = this.dataset.key; if (d.done[key]) return;
-      var p = parseInt(this.dataset.pts), txt = this.dataset.text;
-      d.done[key] = true; d.pts += p; d.acts += 1;
+function renderPanel(d){
+  if(!activeCat){document.getElementById('panel').innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';return;}
+  var cat=activeCat;
+  var tags=['all'];for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
+  var filtered=[];for(var i=0;i<cat.actions.length;i++){if(activeTag==='all'||cat.actions[i].tag===activeTag)filtered.push(cat.actions[i]);}
+  var dc=0;for(var i=0;i<cat.actions.length;i++){if(d.done[cat.id+'_'+i])dc++;}
+  var h='<div class="ph"><span class="ptitle">'+cat.name+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div>';
+  h+='<div class="filter-row">';
+  for(var i=0;i<tags.length;i++) h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
+  h+='</div><div class="act-list">';
+  for(var i=0;i<filtered.length;i++){var a=filtered[i],idx=cat.actions.indexOf(a),key=cat.id+'_'+idx,isDone=!!d.done[key];h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'+':'')+a.pts+' pts</span></div>';}
+  h+='</div>';
+  document.getElementById('panel').innerHTML=h;
+  var ftags=document.querySelectorAll('.ftag');
+  for(var i=0;i<ftags.length;i++) ftags[i].addEventListener('click',function(){activeTag=this.dataset.tag;renderPanel(getUser(currentUser));});
+  var acts=document.querySelectorAll('.act');
+  for(var i=0;i<acts.length;i++){
+    acts[i].addEventListener('click',function(){
+      var d=getUser(currentUser);
+      var key=this.dataset.key;if(d.done[key])return;
+      var p=parseInt(this.dataset.pts),txt=this.dataset.text;
+      d.done[key]=true;d.pts+=p;d.acts+=1;
       d.log.push({text:txt,pts:p,catId:activeCat.id});
-      saveData(function() { renderAll(); });
+      saveData(function(){renderAll();});
     });
   }
 }
 
-function renderMyLog(d) {
-  var el = document.getElementById('my-log');
-  if (!d.log||!d.log.length) { el.innerHTML = '<div class="empty">No activities logged yet</div>'; return; }
-  var h = '';
-  for (var i = d.log.length-1; i >= 0; i--) h += '<div class="log-entry"><span class="le-text">'+d.log[i].text+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
-  el.innerHTML = h;
+function renderMyLog(d){
+  var el=document.getElementById('my-log');
+  if(!d.log||!d.log.length){el.innerHTML='<div class="empty">No activities logged yet</div>';return;}
+  var h='';
+  for(var i=d.log.length-1;i>=0;i--) h+='<div class="log-entry"><span class="le-text">'+d.log[i].text+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
+  el.innerHTML=h;
 }
 
-document.getElementById('name-in').addEventListener('keydown', function(e) { if (e.key==='Enter'||e.keyCode===13) startSession(); });
+document.getElementById('name-in').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13)startSession();});
 
-function init() {
-  loadData(function() {
-    document.getElementById('gate-page').classList.remove('hidden');
-    refreshGate();
-    try { var last = localStorage.getItem('ed_last_user'); if (last) document.getElementById('name-in').value = last; } catch(e) {}
-  });
+/* INIT — no spinner, loads localStorage instantly then shows gate */
+function init(){
+  try{var s=localStorage.getItem(LOCAL_KEY);if(s){var d=JSON.parse(s);if(d&&d.members)teamData=d;}}catch(e){}
+  document.getElementById('gate-page').classList.remove('hidden');
+  refreshGate();
+  try{var last=localStorage.getItem('ed_last_user');if(last)document.getElementById('name-in').value=last;}catch(e){}
+  /* if remote configured, refresh data in background without blocking UI */
+  if(hasRemote()){
+    loadData(function(){refreshGate();});
+  }
 }
 
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(function() { setTimeout(init, 50); });
-} else {
-  window.addEventListener('load', function() { setTimeout(init, 50); });
-}
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){setTimeout(init,30);});}
+else{window.addEventListener('load',function(){setTimeout(init,30);});}
 </script>
 </body>
 </html>
