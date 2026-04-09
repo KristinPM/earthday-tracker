@@ -99,6 +99,13 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
 .le-cat{font-size:10px;padding:1px 7px;border-radius:999px;background:#EAF3DE;color:#27500A;flex-shrink:0}
 .le-pts{color:#639922;font-weight:700;flex-shrink:0;font-size:11px}
 .empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
+
+
+
+
+
+
+
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
 .modal{background:white;border-radius:16px;padding:26px;max-width:340px;width:100%;text-align:center}
 .modal h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:#1a1a1a;margin-bottom:7px}
@@ -188,6 +195,9 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
   </div>
 </div>
 
+
+
+
 <div class="modal-bg hidden" id="modal">
   <div class="modal">
     <h3>Reset your points?</h3>
@@ -218,7 +228,7 @@ var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK'
 
 var LOCAL_KEY  = 'ed_team_v1';
 var TEAM_GOAL  = 100;
-var POLL_MS    = 8000;
+var POLL_MS    = 5000;
 var pollTimer  = null;
 var teamData   = {members:{}};
 var currentUser = '';
@@ -254,55 +264,61 @@ function loadData(cb) {
   xhr.send();
 }
 
-/* ── SAVE to JSONbin: read first, merge user, then write ──
-   This prevents two devices overwriting each other.
-   We fetch the latest bin, update only this user's entry,
-   then PUT the merged result back.
+/* ── SAVE: instant local update + background push to JSONbin ──
+   UI updates immediately from localStorage.
+   JSONbin push happens in the background — no waiting.
+   The background push merges this user's entry with whatever
+   is already in the bin so no other user's data is lost.
 ── */
 function saveData(cb) {
-  /* always save locally for instant UI feedback */
+  /* Step 1: save locally and update UI immediately — zero delay */
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
-  if (!hasRemote()) { if (cb) cb(); return; }
+  if (cb) cb();
 
-  /* Step 1: read current bin */
+  /* Step 2: push to JSONbin in background (non-blocking) */
+  if (!hasRemote()) return;
+  pushToRemote();
+}
+
+/* Separate function so it can be called independently */
+function pushToRemote() {
+  if (!hasRemote()) return;
+  var k = slug(currentUser);
+  var myEntry = teamData.members[k] ? teamData.members[k] : null;
+  if (!myEntry) return;
+
+  /* Read current bin first to get all other users */
   var rdr = new XMLHttpRequest();
   rdr.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
   rdr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
   rdr.setRequestHeader('X-Bin-Meta', 'false');
-  rdr.timeout = 8000;
+  rdr.timeout = 10000;
   rdr.onload = function() {
     var merged = {members:{}};
-    /* parse whatever is already in the bin */
-    try {
-      var r = JSON.parse(rdr.responseText);
-      var existing = (r && r.members) ? r : (r && r.record && r.record.members ? r.record : null);
-      if (existing && existing.members) merged = existing;
-    } catch(e) {}
-
-    /* Step 2: overlay THIS user's latest data onto the merged object */
-    var k = slug(currentUser);
-    if (k && teamData.members[k]) {
-      merged.members[k] = teamData.members[k];
+    if (rdr.status === 200) {
+      try {
+        var r = JSON.parse(rdr.responseText);
+        var existing = (r && r.members) ? r : (r && r.record && r.record.members ? r.record : null);
+        if (existing && existing.members) merged = existing;
+      } catch(e) {}
     }
-
-    /* Update local teamData to reflect full merged picture */
-    teamData = merged;
-    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData)); } catch(e) {}
-
-    /* Step 3: write merged data back to bin */
+    /* Overlay only this user's entry */
+    merged.members[k] = myEntry;
+    /* Write merged result back */
     var wtr = new XMLHttpRequest();
     wtr.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
     wtr.setRequestHeader('Content-Type', 'application/json');
     wtr.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-    wtr.timeout = 8000;
-    wtr.onload = function() { if (cb) cb(); };
-    wtr.ontimeout = wtr.onerror = function() { if (cb) cb(); };
-    wtr.send(JSON.stringify(teamData));
+    wtr.timeout = 10000;
+    wtr.onload = function() {
+      if (wtr.status === 200) {
+        /* Signal the tree display to sync immediately */
+        try { localStorage.setItem('ed_team_updated', String(Date.now())); } catch(e) {}
+      }
+    };
+    wtr.send(JSON.stringify(merged));
   };
-  rdr.ontimeout = rdr.onerror = function() {
-    /* bin read failed — write local data only, skip remote */
-    if (cb) cb();
-  };
+  rdr.ontimeout = rdr.onerror = function() { /* silent fail — will retry next poll */ };
   rdr.send();
 }
 
@@ -488,18 +504,18 @@ function startSession(){
   var n=document.getElementById('name-in').value.trim();
   if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
   currentUser=n;
-  /* Load latest data from JSONbin first so we see all employees */
+  /* Load latest from JSONbin first so we see all employees immediately */
   loadData(function(){
     getUser(n);
-    saveData(function(){
-      try{localStorage.setItem('ed_last_user',n);}catch(e){}
-      document.getElementById('gate-page').classList.add('hidden');
-      document.getElementById('app-page').classList.remove('hidden');
-      updateNotice();
-      activeCat=null; activeTag='all';
-      renderAll();
-      startPoll();
-    });
+    try{localStorage.setItem('ed_last_user',n);}catch(e){}
+    document.getElementById('gate-page').classList.add('hidden');
+    document.getElementById('app-page').classList.remove('hidden');
+    updateNotice();
+    activeCat=null; activeTag='all';
+    renderAll();
+    startPoll();
+    /* Push this user's entry to JSONbin in background */
+    pushToRemote();
   });
 }
 
@@ -513,8 +529,11 @@ function switchUser(){
   refreshGate();
 }
 
+
+
+
 function showReset(){
-  document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s activities and points.";
+  document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s logged activities and points.";
   document.getElementById('modal').classList.remove('hidden');
 }
 function hideReset(){document.getElementById('modal').classList.add('hidden');}
@@ -522,7 +541,8 @@ function doReset(){
   hideReset();
   var k=slug(currentUser);
   teamData.members[k]={name:currentUser,pts:0,acts:0,done:{},log:[]};
-  saveData(function(){activeCat=null;activeTag='all';renderAll();});
+  activeCat=null; activeTag='all'; renderAll();
+  saveData(null);
 }
 
 function renderAll(){
@@ -575,7 +595,7 @@ function renderPanel(d){
   h+='<div class="filter-row">';
   for(var i=0;i<tags.length;i++) h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
   h+='</div><div class="act-list">';
-  for(var i=0;i<filtered.length;i++){var a=filtered[i],idx=cat.actions.indexOf(a),key=cat.id+'_'+idx,isDone=!!d.done[key];h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'+':'')+a.pts+' pts</span></div>';}
+  for(var i=0;i<filtered.length;i++){var a=filtered[i],idx=cat.actions.indexOf(a),key=cat.id+'_'+idx,isDone=!!d.done[key];h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'- '+a.pts+' undo':'+'+a.pts)+' pts</span></div>';}
   h+='</div>';
   document.getElementById('panel').innerHTML=h;
   var ftags=document.querySelectorAll('.ftag');
@@ -584,11 +604,25 @@ function renderPanel(d){
   for(var i=0;i<acts.length;i++){
     acts[i].addEventListener('click',function(){
       var d=getUser(currentUser);
-      var key=this.dataset.key;if(d.done[key])return;
+      var key=this.dataset.key;
       var p=parseInt(this.dataset.pts),txt=this.dataset.text;
-      d.done[key]=true;d.pts+=p;d.acts+=1;
-      d.log.push({text:txt,pts:p,catId:activeCat.id});
-      saveData(function(){renderAll();});
+      if(d.done[key]){
+        /* Already done — REMOVE it (undo) */
+        delete d.done[key];
+        d.pts=Math.max(0,d.pts-p);
+        d.acts=Math.max(0,d.acts-1);
+        /* Remove from log */
+        for(var li=d.log.length-1;li>=0;li--){
+          if(d.log[li].text===txt&&d.log[li].catId===activeCat.id){d.log.splice(li,1);break;}
+        }
+      } else {
+        /* Not done — ADD it */
+        d.done[key]=true;
+        d.pts+=p;d.acts+=1;
+        d.log.push({text:txt,pts:p,catId:activeCat.id});
+      }
+      renderAll();
+      saveData(null);
     });
   }
 }
