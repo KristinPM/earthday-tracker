@@ -40,13 +40,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#eef1ea;font-family:
   <div class="lvs" id="LV"></div>
 </div>
 <script>
-var SP_GOAL = 100;
+var SP_GOAL = 500;
 var LVS=[
   {n:'Seedling',e:'&#127807;',p:0,  c:'#66bb6a'},
-  {n:'Sprout',  e:'&#127807;',p:10, c:'#26a69a'},
-  {n:'Grower',  e:'&#127795;',p:25, c:'#42a5f5'},
-  {n:'Guardian',e:'&#128737;',p:50, c:'#ab47bc'},
-  {n:'Champion',e:'&#127942;',p:100,c:'#ffa726'}
+  {n:'Sprout',  e:'&#127807;',p:125, c:'#26a69a'},
+  {n:'Grower',  e:'&#127795;',p:250, c:'#42a5f5'},
+  {n:'Guardian',e:'&#128737;',p:375, c:'#ab47bc'},
+  {n:'Champion',e:'&#127942;',p:500,c:'#ffa726'}
 ];
 function glv(p){var l=LVS[0];for(var i=0;i<LVS.length;i++){if(p>=LVS[i].p)l=LVS[i];}return l;}
 
