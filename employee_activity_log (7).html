@@ -167,13 +167,13 @@ body{font-family:'Lato',sans-serif;background:#f4f4f2;min-height:100vh;padding:0
   <div class="lv-card">
     <h3>My level progress</h3>
     <div class="pb-wrap"><div class="pb-fill" id="pb" style="width:0%"></div></div>
-    <div class="pb-meta"><span id="pb-lbl">0 / 10 pts to Sprout</span><span id="pb-pct">0%</span></div>
+    <div class="pb-meta"><span id="pb-lbl">0 / 125 pts to Sprout</span><span id="pb-pct">0%</span></div>
     <div class="ms-row">
       <div class="ms cur" id="ms0"><div class="ms-dot"></div>Seedling<br>0</div>
-      <div class="ms" id="ms1"><div class="ms-dot"></div>Sprout<br>10</div>
-      <div class="ms" id="ms2"><div class="ms-dot"></div>Grower<br>25</div>
-      <div class="ms" id="ms3"><div class="ms-dot"></div>Guardian<br>50</div>
-      <div class="ms" id="ms4"><div class="ms-dot"></div>Champion<br>100</div>
+      <div class="ms" id="ms1"><div class="ms-dot"></div>Sprout<br>125</div>
+      <div class="ms" id="ms2"><div class="ms-dot"></div>Grower<br>250</div>
+      <div class="ms" id="ms3"><div class="ms-dot"></div>Guardian<br>375</div>
+      <div class="ms" id="ms4"><div class="ms-dot"></div>Champion<br>500</div>
     </div>
   </div>
 
@@ -227,7 +227,7 @@ var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK'
 /* ═══════════════════════════════════════════════════ */
 
 var LOCAL_KEY  = 'ed_team_v1';
-var TEAM_GOAL  = 100;
+var TEAM_GOAL  = 500;
 var POLL_MS    = 5000;
 var pollTimer  = null;
 var teamData   = {members:{}};
@@ -372,7 +372,7 @@ function getUser(name) {
   return teamData.members[k];
 }
 
-var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:10},{name:'Grower',min:25},{name:'Guardian',min:50},{name:'Champion',min:100}];
+var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:125},{name:'Grower',min:250},{name:'Guardian',min:375},{name:'Champion',min:500}];
 var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
 var CATS=[
   {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
