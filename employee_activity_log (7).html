@@ -199,7 +199,7 @@ var JSONBIN_ID  = '69cff25faaba882197c08a39';
 var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
 var LOCAL_KEY   = 'ed_team_v2';
 var TEAM_GOAL   = 500;
-var POLL_MS     = 20000;
+var POLL_MS     = 8000;
 var pollTimer   = null;
 var saveTimer   = null;
 var teamData    = {members:{}};
@@ -255,7 +255,7 @@ function saveData(){
   saveLocal();
   if(!hasRemote())return;
   if(saveTimer)clearTimeout(saveTimer);
-  saveTimer=setTimeout(pushToRemote,600);
+  saveTimer=setTimeout(pushToRemote,300);
 }
 
 function pushToRemote(){
