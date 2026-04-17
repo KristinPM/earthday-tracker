@@ -4,40 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Activity Log</title>
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:"Aptos","Segoe UI",Arial,sans-serif;
-  background:transparent;
-  min-height:100vh;
-  padding:0 0 48px;
-}
+body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-height:100vh;padding:0 0 48px}
 .page{max-width:760px;margin:0 auto;padding:24px 16px 0}
 .gate{background:white;border-radius:16px;border:.5px solid #e4e4e2;padding:36px 28px;text-align:center}
-.gate h2{
-  font-family:"Aptos","Segoe UI",Arial,sans-serif;
-  font-size:2rem;
-  font-weight:700;
-  color:#1a1a1a;
-}
+.gate h2{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:2rem;font-weight:700;color:#1a1a1a}
 .gate p{font-size:.88rem;color:#888;margin-bottom:22px;line-height:1.6}
 .gate-row{display:flex;gap:10px;max-width:400px;margin:0 auto}
-.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:'Lato',sans-serif;font-size:.9rem;color:#1a1a1a;outline:none}
+.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.9rem;color:#1a1a1a;outline:none}
 .gate-row input:focus{border-color:#639922}
-.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:'Lato',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
 .btn-go:hover{background:#4e7a1a}
 .gate-err{color:#c0392b;font-size:.8rem;margin-top:8px;min-height:18px}
 .prev-wrap{margin-top:18px;max-width:400px;margin-left:auto;margin-right:auto;text-align:left;display:none}
 .prev-lbl{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:'Lato',sans-serif}
+.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:"Aptos","Segoe UI",Arial,sans-serif}
 .chip:hover{border-color:#639922;color:#639922;background:white}
 .who-bar{background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.who-left .who-name{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a;font-weight:700}
+.who-left .who-name{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.95rem;color:#1a1a1a;font-weight:700}
 .who-left .who-meta{font-size:.75rem;color:#888;margin-top:1px}
 .who-btns{display:flex;gap:7px}
-.btn-xs{padding:5px 12px;border-radius:8px;font-family:'Lato',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
+.btn-xs{padding:5px 12px;border-radius:8px;font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
 .btn-xs:hover{background:#e8e8e6}
 .btn-xs.red{background:#fff5f5;border-color:#f5c6c6;color:#c0392b}
 .btn-xs.red:hover{background:#fee2e2}
@@ -47,9 +36,9 @@ body{
 .stat-l{font-size:10px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
 .sg{color:#639922}.st{color:#1D9E75}.sa{color:#BA7517}
 .lv-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
-.lv-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:11px}
+.lv-card h3{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.9rem;color:#1a1a1a;margin-bottom:11px}
 .pb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
-.pb-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
+.pb-fill{height:100%;border-radius:999px;background:#639922;transition:width .4s}
 .pb-meta{display:flex;justify-content:space-between;font-size:11px;color:#888}
 .ms-row{display:flex;justify-content:space-between;margin-top:11px}
 .ms{text-align:center;font-size:9px;color:#aaa}
@@ -58,25 +47,20 @@ body{
 .ms.on .ms-dot{background:#639922}
 .ms.cur .ms-dot{background:#639922;box-shadow:0 0 0 3px #EAF3DE}
 .ms.cur{color:#27500A;font-weight:700}
-/* Force Aptos everywhere (overrides Playfair + Lato) */
-h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
-  font-family:"Aptos","Segoe UI",Arial,sans-serif !important;
-}
-/* ── ACTIVITY CATEGORIES SECTION ── */
+h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{font-family:"Aptos","Segoe UI",Arial,sans-serif !important}
 .cats-section{margin-bottom:6px}
-.cats-heading{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding:12px 16px;background:white;border-radius:12px;border:.5px solid #e4e4e2;display:flex;align-items:center;gap:10px}
+.cats-heading{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.95rem;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding:12px 16px;background:white;border-radius:12px;border:.5px solid #e4e4e2;display:flex;align-items:center;gap:10px}
 .cats-heading-bar{display:inline-block;width:4px;height:20px;background:#639922;border-radius:2px;flex-shrink:0}
-
 .cats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-.cat-pill{padding:6px 14px;border-radius:999px;border:1px solid #ddd;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#555;font-family:'Lato',sans-serif}
+.cat-pill{padding:6px 14px;border-radius:999px;border:1px solid #ddd;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#555;font-family:"Aptos","Segoe UI",Arial,sans-serif}
 .cat-pill:hover{border-color:#639922;color:#639922}
 .cat-pill.active{background:#639922;border-color:#639922;color:white}
 .filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-.ftag{padding:3px 10px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:10px;cursor:pointer;color:#888;font-family:'Lato',sans-serif}
+.ftag{padding:3px 10px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:10px;cursor:pointer;color:#888;font-family:"Aptos","Segoe UI",Arial,sans-serif}
 .ftag.active{background:#1a1a1a;border-color:#1a1a1a;color:white}
 .panel{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
 .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.ptitle{font-family:'Playfair Display',serif;font-size:.95rem;color:#1a1a1a}
+.ptitle{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.95rem;color:#1a1a1a}
 .psub{font-size:11px;color:#aaa}
 .act-list{display:flex;flex-direction:column;gap:5px}
 .act{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer}
@@ -96,22 +80,22 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
 .no-cat{display:flex;align-items:center;justify-content:center;height:110px;border:.5px dashed #ddd;border-radius:10px}
 .no-cat p{font-size:12px;color:#bbb}
 .team-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
-.team-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:12px}
+.team-card h3{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.9rem;color:#1a1a1a;margin-bottom:12px}
 .team-big{font-size:2rem;font-weight:700;color:#639922;line-height:1}
 .team-sub{font-size:.78rem;color:#888;margin-top:2px;margin-bottom:12px}
 .tpb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
-.tpb-fill{height:100%;border-radius:999px;background:#639922;transition:width .6s}
+.tpb-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
 .tpb-lbl{font-size:10px;color:#aaa;text-align:right;margin-bottom:10px}
 .mlist{display:flex;flex-direction:column;gap:5px}
 .mrow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f7f7f5;border-radius:8px;border:.5px solid #ebebeb}
 .mname{font-size:12px;font-weight:700;color:#1a1a1a;min-width:100px;flex-shrink:0}
 .mbar-wrap{flex:1;height:4px;background:#eee;border-radius:999px;overflow:hidden}
-.mbar-fill{height:100%;border-radius:999px;background:#639922;transition:width .5s}
+.mbar-fill{height:100%;border-radius:999px;background:#639922;transition:width .4s}
 .mpts{font-size:11px;font-weight:700;color:#639922;min-width:45px;text-align:right;flex-shrink:0}
 .macts{font-size:10px;color:#aaa;min-width:55px;text-align:right;flex-shrink:0}
 .you-tag{font-size:9px;padding:1px 6px;background:#EAF3DE;color:#27500A;border-radius:999px;font-weight:700;flex-shrink:0}
 .log-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px}
-.log-card h3{font-family:'Playfair Display',serif;font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
+.log-card h3{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
 .log-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f0f0ee;font-size:12px;color:#666;gap:7px}
 .log-entry:last-child{border-bottom:none}
 .le-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -120,11 +104,11 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
 .empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
 .modal{background:white;border-radius:16px;padding:26px;max-width:340px;width:100%;text-align:center}
-.modal h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:#1a1a1a;margin-bottom:7px}
+.modal h3{font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:1.05rem;color:#1a1a1a;margin-bottom:7px}
 .modal p{font-size:.84rem;color:#666;margin-bottom:20px;line-height:1.5}
 .modal-btns{display:flex;gap:9px}
-.btn-cancel{flex:1;padding:9px;background:#f0f0ee;border:.5px solid #ddd;border-radius:9px;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:#555}
-.btn-del{flex:1;padding:9px;background:#c0392b;border:none;border-radius:9px;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:white}
+.btn-cancel{flex:1;padding:9px;background:#f0f0ee;border:.5px solid #ddd;border-radius:9px;font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:#555}
+.btn-del{flex:1;padding:9px;background:#c0392b;border:none;border-radius:9px;font-family:"Aptos","Segoe UI",Arial,sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;color:white}
 .badge-easy{background:#E1F5EE;color:#085041}
 .badge-medium{background:#FAEEDA;color:#633806}
 .badge-family{background:#EEEDFE;color:#3C3489}
@@ -141,7 +125,7 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
     <h2>&#127757; Activity Log</h2>
     <p>Enter your name or identifier of your choice to log activities and earn points</p>
     <div class="gate-row">
-      <input type="text" id="name-in" placeholder="Enter a name or identifier of your choice" maxlength="60" />
+      <input type="text" id="name-in" placeholder="Enter a name or identifier of your choice" maxlength="60"/>
       <button class="btn-go" onclick="startSession()">Start</button>
     </div>
     <div class="gate-err" id="gate-err"></div>
@@ -154,7 +138,6 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
 
 <div class="page hidden" id="app-page">
   <div class="notice" id="sync-notice">&#128994; Loading...</div>
-
   <div class="who-bar">
     <div class="who-left">
       <div class="who-name" id="who-name"></div>
@@ -165,13 +148,11 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
       <button class="btn-xs red" onclick="showReset()">Reset my points</button>
     </div>
   </div>
-
   <div class="stats-row">
     <div class="stat"><div class="stat-n sg" id="s-pts">0</div><div class="stat-l">My points</div></div>
     <div class="stat"><div class="stat-n st" id="s-acts">0</div><div class="stat-l">Actions done</div></div>
     <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">Seedling</div><div class="stat-l">My level</div></div>
   </div>
-
   <div class="lv-card">
     <h3>My level progress</h3>
     <div class="pb-wrap"><div class="pb-fill" id="pb" style="width:0%"></div></div>
@@ -184,17 +165,11 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
       <div class="ms" id="ms4"><div class="ms-dot"></div>Champion<br>500</div>
     </div>
   </div>
-
   <div class="cats-section">
-    <div class="cats-heading">
-      <span class="cats-heading-bar"></span>
-      Activity Categories
-    </div>
+    <div class="cats-heading"><span class="cats-heading-bar"></span>Activity Categories</div>
     <div class="cats" id="cats"></div>
   </div>
-
   <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
-
   <div class="team-card">
     <h3>Team total</h3>
     <div class="team-big" id="team-total">0</div>
@@ -203,7 +178,6 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
     <div class="tpb-lbl" id="tpb-lbl">0 / 500 pts team goal</div>
     <div class="mlist" id="mlist"></div>
   </div>
-
   <div class="log-card">
     <h3>My activity log</h3>
     <div id="my-log"><div class="empty">No activities logged yet</div></div>
@@ -224,92 +198,96 @@ h1,h2,h3,.ptitle,.cats-heading,.lv-card h3,.team-card h3,.log-card h3,.who-name{
 <script>
 var JSONBIN_ID  = '69cff25faaba882197c08a39';
 var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
-var LOCAL_KEY   = 'ed_team_v1';
+var LOCAL_KEY   = 'ed_team_v2';
 var TEAM_GOAL   = 500;
-var POLL_MS     = 5000;
+var POLL_MS     = 8000;
 var pollTimer   = null;
+var saveTimer   = null;
+var pushing     = false;
+var pendingSave = false;
 var teamData    = {members:{}};
 var currentUser = '';
 var activeCat   = null;
 var activeTag   = 'all';
 
+var BIN_URL = 'https://api.jsonbin.io/v3/b/'+JSONBIN_ID;
+
 function hasRemote(){return !!(JSONBIN_ID&&JSONBIN_KEY);}
 
+function parseRemote(text){
+  try{var r=JSON.parse(text);return(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);}catch(e){return null;}
+}
+
 function loadData(cb){
-  if(!hasRemote()){
-    try{var s=localStorage.getItem(LOCAL_KEY);if(s){var d=JSON.parse(s);if(d&&d.members)teamData=d;}}catch(e){}
-    if(cb)cb(); return;
-  }
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  xhr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  xhr.setRequestHeader('X-Bin-Meta','false');
-  xhr.timeout=8000;
-  xhr.onload=function(){
-    try{var r=JSON.parse(xhr.responseText);var d=(r&&r.members)?r:(r&&r.record)?r.record:null;if(d&&d.members)teamData=d;}catch(e){}
+  var ls=null;
+  try{var s=localStorage.getItem(LOCAL_KEY);if(s){var d=JSON.parse(s);if(d&&d.members)ls=d;}}catch(e){}
+  if(!hasRemote()){if(ls)teamData=ls;if(cb)cb();return;}
+  var x=new XMLHttpRequest();
+  x.open('GET',BIN_URL+'/latest',true);
+  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+  x.setRequestHeader('X-Bin-Meta','false');
+  x.timeout=8000;
+  x.onload=function(){
+    if(x.status===200){var r=parseRemote(x.responseText);if(r)teamData=r;}
+    else if(ls)teamData=ls;
     if(cb)cb();
   };
-  xhr.ontimeout=xhr.onerror=function(){if(cb)cb();};
-  xhr.send();
+  x.ontimeout=x.onerror=function(){if(ls)teamData=ls;if(cb)cb();};
+  x.send();
 }
 
-function saveData(cb){
+function saveLocal(){
   try{localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));}catch(e){}
-  if(cb)cb();
-  if(!hasRemote())return;
-  pushToRemote();
 }
 
-function pushToRemote(){
+function saveData(){
+  saveLocal();
   if(!hasRemote())return;
-  var k=slug(currentUser);
-  var myEntry=teamData.members[k]?teamData.members[k]:null;
-  if(!myEntry)return;
-  var rdr=new XMLHttpRequest();
-  rdr.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  rdr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  rdr.setRequestHeader('X-Bin-Meta','false');
-  rdr.timeout=10000;
-  rdr.onload=function(){
-    var merged={members:{}};
-    if(rdr.status===200){
-      try{var r=JSON.parse(rdr.responseText);var ex=(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);if(ex&&ex.members)merged=ex;}catch(e){}
-    }
-    merged.members[k]=myEntry;
-    var wtr=new XMLHttpRequest();
-    wtr.open('PUT','https://api.jsonbin.io/v3/b/'+JSONBIN_ID,true);
-    wtr.setRequestHeader('Content-Type','application/json');
-    wtr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-    wtr.timeout=10000;
-    wtr.onload=function(){if(wtr.status===200){try{localStorage.setItem('ed_team_updated',String(Date.now()));}catch(e){}}};
-    wtr.send(JSON.stringify(merged));
+  if(saveTimer)clearTimeout(saveTimer);
+  saveTimer=setTimeout(pushToRemote,400);
+}
+
+/* Single direct PUT — no read-before-write.
+   teamData already holds everyone from the last poll so we just
+   overwrite the bin with the full merged state. */
+function pushToRemote(){
+  if(pushing){pendingSave=true;return;}
+  if(!teamData.members[slug(currentUser)])return;
+  pushing=true;
+  var x=new XMLHttpRequest();
+  x.open('PUT',BIN_URL,true);
+  x.setRequestHeader('Content-Type','application/json');
+  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+  x.timeout=10000;
+  x.onload=x.ontimeout=x.onerror=function(){
+    pushing=false;
+    if(pendingSave){pendingSave=false;pushToRemote();}
   };
-  rdr.ontimeout=rdr.onerror=function(){};
-  rdr.send();
+  x.send(JSON.stringify(teamData));
 }
 
 function startPoll(){
   if(!hasRemote())return;
   if(pollTimer)clearInterval(pollTimer);
   pollTimer=setInterval(function(){
-    var xhr=new XMLHttpRequest();
-    xhr.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-    xhr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-    xhr.setRequestHeader('X-Bin-Meta','false');
-    xhr.timeout=8000;
-    xhr.onload=function(){
-      if(xhr.status!==200)return;
-      try{
-        var r=JSON.parse(xhr.responseText);
-        var d=(r&&r.members)?r:(r&&r.record)?r.record:null;
-        if(d&&d.members&&Object.keys(d.members).length>0){
-          teamData=d;
-          try{localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));}catch(e2){}
-          if(currentUser)renderAll();
-        }
-      }catch(e){}
+    var x=new XMLHttpRequest();
+    x.open('GET',BIN_URL+'/latest',true);
+    x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+    x.setRequestHeader('X-Bin-Meta','false');
+    x.timeout=8000;
+    x.onload=function(){
+      if(x.status!==200)return;
+      var remote=parseRemote(x.responseText);
+      if(!remote||!remote.members)return;
+      /* Keep our own live entry, take everyone else from remote */
+      var k=slug(currentUser);
+      var mine=teamData.members[k];
+      teamData=remote;
+      if(mine)teamData.members[k]=mine;
+      saveLocal();
+      if(currentUser)renderAll();
     };
-    xhr.send();
+    x.send();
   },POLL_MS);
 }
 
@@ -331,6 +309,7 @@ function getUser(name){
   if(!teamData.members[k])teamData.members[k]={name:name,pts:0,acts:0,done:{},log:[]};
   return teamData.members[k];
 }
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:125},{name:'Grower',min:250},{name:'Guardian',min:375},{name:'Champion',min:500}];
 var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
@@ -454,10 +433,15 @@ function refreshGate(){
   if(!keys.length){wrap.style.display='none';return;}
   wrap.style.display='block';
   var h='';
-  for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];h+='<button class="chip" data-name="'+m.name+'">'+m.name+' ('+m.pts+' pts)</button>';}
-  document.getElementById('chip-row').innerHTML=h;
-  var chips=document.querySelectorAll('.chip');
-  for(var i=0;i<chips.length;i++){chips[i].addEventListener('click',function(){document.getElementById('name-in').value=this.dataset.name;startSession();});}
+  for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];h+='<button class="chip" data-name="'+escH(m.name)+'">'+escH(m.name)+' ('+m.pts+' pts)</button>';}
+  var cr=document.getElementById('chip-row');
+  cr.innerHTML=h;
+  cr.onclick=function(e){
+    var chip=e.target.closest('.chip');
+    if(!chip)return;
+    document.getElementById('name-in').value=chip.dataset.name;
+    startSession();
+  };
 }
 
 function startSession(){
@@ -466,23 +450,25 @@ function startSession(){
   currentUser=n;
   loadData(function(){
     getUser(n);
-    try{localStorage.setItem('ed_last_user',n);}catch(e){}
     document.getElementById('gate-page').classList.add('hidden');
     document.getElementById('app-page').classList.remove('hidden');
     updateNotice();
     activeCat=null;activeTag='all';
-    renderAll();startPoll();pushToRemote();
+    renderAll();
+    startPoll();
+    pushToRemote();
   });
 }
 
 function switchUser(){
   if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
   currentUser='';activeCat=null;activeTag='all';
   document.getElementById('app-page').classList.add('hidden');
   document.getElementById('gate-page').classList.remove('hidden');
   document.getElementById('name-in').value='';
   document.getElementById('gate-err').textContent='';
-  refreshGate();
+  loadData(function(){refreshGate();});
 }
 
 function showReset(){
@@ -494,23 +480,27 @@ function doReset(){
   hideReset();
   var k=slug(currentUser);
   teamData.members[k]={name:currentUser,pts:0,acts:0,done:{},log:[]};
-  activeCat=null;activeTag='all';renderAll();saveData(null);
+  activeCat=null;activeTag='all';
+  renderAll();saveData();
 }
 
 function renderAll(){
   var d=getUser(currentUser);
   document.getElementById('who-name').textContent=d.name;
-  document.getElementById('who-meta').textContent=d.pts+' points  \u00b7  '+d.acts+' actions completed';
+  document.getElementById('who-meta').textContent=d.pts+' points \u00b7 '+d.acts+' actions completed';
   document.getElementById('s-pts').textContent=d.pts;
   document.getElementById('s-acts').textContent=d.acts;
   var lv=glv(d.pts),nx=nlv(d.pts);
   document.getElementById('s-lvl').textContent=lv.name;
   var pct=0,lbl='Max level reached!';
-  if(nx){pct=Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100);lbl=d.pts+' / '+nx.min+' pts to '+nx.name;}else pct=100;
+  if(nx){pct=Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100);lbl=d.pts+' / '+nx.min+' pts to '+nx.name;}else{pct=100;}
   document.getElementById('pb').style.width=pct+'%';
   document.getElementById('pb-lbl').textContent=lbl;
   document.getElementById('pb-pct').textContent=pct+'%';
-  for(var i=0;i<LEVELS.length;i++){var el=document.getElementById('ms'+i);el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');}
+  for(var i=0;i<LEVELS.length;i++){
+    var el=document.getElementById('ms'+i);
+    el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');
+  }
   renderCats(d);renderPanel(d);renderTeam();renderMyLog(d);
 }
 
@@ -525,73 +515,90 @@ function renderTeam(){
   document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
   var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
   var h='';
-  for(var i=0;i<list.length;i++){var m=list[i],isMe=m.name.toLowerCase()===currentUser.toLowerCase(),bp=Math.round(m.pts/maxPts*100);h+='<div class="mrow"><span class="mname">'+m.name+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';}
+  for(var i=0;i<list.length;i++){
+    var m=list[i],isMe=slug(m.name)===slug(currentUser),bp=Math.round(m.pts/maxPts*100);
+    h+='<div class="mrow"><span class="mname">'+escH(m.name)+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';
+  }
   document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
 
 function renderCats(d){
   var h='';
   for(var i=0;i<CATS.length;i++){var c=CATS[i];h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>';}
-  document.getElementById('cats').innerHTML=h;
-  var pills=document.querySelectorAll('.cat-pill');
-  for(var i=0;i<pills.length;i++){pills[i].addEventListener('click',function(){var id=this.dataset.id;for(var j=0;j<CATS.length;j++){if(CATS[j].id===id){activeCat=CATS[j];break;}}activeTag='all';var d=getUser(currentUser);renderCats(d);renderPanel(d);});}
+  var el=document.getElementById('cats');
+  el.innerHTML=h;
+  el.onclick=function(e){
+    var pill=e.target.closest('.cat-pill');
+    if(!pill)return;
+    var id=pill.dataset.id;
+    for(var j=0;j<CATS.length;j++){if(CATS[j].id===id){activeCat=CATS[j];break;}}
+    activeTag='all';
+    renderCats(getUser(currentUser));
+    renderPanel(getUser(currentUser));
+  };
 }
 
 function renderPanel(d){
-  if(!activeCat){document.getElementById('panel').innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';return;}
+  var panel=document.getElementById('panel');
+  if(!activeCat){panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';return;}
   var cat=activeCat;
-  var tags=['all'];for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
-  var filtered=[];for(var i=0;i<cat.actions.length;i++){if(activeTag==='all'||cat.actions[i].tag===activeTag)filtered.push(cat.actions[i]);}
-  var dc=0;for(var i=0;i<cat.actions.length;i++){if(d.done[cat.id+'_'+i])dc++;}
-  var h='<div class="ph"><span class="ptitle">'+cat.name+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div>';
+  var tags=['all'];
+  for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
+  var filtered=activeTag==='all'?cat.actions.slice():cat.actions.filter(function(a){return a.tag===activeTag;});
+  var dc=0;
+  for(var i=0;i<cat.actions.length;i++){if(d.done[cat.id+'_'+i])dc++;}
+  var h='<div class="ph"><span class="ptitle">'+escH(cat.name)+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div>';
   h+='<div class="filter-row">';
   for(var i=0;i<tags.length;i++)h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
   h+='</div><div class="act-list">';
   for(var i=0;i<filtered.length;i++){
     var a=filtered[i],idx2=cat.actions.indexOf(a),key=cat.id+'_'+idx2,isDone=!!d.done[key];
-    h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+a.text.replace(/"/g,'&quot;')+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+a.text+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'- '+a.pts+' undo':'+'+a.pts)+' pts</span></div>';
+    h+='<div class="act'+(isDone?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+escH(a.text)+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(isDone?'\u2212'+a.pts+' undo':'+'+a.pts)+' pts</span></div>';
   }
   h+='</div>';
-  document.getElementById('panel').innerHTML=h;
-  var ftags=document.querySelectorAll('.ftag');
-  for(var i=0;i<ftags.length;i++){ftags[i].addEventListener('click',function(){activeTag=this.dataset.tag;renderPanel(getUser(currentUser));});}
-  var acts=document.querySelectorAll('.act');
-  for(var i=0;i<acts.length;i++){
-    acts[i].addEventListener('click',function(){
-      var d=getUser(currentUser);
-      var key=this.dataset.key;
-      var p=parseInt(this.dataset.pts),txt=this.dataset.text;
-      if(d.done[key]){
-        delete d.done[key];d.pts=Math.max(0,d.pts-p);d.acts=Math.max(0,d.acts-1);
-        for(var li=d.log.length-1;li>=0;li--){if(d.log[li].text===txt&&d.log[li].catId===activeCat.id){d.log.splice(li,1);break;}}
-      } else {
-        d.done[key]=true;d.pts+=p;d.acts+=1;d.log.push({text:txt,pts:p,catId:activeCat.id});
-      }
-      renderAll();saveData(null);
-    });
-  }
+  panel.innerHTML=h;
 }
 
 function renderMyLog(d){
   var el=document.getElementById('my-log');
   if(!d.log||!d.log.length){el.innerHTML='<div class="empty">No activities logged yet</div>';return;}
   var h='';
-  for(var i=d.log.length-1;i>=0;i--)h+='<div class="log-entry"><span class="le-text">'+d.log[i].text+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
+  for(var i=d.log.length-1;i>=0;i--)
+    h+='<div class="log-entry"><span class="le-text">'+escH(d.log[i].text)+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
   el.innerHTML=h;
 }
 
+/* ── Single permanent delegated listeners — attached once, never stack ── */
 document.getElementById('name-in').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13)startSession();});
 
+document.getElementById('panel').addEventListener('click',function(e){
+  if(!currentUser||!activeCat)return;
+  var ftag=e.target.closest('.ftag');
+  if(ftag){activeTag=ftag.dataset.tag;renderPanel(getUser(currentUser));return;}
+  var act=e.target.closest('.act');
+  if(!act)return;
+  var d=getUser(currentUser);
+  var key=act.dataset.key,p=parseInt(act.dataset.pts),txt=act.dataset.text;
+  if(d.done[key]){
+    delete d.done[key];d.pts=Math.max(0,d.pts-p);d.acts=Math.max(0,d.acts-1);
+    for(var li=d.log.length-1;li>=0;li--){if(d.log[li].text===txt&&d.log[li].catId===activeCat.id){d.log.splice(li,1);break;}}
+  } else {
+    d.done[key]=true;d.pts+=p;d.acts+=1;d.log.push({text:txt,pts:p,catId:activeCat.id});
+  }
+  renderAll();
+  saveData();
+});
+
 function init(){
-  try{var s=localStorage.getItem(LOCAL_KEY);if(s){var d=JSON.parse(s);if(d&&d.members)teamData=d;}}catch(e){}
+  /* Clear old v1 data — fresh rollout, no old names */
+  try{localStorage.removeItem('ed_team_v1');localStorage.removeItem('ed_last_user');}catch(e){}
   document.getElementById('gate-page').classList.remove('hidden');
-  refreshGate();
-  try{var last=localStorage.getItem('ed_last_user');if(last)document.getElementById('name-in').value=last;}catch(e){}
-  if(hasRemote()){loadData(function(){refreshGate();});}
+  if(hasRemote()){
+    loadData(function(){refreshGate();});
+  }
 }
 
-if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){setTimeout(init,30);});}
-else{window.addEventListener('load',function(){setTimeout(init,30);});}
+init();
 </script>
 </body>
 </html>
