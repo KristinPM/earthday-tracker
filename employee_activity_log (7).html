@@ -477,7 +477,7 @@ function renderCats(d){
 }
 function renderPanel(d){
   var panel=document.getElementById('panel');
-  if(!activeCat){panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';return;}
+  if(!activeCat){panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';updateSubmitBar();return;}
   var cat=activeCat,tags=['all'];
   for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
   var filtered=(activeTag==='all')?cat.actions.slice():cat.actions.filter(function(a){return a.tag===activeTag;});
@@ -485,8 +485,19 @@ function renderPanel(d){
   var h='<div class="ph"><span class="ptitle">'+escH(cat.name)+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div><div class="filter-row">';
   for(var i=0;i<tags.length;i++)h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
   h+='</div><div class="act-list">';
-  for(var i=0;i<filtered.length;i++){var a=filtered[i],idx=cat.actions.indexOf(a),key=cat.id+'_'+idx,done=!!d.done[key];h+='<div class="act'+(done?' done':'')+'" data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+escH(a.text)+'"><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+(done?'−'+a.pts+' undo':'+'+a.pts)+' pts</span></div>';}
+  for(var i=0;i<filtered.length;i++){
+    var a=filtered[i],idx2=cat.actions.indexOf(a),key=cat.id+'_'+idx2;
+    var done=!!d.done[key],pend=!!pending[key];
+    var cls=done?' done':pend?' pending':'';
+    var ptsLabel=done?'&#10003; logged':pend?'&#9733; +'+a.pts+' pts':'+'+a.pts+' pts';
+    var dataAttrs=done?'':' data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+escH(a.text)+'"';
+    h+='<div class="act'+cls+'"'+dataAttrs+'>';
+    h+='<div class="chk"><div class="tick"></div></div>';
+    h+='<div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+a.tag+'</div></div>';
+    h+='<span class="act-pts">'+ptsLabel+'</span></div>';
+  }
   h+='</div>';panel.innerHTML=h;
+  updateSubmitBar();
 }
 function renderTeam(){
   var keys=Object.keys(teamData.members),total=0,list=[];
