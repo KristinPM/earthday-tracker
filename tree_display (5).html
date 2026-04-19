@@ -51,6 +51,9 @@ html,body{
 .lp{font-size:clamp(.54rem,1.1vw,.64rem);font-weight:700;letter-spacing:.4px;position:relative;z-index:1;color:#888;transition:color .4s;margin-top:1px}
 .lck{position:absolute;top:4px;right:6px;font-size:.62rem;z-index:2}
 .lb.on .ln,.lb.on .lp{color:rgba(255,255,255,.92)}
+.refresh-btn{margin-top:10px;padding:8px 16px;border:none;border-radius:10px;background:#639922;color:#fff;font-family:Aptos, "Segoe UI", sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s ease}
+.refresh-btn:hover{background:#4e7a1a}
+.refresh-btn:disabled{background:#aab7a1;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -58,6 +61,7 @@ html,body{
   <div class="hdr">
     <h1>Our Virtual Tree</h1>
     <p>As employees log activities across regions, our tree grows more vibrant with every contribution.</p>
+    <button id="refreshBtn" class="refresh-btn" type="button">Refresh</button>
   </div>
   <div class="cv">
     <canvas id="C0"></canvas>
@@ -77,6 +81,8 @@ var LVS=[
 function glv(p){var l=LVS[0];for(var i=0;i<LVS.length;i++){if(p>=LVS[i].p)l=LVS[i];}return l;}
 
 var pts=0,aT=0,tT=0;
+var POLL_MS=300000;
+var pollTimer=null;
 var C0=document.getElementById('C0'),C1=document.getElementById('C1');
 var X0=C0.getContext('2d'),X1=C1.getContext('2d');
 var W=0,H=0,D=1;
@@ -203,8 +209,10 @@ function sumMembers(obj){
   for(var i=0;i<keys.length;i++) total+=obj.members[keys[i]].pts||0;
   return total;
 }
-function syncRemote(){
-  if(!JSONBIN_ID||!JSONBIN_KEY){syncLocal();return;}
+function syncRemote(showBusy){
+  var btn=document.getElementById('refreshBtn');
+  if(btn&&showBusy){btn.disabled=true;btn.textContent='Refreshing...';}
+  if(!JSONBIN_ID||!JSONBIN_KEY){syncLocal();if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}return;}
   var xhr=new XMLHttpRequest();
   xhr.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   xhr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
@@ -217,13 +225,20 @@ function syncRemote(){
         var d=null;
         if(parsed&&parsed.members) d=parsed;
         else if(parsed&&parsed.record&&parsed.record.members) d=parsed.record;
-        if(d&&Object.keys(d.members).length>0){applyPts(sumMembers(d));return;}
+        if(d&&Object.keys(d.members).length>0){applyPts(sumMembers(d));}
       }catch(ex){}
+    }else{
+      syncLocal();
     }
+    if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}
   };
-  xhr.ontimeout=function(){syncLocal();};
-  xhr.onerror=function(){syncLocal();};
+  xhr.ontimeout=function(){syncLocal();if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}};
+  xhr.onerror=function(){syncLocal();if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}};
   xhr.send();
+}
+function startPolling(){
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(function(){syncRemote(false);},POLL_MS);
 }
 function syncLocal(){
   try{
@@ -245,15 +260,20 @@ function init(){
   /* wait for image before first draw */
   if(!IMG_READY){setTimeout(init,100);return;}
   doBW();badges();
-  syncRemote();
-  setInterval(syncRemote,3000);
+  syncRemote(false);
+  startPolling();
   setInterval(function(){
     try{
-      var ts=localStorage.getItem('ed_team_updated')||'';
-      if(ts&&ts!==lastUpdatedSeen){lastUpdatedSeen=ts;syncRemote();}
+      var ts=localStorage.getItem('ed_pts_tick')||'';
+      if(ts&&ts!==lastUpdatedSeen){lastUpdatedSeen=ts;syncRemote(false);}
     }catch(e){}
-  },500);
+  },1000);
 }
+
+document.getElementById('refreshBtn').addEventListener('click',function(){
+  syncRemote(true);
+});
+
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){setTimeout(init,50);});
 } else {
