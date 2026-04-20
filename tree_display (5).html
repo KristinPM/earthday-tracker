@@ -200,7 +200,11 @@ var LOCAL_KEY   = 'ed_team_v2';
 
 function applyPts(total){
   var capped=Math.min(total,SP_GOAL);
-  if(capped!==pts){pts=capped;tT=pts/SP_GOAL;badges();}
+  pts=capped;
+  tT=pts/SP_GOAL;
+  badges();
+  doBW();
+  mask(tT);
 }
 function sumMembers(obj){
   var total=0;
