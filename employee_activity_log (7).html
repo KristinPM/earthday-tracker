@@ -219,11 +219,13 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 <div class="submit-flash" id="submit-flash"></div>
 
 <script>
+
 var JSONBIN_ID='69cff25faaba882197c08a39';
 var JSONBIN_KEY='$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
-var LOCAL_KEY='ed_team_v2';
+var LOCAL_KEY='ed_team_v3_events';
+var LEGACY_LOCAL_KEY='ed_team_v2';
+var LOCAL_TICK_KEY='ed_pts_tick';
 var TEAM_GOAL=500;
-var POLL_MS=600000;
 
 var LEVELS=[
   {name:'Seedling',min:0,next:125},
@@ -311,13 +313,13 @@ var CATS=[
 var CAT_NAMES={};
 for(var ci=0;ci<CATS.length;ci++) CAT_NAMES[CATS[ci].id]=CATS[ci].name;
 
-var teamData={members:{}};
+var store={events:[],members:{}};
 var currentUser='';
 var activeCat=null;
 var activeTag='all';
 var pending={};
-var pollTimer=null;
 var syncMode='local';
+var bc=null;
 
 function escH(s){
   return String(s||'').replace(/[&<>"']/g,function(m){
@@ -329,77 +331,208 @@ function slug(s){
 }
 function clone(v){ return JSON.parse(JSON.stringify(v)); }
 
+function userTemplate(name){
+  return {name:name,pts:0,acts:0,done:{},log:[],updatedAt:0,lastResetAt:0};
+}
+
+function normalizeEvent(ev){
+  if(!ev || !ev.id || !ev.userKey) return null;
+  var out = {
+    id:String(ev.id),
+    type:ev.type==='reset'?'reset':'activity',
+    userKey:String(ev.userKey),
+    name:String(ev.name||''),
+    ts:Number(ev.ts||Date.now())
+  };
+  if(out.type==='activity'){
+    out.activityKey=String(ev.activityKey||'');
+    out.text=String(ev.text||'');
+    out.catId=String(ev.catId||'');
+    out.pts=Number(ev.pts||0);
+    if(!out.activityKey || !out.text) return null;
+  }
+  return out;
+}
+
+function legacyMembersToEvents(raw){
+  var out=[], seen={};
+  var members = raw && raw.members ? raw.members : {};
+  Object.keys(members).forEach(function(k){
+    var m = members[k] || {};
+    var userKey = slug(m.name || k || 'member');
+    var name = String(m.name || k || userKey);
+    var updatedAt = Number(m.updatedAt || Date.now());
+    var importedPts = 0;
+
+    if(Array.isArray(m.log) && m.log.length){
+      for(var i=0;i<m.log.length;i++){
+        var lg = m.log[i] || {};
+        var text = String(lg.text || 'Imported activity');
+        var catId = String(lg.catId || 'legacy');
+        var pts = Number(lg.pts || 0);
+        var ts = Number(lg.ts || (updatedAt + i));
+        var activityKey = String(lg.activityKey || (catId + '|' + text));
+        var id = String(lg.id || ('legacy_' + userKey + '_' + ts + '_' + slug(activityKey).slice(0,40)));
+        if(!seen[id]){
+          seen[id]=true;
+          out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:activityKey,text:text,catId:catId,pts:pts,ts:ts});
+          importedPts += pts;
+        }
+      }
+    }
+
+    if((!Array.isArray(m.log) || !m.log.length) && m.done && typeof m.done==='object'){
+      Object.keys(m.done).forEach(function(activityKey, idx){
+        var ts = updatedAt + idx;
+        var parts = String(activityKey).split('|');
+        var catId = parts[0] || 'legacy';
+        var text = parts.slice(1).join('|') || 'Imported activity';
+        var id = 'legacydone_' + userKey + '_' + slug(activityKey).slice(0,40);
+        if(!seen[id]){
+          seen[id]=true;
+          out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:String(activityKey),text:text,catId:catId,pts:0,ts:ts});
+        }
+      });
+    }
+
+    var memberPts = Number(m.pts || 0);
+    if(memberPts > importedPts){
+      var carryPts = memberPts - importedPts;
+      var carryId = 'legacycarry_' + userKey;
+      if(!seen[carryId]){
+        seen[carryId]=true;
+        out.push({id:carryId,type:'activity',userKey:userKey,name:name,activityKey:'legacy|carryover',text:'Imported prior points',catId:'legacy',pts:carryPts,ts:updatedAt + 999});
+      }
+    }
+  });
+  return out;
+}
+
+function deriveMembers(events){
+  var members={};
+  var list=(events||[]).slice().sort(function(a,b){
+    var at=Number(a.ts||0), bt=Number(b.ts||0);
+    if(at!==bt) return at-bt;
+    return String(a.id).localeCompare(String(b.id));
+  });
+  for(var i=0;i<list.length;i++){
+    var ev=normalizeEvent(list[i]);
+    if(!ev) continue;
+    if(!members[ev.userKey]) members[ev.userKey]=userTemplate(ev.name||ev.userKey);
+    var m=members[ev.userKey];
+    if(ev.name) m.name=ev.name;
+    m.updatedAt=Math.max(m.updatedAt||0, ev.ts||0);
+    if(ev.type==='reset'){
+      m.pts=0;
+      m.acts=0;
+      m.done={};
+      m.log=[];
+      m.lastResetAt=ev.ts||0;
+      continue;
+    }
+    if(m.lastResetAt && ev.ts<m.lastResetAt) continue;
+    if(!m.done[ev.activityKey]){
+      m.done[ev.activityKey]=true;
+      m.pts+=Number(ev.pts||0);
+      m.acts+=1;
+      m.log.push({id:ev.id,text:ev.text,pts:Number(ev.pts||0),catId:ev.catId,ts:ev.ts});
+    }
+  }
+  Object.keys(members).forEach(function(k){
+    members[k].log.sort(function(a,b){ return Number(a.ts||0)-Number(b.ts||0); });
+  });
+  return members;
+}
+
+function hydrateStore(raw){
+  var events=[], seen={};
+  var src = raw && Array.isArray(raw.events) ? raw.events.slice() : [];
+  if((!src || !src.length) && raw && raw.members) src = legacyMembersToEvents(raw);
+  for(var i=0;i<src.length;i++){
+    var ev=normalizeEvent(src[i]);
+    if(ev && !seen[ev.id]){
+      seen[ev.id]=true;
+      events.push(ev);
+    }
+  }
+  return {events:events,members:deriveMembers(events)};
+}
+
 function readLocal(){
   try{
     var raw=localStorage.getItem(LOCAL_KEY);
-    if(!raw) return null;
-    var parsed=JSON.parse(raw);
-    if(parsed&&parsed.members) return parsed;
+    if(raw) return hydrateStore(JSON.parse(raw));
+  }catch(e){}
+  try{
+    var legacyRaw=localStorage.getItem(LEGACY_LOCAL_KEY);
+    if(legacyRaw) return hydrateStore(JSON.parse(legacyRaw));
   }catch(e){}
   return null;
 }
 function writeLocal(){
   try{
-    localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));
-    localStorage.setItem('ed_pts_tick',String(Date.now()));
+    localStorage.setItem(LOCAL_KEY,JSON.stringify({events:store.events}));
+    localStorage.setItem(LOCAL_TICK_KEY,String(Date.now()));
   }catch(e){}
 }
-function userTemplate(name){
-  return {name:name,pts:0,acts:0,done:{},log:[],updatedAt:Date.now()};
+function broadcastTotal(){
+  var total=sumTeamPoints();
+  try{
+    if(!bc) bc=new BroadcastChannel('ed_tree_sync');
+    bc.postMessage({pts:total,ts:Date.now()});
+  }catch(e){}
 }
-function normalizeUser(u,fallbackName){
-  var x=clone(u||{});
-  x.name=x.name||fallbackName||'';
-  x.pts=Number(x.pts||0);
-  x.acts=Number(x.acts||0);
-  x.done=x.done||{};
-  x.log=Array.isArray(x.log)?x.log:[];
-  x.updatedAt=Number(x.updatedAt||0);
-  return x;
+function saveLocalAndBroadcast(){
+  writeLocal();
+  broadcastTotal();
 }
-function getUser(name){
-  var key=slug(name);
-  if(!teamData.members[key]) teamData.members[key]=userTemplate(name);
-  teamData.members[key]=normalizeUser(teamData.members[key],name);
-  return teamData.members[key];
+
+function sumTeamPoints(){
+  var total=0, keys=Object.keys(store.members||{});
+  for(var i=0;i<keys.length;i++) total+=Number(store.members[keys[i]].pts||0);
+  return total;
 }
-function userScore(u){
-  if(!u) return -1;
-  var pts=Number(u.pts||0);
-  var acts=Number(u.acts||0);
-  var logLen=(u.log&&Array.isArray(u.log))?u.log.length:0;
-  var doneLen=u.done?Object.keys(u.done).length:0;
-  var updated=Number(u.updatedAt||0);
-  return (pts*100000000)+(acts*1000000)+(logLen*1000)+doneLen+(updated/10000000000000);
-}
-function mergeUser(localUser,remoteUser,fallbackName){
-  if(localUser&&remoteUser){
-    localUser=normalizeUser(localUser,fallbackName);
-    remoteUser=normalizeUser(remoteUser,fallbackName);
-    return userScore(localUser)>=userScore(remoteUser)?localUser:remoteUser;
+
+function mergeEventLists(baseEvents,incomingEvents){
+  var map={}, merged=[];
+  function add(arr){
+    (arr||[]).forEach(function(ev){
+      var n=normalizeEvent(ev);
+      if(n && !map[n.id]){
+        map[n.id]=true;
+        merged.push(n);
+      }
+    });
   }
-  if(localUser) return normalizeUser(localUser,fallbackName);
-  if(remoteUser) return normalizeUser(remoteUser,fallbackName);
-  return normalizeUser(null,fallbackName);
-}
-function mergeDatasets(localData,remoteData){
-  var merged={members:{}};
-  var localMembers=(localData&&localData.members)?localData.members:{};
-  var remoteMembers=(remoteData&&remoteData.members)?remoteData.members:{};
-  var all={};
-
-  Object.keys(localMembers).forEach(function(k){all[k]=true;});
-  Object.keys(remoteMembers).forEach(function(k){all[k]=true;});
-
-  Object.keys(all).forEach(function(k){
-    var fallbackName=(localMembers[k]&&localMembers[k].name)||(remoteMembers[k]&&remoteMembers[k].name)||'';
-    merged.members[k]=mergeUser(localMembers[k],remoteMembers[k],fallbackName);
+  add(baseEvents);
+  add(incomingEvents);
+  merged.sort(function(a,b){
+    var at=Number(a.ts||0), bt=Number(b.ts||0);
+    if(at!==bt) return at-bt;
+    return String(a.id).localeCompare(String(b.id));
   });
-
   return merged;
 }
-function smartMerge(remote){
-  teamData=mergeDatasets(teamData,remote);
+
+function applyStore(raw){
+  store=hydrateStore(raw||{events:[]});
+  saveLocalAndBroadcast();
+  return store;
+}
+
+function parseRemoteResponse(text){
+  try{
+    var r=JSON.parse(text);
+    var data=(r&&Array.isArray(r.events))?r:(r&&r.record&&Array.isArray(r.record.events)?r.record:null);
+    return hydrateStore(data||{events:[]});
+  }catch(e){}
+  return hydrateStore({events:[]});
+}
+
+function getUser(name){
+  var key=slug(name);
+  if(!store.members[key]) store.members[key]=userTemplate(name);
+  return store.members[key];
 }
 function levelForPoints(pts){
   var lv=LEVELS[0];
@@ -413,17 +546,17 @@ function updateNotice(){
     el.innerHTML='&#128994; Shared team data synced.';
   }else if(syncMode==='saving'){
     el.className='notice';
-    el.innerHTML='&#128336; Merging local + shared points and saving...';
+    el.innerHTML='&#128336; Saving new activity entries to the shared tracker...';
   }else if(syncMode==='error'){
     el.className='notice error';
-    el.innerHTML='&#9888;&#65039; Save failed. Local points are still on this device. Click Refresh and try again.';
+    el.innerHTML='&#9888;&#65039; Save failed. Your selections are still on this device. Click Refresh and try again.';
   }else{
     el.className='notice local';
-    el.innerHTML='&#128993; Using local data until shared data loads.';
+    el.innerHTML='&#128993; Using cached data until shared data loads.';
   }
 }
 function refreshGate(){
-  var keys=Object.keys(teamData.members||{});
+  var keys=Object.keys(store.members||{});
   var wrap=document.getElementById('prev-wrap');
   if(!keys.length){
     wrap.style.display='none';
@@ -431,13 +564,13 @@ function refreshGate(){
     return;
   }
   keys.sort(function(a,b){
-    var ap=Number(teamData.members[a].pts||0), bp=Number(teamData.members[b].pts||0);
+    var ap=Number(store.members[a].pts||0), bp=Number(store.members[b].pts||0);
     if(bp!==ap) return bp-ap;
-    return String(teamData.members[a].name||'').localeCompare(String(teamData.members[b].name||''));
+    return String(store.members[a].name||'').localeCompare(String(store.members[b].name||''));
   });
   var h='';
   for(var i=0;i<keys.length;i++){
-    var m=normalizeUser(teamData.members[keys[i]]);
+    var m=store.members[keys[i]];
     h+='<button class="chip" data-name="'+escH(m.name)+'">'+escH(m.name)+' · '+m.pts+' pts</button>';
   }
   document.getElementById('chip-row').innerHTML=h;
@@ -521,9 +654,9 @@ function renderStats(d){
   document.getElementById('ms'+cur).classList.add('cur');
 }
 function renderTeam(){
-  var keys=Object.keys(teamData.members||{}),total=0,list=[];
+  var keys=Object.keys(store.members||{}),total=0,list=[];
   for(var i=0;i<keys.length;i++){
-    var m=normalizeUser(teamData.members[keys[i]]);
+    var m=store.members[keys[i]];
     total+=m.pts;
     list.push({name:m.name,pts:m.pts,acts:m.acts});
   }
@@ -586,15 +719,6 @@ function showFlash(msg,isError){
   setTimeout(function(){ flash.style.display='none'; },2200);
 }
 
-function parseRemoteResponse(text){
-  try{
-    var r=JSON.parse(text);
-    var rem=(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);
-    if(rem&&rem.members) return rem;
-  }catch(e){}
-  return {members:{}};
-}
-
 function loadRemote(cb){
   if(!JSONBIN_ID||!JSONBIN_KEY){
     if(cb) cb(false);
@@ -609,8 +733,7 @@ function loadRemote(cb){
     var ok=false;
     if(x.status===200){
       var remote=parseRemoteResponse(x.responseText);
-      teamData=mergeDatasets(teamData,remote);
-      writeLocal();
+      applyStore({events:mergeEventLists(store.events,remote.events)});
       syncMode='remote';
       ok=true;
     }
@@ -624,7 +747,15 @@ function loadRemote(cb){
   x.send();
 }
 
-function saveMergedTeam(doneCb){
+function makeEventId(userKey,activityKey,ts){
+  return 'evt_'+userKey+'_'+String(ts)+'_'+slug(activityKey).slice(0,40)+'_'+Math.random().toString(36).slice(2,8);
+}
+function makeResetId(userKey,ts){
+  return 'reset_'+userKey+'_'+String(ts)+'_'+Math.random().toString(36).slice(2,8);
+}
+
+function persistNewEvents(newEvents, doneCb, attempt){
+  attempt = attempt || 1;
   if(!JSONBIN_ID||!JSONBIN_KEY){
     if(doneCb) doneCb(false);
     return;
@@ -633,71 +764,90 @@ function saveMergedTeam(doneCb){
   syncMode='saving';
   updateNotice();
 
-  var localSnapshot=clone(teamData);
+  var getReq=new XMLHttpRequest();
+  getReq.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
+  getReq.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+  getReq.setRequestHeader('X-Bin-Meta','false');
+  getReq.timeout=10000;
 
-  var x=new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout=10000;
+  getReq.onload=function(){
+    if(getReq.status!==200){
+      syncMode='error';
+      updateNotice();
+      if(doneCb) doneCb(false);
+      return;
+    }
+    var remote=parseRemoteResponse(getReq.responseText);
+    var mergedEvents=mergeEventLists(remote.events,newEvents);
+    applyStore({events:mergedEvents});
 
-  x.onload=function(){
-    try{
-      var remote={members:{}};
-      if(x.status===200) remote=parseRemoteResponse(x.responseText);
+    var putReq=new XMLHttpRequest();
+    putReq.open('PUT','https://api.jsonbin.io/v3/b/'+JSONBIN_ID,true);
+    putReq.setRequestHeader('Content-Type','application/json');
+    putReq.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+    putReq.timeout=15000;
 
-      var merged=mergeDatasets(localSnapshot,remote);
-      teamData=merged;
-      writeLocal();
-      refreshGate();
-      if(currentUser) renderAll();
-
-      var put=new XMLHttpRequest();
-      put.open('PUT','https://api.jsonbin.io/v3/b/'+JSONBIN_ID,true);
-      put.setRequestHeader('Content-Type','application/json');
-      put.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-      put.timeout=15000;
-
-      put.onload=function(){
-        var ok=put.status>=200&&put.status<300;
-        syncMode=ok?'remote':'error';
+    putReq.onload=function(){
+      if(!(putReq.status>=200&&putReq.status<300)){
+        syncMode='error';
         updateNotice();
-        if(doneCb) doneCb(ok);
+        if(doneCb) doneCb(false);
+        return;
+      }
+
+      var verifyReq=new XMLHttpRequest();
+      verifyReq.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
+      verifyReq.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+      verifyReq.setRequestHeader('X-Bin-Meta','false');
+      verifyReq.timeout=10000;
+      verifyReq.onload=function(){
+        if(verifyReq.status!==200){
+          syncMode='error';
+          updateNotice();
+          if(doneCb) doneCb(false);
+          return;
+        }
+        var verified=parseRemoteResponse(verifyReq.responseText);
+        var allPresent=true, ids={};
+        for(var i=0;i<verified.events.length;i++) ids[verified.events[i].id]=true;
+        for(var j=0;j<newEvents.length;j++) if(!ids[newEvents[j].id]) allPresent=false;
+        if(allPresent){
+          applyStore(verified);
+          syncMode='remote';
+          updateNotice();
+          if(doneCb) doneCb(true);
+        }else if(attempt<2){
+          persistNewEvents(newEvents, doneCb, attempt+1);
+        }else{
+          syncMode='error';
+          updateNotice();
+          if(doneCb) doneCb(false);
+        }
       };
-      put.onerror=put.ontimeout=function(){
+      verifyReq.onerror=verifyReq.ontimeout=function(){
         syncMode='error';
         updateNotice();
         if(doneCb) doneCb(false);
       };
+      verifyReq.send();
+    };
 
-      put.send(JSON.stringify(teamData));
-    }catch(e){
+    putReq.onerror=putReq.ontimeout=function(){
       syncMode='error';
       updateNotice();
       if(doneCb) doneCb(false);
-    }
+    };
+
+    putReq.send(JSON.stringify({events:mergedEvents}));
   };
 
-  x.onerror=x.ontimeout=function(){
+  getReq.onerror=getReq.ontimeout=function(){
     syncMode='error';
     updateNotice();
     if(doneCb) doneCb(false);
   };
 
-  x.send();
-}
-
-function startPoll(){
-  if(!JSONBIN_ID||!JSONBIN_KEY) return;
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer=setInterval(function(){
-    loadRemote(function(ok){
-      if(ok){
-        refreshGate();
-        if(currentUser) renderAll();
-      }
-    });
-  },POLL_MS);
+  getReq.send();
 }
 
 function refreshFromServer(){
@@ -722,27 +872,48 @@ function submitActivities(){
   refreshBtn.disabled=true;
   btn.textContent='Saving...';
 
-  var d=getUser(currentUser);
-  for(var i=0;i<keys.length;i++){
-    var key=keys[i],item=pending[key];
-    if(!d.done[key]){
-      d.done[key]=true;
-      d.pts+=item.pts;
-      d.acts+=1;
-      d.log.push({text:item.text,pts:item.pts,catId:item.catId,ts:Date.now()});
+  loadRemote(function(){
+    var userKey=slug(currentUser);
+    var d=getUser(currentUser);
+    var tsBase=Date.now();
+    var newEvents=[];
+
+    for(var i=0;i<keys.length;i++){
+      var key=keys[i],item=pending[key];
+      if(!d.done[key]){
+        newEvents.push({
+          id:makeEventId(userKey,key,tsBase+i),
+          type:'activity',
+          userKey:userKey,
+          name:currentUser,
+          activityKey:key,
+          text:item.text,
+          catId:item.catId,
+          pts:Number(item.pts||0),
+          ts:tsBase+i
+        });
+      }
     }
-  }
-  d.updatedAt=Date.now();
 
-  pending={};
-  writeLocal();
-  renderAll();
+    if(!newEvents.length){
+      pending={};
+      renderAll();
+      btn.disabled=false;
+      refreshBtn.disabled=false;
+      btn.textContent='Log Activities';
+      showFlash('All selected activities were already logged for this name.',true);
+      return;
+    }
 
-  saveMergedTeam(function(success){
-    btn.disabled=false;
-    refreshBtn.disabled=false;
-    btn.textContent='Log Activities';
-    showFlash(success?'✓ Activities logged and merged to team total!':'Save failed — click Refresh and try again.',!success);
+    persistNewEvents(newEvents,function(success){
+      pending={};
+      refreshGate();
+      renderAll();
+      btn.disabled=false;
+      refreshBtn.disabled=false;
+      btn.textContent='Log Activities';
+      showFlash(success?'✓ Activities logged and merged to team total!':'Save failed — click Refresh and try again.',!success);
+    });
   });
 }
 
@@ -764,16 +935,13 @@ function startSession(){
 
   loadRemote(function(){
     getUser(currentUser);
-    writeLocal();
+    saveLocalAndBroadcast();
     refreshGate();
     renderAll();
   });
-
-  startPoll();
 }
 
 function switchUser(){
-  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
   currentUser='';
   activeCat=null;
   activeTag='all';
@@ -789,18 +957,24 @@ function resetCurrentUser(){
   if(!currentUser) return;
   if(!confirm('Reset your saved points and activity log for this name?')) return;
 
-  var d=getUser(currentUser);
-  d.pts=0;
-  d.acts=0;
-  d.done={};
-  d.log=[];
-  d.updatedAt=Date.now();
-
-  writeLocal();
-  renderAll();
-
-  saveMergedTeam(function(success){
-    showFlash(success?'✓ Your points were reset':'Reset failed — click Refresh and try again.',!success);
+  var btn=document.getElementById('refresh-btn');
+  btn.disabled=true;
+  loadRemote(function(){
+    var userKey=slug(currentUser);
+    var resetEvent={
+      id:makeResetId(userKey,Date.now()),
+      type:'reset',
+      userKey:userKey,
+      name:currentUser,
+      ts:Date.now()
+    };
+    persistNewEvents([resetEvent],function(success){
+      pending={};
+      refreshGate();
+      renderAll();
+      btn.disabled=false;
+      showFlash(success?'✓ Your points were reset':'Reset failed — click Refresh and try again.',!success);
+    });
   });
 }
 
@@ -836,11 +1010,29 @@ document.getElementById('panel').addEventListener('click',function(e){
   renderPanel(d);
 });
 
+window.addEventListener('storage',function(e){
+  if(e.key===LOCAL_KEY||e.key===LOCAL_TICK_KEY){
+    var local=readLocal();
+    if(local){
+      store=local;
+      refreshGate();
+      if(currentUser) renderAll();
+      else updateNotice();
+    }
+  }
+});
+
+try{
+  bc=new BroadcastChannel('ed_tree_sync');
+}catch(e){}
+
 (function(){
   var local=readLocal();
   if(local){
-    teamData=local;
+    store=local;
     syncMode='local';
+  }else{
+    store=hydrateStore({events:[]});
   }
   refreshGate();
   updateNotice();
@@ -849,6 +1041,7 @@ document.getElementById('panel').addEventListener('click',function(e){
     if(currentUser) renderAll();
   });
 })();
+
 </script>
 </body>
 </html>
