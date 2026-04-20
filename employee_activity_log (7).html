@@ -201,7 +201,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
   </div>
 
   <div class="log-card">
-    <h3>My activity log</h3>
+    <h3>Team activity log</h3>
     <div id="my-log"><div class="empty">No activities logged yet</div></div>
   </div>
 </div>
@@ -680,12 +680,25 @@ function renderTeam(){
   }
   document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
-function renderMyLog(d){
+function renderMyLog(){
   var el=document.getElementById('my-log');
-  if(!d.log||!d.log.length){ el.innerHTML='<div class="empty">No activities logged yet</div>'; return; }
+  var events=(store&&Array.isArray(store.events))?store.events.slice():[];
+
+  events=events.filter(function(ev){
+    return ev&&ev.type==='activity';
+  }).sort(function(a,b){
+    return Number(b.ts||0)-Number(a.ts||0);
+  });
+
+  if(!events.length){
+    el.innerHTML='<div class="empty">No activities logged yet</div>';
+    return;
+  }
+
   var h='';
-  for(var i=d.log.length-1;i>=0;i--){
-    h+='<div class="log-entry"><span class="le-text">'+escH(d.log[i].text)+'</span><span class="le-cat">'+escH(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
+  for(var i=0;i<events.length;i++){
+    var ev=events[i];
+    h+='<div class="log-entry"><span class="le-text">'+escH((ev.name||ev.userKey||'User')+': '+(ev.text||''))+'</span><span class="le-cat">'+escH(CAT_NAMES[ev.catId]||ev.catId)+'</span><span class="le-pts">+'+Number(ev.pts||0)+' pts</span></div>';
   }
   el.innerHTML=h;
 }
@@ -696,7 +709,7 @@ function renderAll(){
   renderCategories();
   renderPanel(d);
   renderTeam();
-  renderMyLog(d);
+  renderMyLog();
   updateNotice();
 }
 function updateSubmitBar(){
