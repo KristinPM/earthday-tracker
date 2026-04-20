@@ -5,136 +5,155 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Our Virtual Tree</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: transparent;
-  font-family: Aptos, "Segoe UI", sans-serif;
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:transparent;
+  font-family:Aptos,"Segoe UI",sans-serif;
 }
-body {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
+body{
+  display:flex;
+  justify-content:center;
+  align-items:stretch;
 }
-.wrap {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  padding: 14px 14px 12px;
+.wrap{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  padding:14px 14px 12px;
 }
-.hdr {
-  text-align: center;
-  margin-bottom: 8px;
-  flex-shrink: 0;
+.hdr{
+  text-align:center;
+  margin-bottom:8px;
+  flex-shrink:0;
 }
-.hdr h1 {
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
-  font-weight: 700;
-  color: #1a1a1a;
-  line-height: 1.1;
+.hdr h1{
+  font-size:clamp(1.6rem,4vw,2.6rem);
+  font-weight:700;
+  color:#1a1a1a;
+  line-height:1.1;
 }
-.hdr p {
-  font-size: clamp(.9rem, 1.5vw, 1.1rem);
-  color: #6f6f6f;
-  margin-top: 6px;
-  line-height: 1.3;
+.hdr p{
+  font-size:clamp(.9rem,1.5vw,1.1rem);
+  color:#6f6f6f;
+  margin-top:6px;
+  line-height:1.3;
 }
-.refresh-wrap {
-  display: flex;
-  justify-content: center;
-  margin: 6px 0 10px;
-  flex-shrink: 0;
+
+.refresh-wrap{
+  display:flex;
+  justify-content:center;
+  margin:6px 0 10px;
+  flex-shrink:0;
 }
-.refresh-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  background: #4CAF50;
-  border: 1px solid #3f9843;
-  border-radius: 999px;
-  font-family: inherit;
-  font-size: .8rem;
-  font-weight: 700;
-  color: #fff;
-  cursor: pointer;
-  transition: all .2s ease;
-  box-shadow: 0 2px 8px rgba(76,175,80,.25);
+.refresh-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 18px;
+  background:#4CAF50;
+  border:1px solid #3f9843;
+  border-radius:999px;
+  font-family:inherit;
+  font-size:.8rem;
+  font-weight:700;
+  color:#fff;
+  cursor:pointer;
+  transition:all .2s ease;
+  box-shadow:0 2px 8px rgba(76,175,80,.25);
 }
-.refresh-btn:hover {
-  background: #43a047;
-  border-color: #388e3c;
-  transform: translateY(-1px);
+.refresh-btn:hover{
+  background:#43a047;
+  border-color:#388e3c;
+  transform:translateY(-1px);
 }
-.refresh-btn.spinning .icon {
-  display: inline-block;
-  animation: spin .8s linear infinite;
+.refresh-btn:disabled{
+  opacity:.7;
+  cursor:default;
+  transform:none;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.refresh-btn.spinning .icon{
+  display:inline-block;
+  animation:spin .8s linear infinite;
 }
-.icon {
-  font-size: .86rem;
-  line-height: 1;
+@keyframes spin{
+  to{transform:rotate(360deg)}
 }
-.cv {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  isolation: isolate;
+.icon{font-size:.86rem;line-height:1}
+
+.cv{
+  position:relative;
+  flex:1;
+  min-height:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  isolation:isolate;
 }
-.tree-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
+
+.tree-layer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  transform:
+    scale(calc(1.02 + (var(--fill-level, 0%) / 100) * 0.08))
+    translateY(calc((100% - var(--fill-level, 0%)) * 0.02))
+    translateX(calc((var(--fill-level, 0%) - 50%) * 0.01));
+  transition:transform 1.6s cubic-bezier(.34,1.05,.64,1);
+  will-change:transform;
 }
-.tree-bw {
-  z-index: 1;
-  filter: grayscale(1) brightness(.86) contrast(1.03);
+.tree-bw{
+  z-index:1;
+  filter:grayscale(1) brightness(.86) contrast(1.03);
 }
-.tree-colour-wrap {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  overflow: hidden;
-  pointer-events: none;
+.tree-colour-wrap{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  overflow:hidden;
+  pointer-events:none;
 }
-.tree-colour {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  clip-path: inset(calc(100% - var(--fill-level,0%)) 0 0 0);
-  transition: clip-path 1.3s cubic-bezier(.34,1.05,.64,1);
+.tree-colour{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  clip-path:inset(calc(100% - var(--fill-level,0%)) 0 0 0);
+  transform:
+    scale(calc(1.02 + (var(--fill-level, 0%) / 100) * 0.08))
+    translateY(calc((100% - var(--fill-level, 0%)) * 0.02))
+    translateX(calc((var(--fill-level, 0%) - 50%) * 0.01));
+  transition:
+    transform 1.6s cubic-bezier(.34,1.05,.64,1),
+    clip-path 1.3s cubic-bezier(.34,1.05,.64,1);
+  will-change:transform,clip-path;
 }
-.liquid-edge {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--fill-level,0%) - 18px);
-  height: 36px;
-  z-index: 3;
-  pointer-events: none;
-  opacity: .9;
-  transition: bottom 1.3s cubic-bezier(.34,1.05,.64,1);
+.liquid-edge{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:calc(var(--fill-level,0%) - 18px);
+  height:36px;
+  z-index:3;
+  pointer-events:none;
+  opacity:.9;
+  transition:bottom 1.3s cubic-bezier(.34,1.05,.64,1);
 }
 .liquid-edge::before,
-.liquid-edge::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%;
-  background: linear-gradient(
+.liquid-edge::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:45% 55% 50% 50% / 55% 45% 55% 45%;
+  background:linear-gradient(
     to bottom,
     rgba(255,255,255,.22) 0%,
     rgba(122,181,78,.22) 35%,
@@ -142,115 +161,133 @@ body {
     rgba(89,148,45,0) 100%
   );
 }
-.liquid-edge::before {
-  animation: waveA 6s linear infinite;
-  transform: translateX(0);
+.liquid-edge::before{
+  animation:waveA 6s linear infinite;
+  transform:translateX(0);
 }
-.liquid-edge::after {
-  animation: waveB 8s linear infinite;
-  opacity: .7;
-  transform: translateX(-12%);
+.liquid-edge::after{
+  animation:waveB 8s linear infinite;
+  opacity:.7;
+  transform:translateX(-12%);
 }
-@keyframes waveA {
-  0% { transform: translateX(0) scaleX(1); }
-  50% { transform: translateX(-4%) scaleX(1.03); }
-  100% { transform: translateX(0) scaleX(1); }
+@keyframes waveA{
+  0%{transform:translateX(0) scaleX(1)}
+  50%{transform:translateX(-4%) scaleX(1.03)}
+  100%{transform:translateX(0) scaleX(1)}
 }
-@keyframes waveB {
-  0% { transform: translateX(-10%) scaleX(1.04); }
-  50% { transform: translateX(2%) scaleX(.98); }
-  100% { transform: translateX(-10%) scaleX(1.04); }
+@keyframes waveB{
+  0%{transform:translateX(-10%) scaleX(1.04)}
+  50%{transform:translateX(2%) scaleX(.98)}
+  100%{transform:translateX(-10%) scaleX(1.04)}
 }
-.pts-label {
-  position: absolute;
-  bottom: 12px;
-  left: 14px;
-  z-index: 5;
-  background: rgba(0,0,0,.48);
-  color: white;
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: clamp(.7rem,1.5vw,.84rem);
-  font-weight: 700;
-  letter-spacing: .3px;
-  backdrop-filter: blur(6px);
+
+.pts-label{
+  position:absolute;
+  bottom:12px;
+  left:14px;
+  z-index:5;
+  background:rgba(0,0,0,.48);
+  color:#fff;
+  padding:5px 14px;
+  border-radius:999px;
+  font-size:clamp(.7rem,1.5vw,.84rem);
+  font-weight:700;
+  letter-spacing:.3px;
+  backdrop-filter:blur(6px);
 }
-.lvs {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  flex-shrink: 0;
+
+.status-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  min-height:1em;
+  flex-shrink:0;
 }
-.lb {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 7px 10px 6px;
-  border-radius: 10px;
-  background: #e8e8e6;
-  border: 2px solid #ccc;
-  min-width: 82px;
-  flex: 1;
-  max-width: 130px;
-  transition: all .5s;
-  position: relative;
-  overflow: hidden;
+.status-note{
+  text-align:center;
+  font-size:.72rem;
+  color:#5f6368;
 }
-.lb.on {
-  border-color: transparent;
-  box-shadow: 0 3px 14px rgba(0,0,0,.14);
+.status-note.error{color:#b3261e}
+.status-note.ok{color:#2e7d32}
+
+.lvs{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:10px;
+  flex-shrink:0;
 }
-.lb.cur {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 20px rgba(0,0,0,.2);
+.lb{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:7px 10px 6px;
+  border-radius:10px;
+  background:#e8e8e6;
+  border:2px solid #ccc;
+  min-width:82px;
+  flex:1;
+  max-width:130px;
+  transition:all .5s;
+  position:relative;
+  overflow:hidden;
 }
-.lbf {
-  position: absolute;
-  inset: 0;
-  background: var(--c);
-  transform: translateY(100%);
-  transition: transform .9s cubic-bezier(.34,1.2,.64,1);
-  z-index: 0;
+.lb.on{
+  border-color:transparent;
+  box-shadow:0 3px 14px rgba(0,0,0,.14);
 }
-.lb.on .lbf {
-  transform: translateY(0);
+.lb.cur{
+  transform:translateY(-3px);
+  box-shadow:0 5px 20px rgba(0,0,0,.2);
 }
-.li {
-  font-size: 1.2rem;
-  position: relative;
-  z-index: 1;
-  margin-bottom: 2px;
+.lbf{
+  position:absolute;
+  inset:0;
+  background:var(--c);
+  transform:translateY(100%);
+  transition:transform .9s cubic-bezier(.34,1.2,.64,1);
+  z-index:0;
 }
-.ln {
-  font-size: clamp(.6rem,1.4vw,.78rem);
-  font-weight: 700;
-  position: relative;
-  z-index: 1;
-  color: #1a1a1a;
-  transition: color .4s;
-  text-align: center;
+.lb.on .lbf{transform:translateY(0)}
+.li{
+  font-size:1.2rem;
+  position:relative;
+  z-index:1;
+  margin-bottom:2px;
 }
-.lp {
-  font-size: clamp(.54rem,1.1vw,.64rem);
-  font-weight: 700;
-  letter-spacing: .4px;
-  position: relative;
-  z-index: 1;
-  color: #888;
-  transition: color .4s;
-  margin-top: 1px;
-  text-align: center;
+.ln{
+  font-size:clamp(.6rem,1.4vw,.78rem);
+  font-weight:700;
+  position:relative;
+  z-index:1;
+  color:#1a1a1a;
+  transition:color .4s;
+  text-align:center;
 }
-.lb.on .ln, .lb.on .lp {
-  color: rgba(255,255,255,.92);
+.lp{
+  font-size:clamp(.54rem,1.1vw,.64rem);
+  font-weight:700;
+  letter-spacing:.4px;
+  position:relative;
+  z-index:1;
+  color:#888;
+  transition:color .4s;
+  margin-top:1px;
+  text-align:center;
 }
-@media (max-width: 640px) {
-  .wrap { padding: 10px; }
-  .refresh-wrap { margin: 5px 0 8px; }
-  .lvs { gap: 5px; }
-  .lb { min-width: 74px; padding: 6px 8px 5px; }
+.lb.on .ln,.lb.on .lp{
+  color:rgba(255,255,255,.92);
+}
+
+@media (max-width:640px){
+  .wrap{padding:10px}
+  .refresh-wrap{margin:5px 0 8px}
+  .lvs{gap:5px}
+  .lb{min-width:74px;padding:6px 8px 5px}
 }
 </style>
 </head>
@@ -277,11 +314,28 @@ body {
     <div class="pts-label" id="ptsLabel">0 / 500 points</div>
   </div>
 
+  <div class="status-row">
+    <div class="status-note" id="statusNote"></div>
+  </div>
+
   <div class="lvs" id="levels"></div>
 </div>
 
 <script>
+/* ==========================================
+   PRODUCTION CONFIG
+   Replace only these values
+   ========================================== */
+const JSONBIN_ID = "69cff25faaba882197c08a39";
+const API_KEY = "$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK";
 const GOAL = 500;
+const AUTO_REFRESH_MS = 0; // 0 = off, e.g. 600000 = 10 minutes
+
+const BIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`;
+
+/* ==========================================
+   LEVEL TILES
+   ========================================== */
 const LEVELS = [
   { name: "Seed",   min: 0,   icon: "🌱", color: "#9aa78d" },
   { name: "Sprout", min: 50,  icon: "🌿", color: "#86b94a" },
@@ -294,7 +348,7 @@ const refreshBtn = document.getElementById("refreshBtn");
 const treeWrap = document.getElementById("treeWrap");
 const ptsLabel = document.getElementById("ptsLabel");
 const levelsEl = document.getElementById("levels");
-let points = 0;
+const statusNote = document.getElementById("statusNote");
 
 function buildLevels() {
   levelsEl.innerHTML = LEVELS.map((level, index) => `
@@ -326,6 +380,7 @@ function getCurrentLevelIndex(points) {
 function applyPoints(points) {
   const safePoints = Number(points) || 0;
   const fillPercent = getFillPercent(safePoints);
+
   treeWrap.style.setProperty("--fill-level", `${fillPercent}%`);
   ptsLabel.textContent = `${safePoints} / ${GOAL} points`;
 
@@ -338,18 +393,96 @@ function applyPoints(points) {
   });
 }
 
-function refreshTree() {
+function setStatus(message, type = "") {
+  statusNote.className = "status-note" + (type ? " " + type : "");
+  statusNote.textContent = message || "";
+}
+
+/* ==========================================
+   JSON PARSING
+   Supports:
+   - { totalPoints: 123 }
+   - { total: 123 }
+   - { points: 123 }
+   - { members: { Name: { points: 10 }, Other: { points: 15 } } }
+   - { members: { Name: 10, Other: 15 } }
+   - { entries: [{points:10}, {points:15}] }
+   ========================================== */
+function sumMembers(data) {
+  if (!data || typeof data !== "object") return 0;
+
+  if (typeof data.totalPoints === "number") return data.totalPoints;
+  if (typeof data.total === "number") return data.total;
+  if (typeof data.points === "number") return data.points;
+
+  if (data.members && typeof data.members === "object") {
+    return Object.values(data.members).reduce((sum, member) => {
+      if (typeof member === "number") return sum + member;
+      if (member && typeof member.points === "number") return sum + member.points;
+      if (member && typeof member.totalPoints === "number") return sum + member.totalPoints;
+      return sum;
+    }, 0);
+  }
+
+  if (Array.isArray(data.entries)) {
+    return data.entries.reduce((sum, entry) => {
+      if (entry && typeof entry.points === "number") return sum + entry.points;
+      return sum;
+    }, 0);
+  }
+
+  return 0;
+}
+
+async function fetchTreePoints() {
+  const headers = {};
+  if (API_KEY) headers["X-Access-Key"] = API_KEY;
+
+  const res = await fetch(BIN_URL, {
+    method: "GET",
+    headers,
+    cache: "no-store"
+  });
+
+  if (!res.ok) {
+    throw new Error(`Fetch failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+  const record = json && typeof json === "object" && "record" in json ? json.record : json;
+  return sumMembers(record);
+}
+
+let refreshInFlight = false;
+
+async function refreshTree() {
+  if (refreshInFlight) return;
+  refreshInFlight = true;
+  refreshBtn.disabled = true;
   refreshBtn.classList.add("spinning");
-  setTimeout(() => {
-    points += 25;
-    if (points > GOAL) points = GOAL;
+  setStatus("Refreshing...", "");
+
+  try {
+    const points = await fetchTreePoints();
     applyPoints(points);
+    setStatus("Latest team points loaded.", "ok");
+  } catch (err) {
+    console.error("Tree refresh failed:", err);
+    setStatus("Could not load points. Check JSONBIN_ID / API_KEY.", "error");
+  } finally {
+    refreshInFlight = false;
+    refreshBtn.disabled = false;
     refreshBtn.classList.remove("spinning");
-  }, 500);
+  }
 }
 
 buildLevels();
 applyPoints(0);
+refreshTree();
+
+if (AUTO_REFRESH_MS > 0) {
+  setInterval(refreshTree, AUTO_REFRESH_MS);
+}
 </script>
 </body>
 </html>
