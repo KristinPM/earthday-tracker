@@ -6,192 +6,144 @@
 <title>Activity Log</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-height:100vh;padding:0 0 48px;color:#1a1a1a}
-.page{max-width:900px;margin:0 auto;padding:24px 16px 0}
-.hidden{display:none!important}
-
-.gate,.card,.panel,.team-card,.log-card,.submit-bar,.who-bar,.cats-heading{
-  background:#fff;border:.5px solid #e4e4e2;border-radius:16px;
-}
-.gate{padding:36px 28px;text-align:center}
-.gate h2{font-size:2rem;font-weight:700;margin-bottom:8px}
-.gate p{font-size:.92rem;color:#777;line-height:1.6;margin-bottom:18px}
-.gate-row{display:flex;gap:10px;max-width:420px;margin:0 auto}
-.gate-row input{
-  flex:1;padding:12px 14px;border-radius:10px;border:1.5px solid #ddd;
-  font-family:inherit;font-size:.95rem;outline:none
-}
+body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-height:100vh;padding:0 0 48px}
+.page{max-width:760px;margin:0 auto;padding:24px 16px 0}
+.gate{background:white;border-radius:16px;border:.5px solid #e4e4e2;padding:36px 28px;text-align:center}
+.gate h2{font-size:2rem;font-weight:700;color:#1a1a1a;margin-bottom:8px}
+.gate p{font-size:.88rem;color:#888;margin-bottom:22px;line-height:1.6}
+.gate-row{display:flex;gap:10px;max-width:400px;margin:0 auto}
+.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:inherit;font-size:.9rem;color:#1a1a1a;outline:none}
 .gate-row input:focus{border-color:#639922}
-.btn-go,.btn-submit,.refresh-btn{
-  padding:11px 18px;background:#639922;color:#fff;border:none;border-radius:10px;
-  font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer
-}
-.btn-go:hover,.btn-submit:hover,.refresh-btn:hover{background:#4e7a1a}
-.gate-err{color:#c0392b;font-size:.82rem;margin-top:10px;min-height:18px}
-.prev-wrap{margin-top:18px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left}
-.prev-wrap.hidden{display:none}
-.prev-lbl{font-size:.72rem;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-go:hover{background:#4e7a1a}
+.gate-err{color:#c0392b;font-size:.8rem;margin-top:8px;min-height:18px}
+.prev-wrap{margin-top:18px;max-width:420px;margin-left:auto;margin-right:auto;text-align:left;display:none}
+.prev-lbl{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.chip{
-  padding:6px 12px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;
-  font-size:.82rem;color:#555;cursor:pointer
-}
-.chip:hover{border-color:#639922;color:#639922;background:#fff}
-
-.notice{
-  margin-bottom:12px;padding:11px 14px;border-left:4px solid #639922;border-radius:10px;
-  background:#eef6e5;color:#365418;font-size:.82rem;line-height:1.5
-}
-.notice.warn{background:#fff5e8;border-left-color:#d09b2d;color:#7a5312}
-.notice.err{background:#fff1f1;border-left-color:#c0392b;color:#8f2f24}
-
-.who-bar{
-  padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap
-}
-.who-name{font-size:1rem;font-weight:700}
-.who-meta{font-size:.78rem;color:#888;margin-top:2px}
-.who-btns{display:flex;gap:8px;flex-wrap:wrap}
-.btn-xs{
-  padding:6px 12px;border-radius:9px;border:.5px solid #ddd;background:#f3f3f1;color:#555;
-  font-size:.78rem;font-weight:700;cursor:pointer
-}
-.btn-xs:hover{background:#e9e9e6}
-.btn-xs.red{background:#fff5f5;border-color:#f2c9c9;color:#c0392b}
-.btn-xs.red:hover{background:#fee8e8}
-.btn-xs:disabled,.btn-go:disabled,.btn-submit:disabled,.refresh-btn:disabled{opacity:.7;cursor:not-allowed}
-
+.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:inherit}
+.chip:hover{border-color:#639922;color:#639922;background:white}
+.who-bar{background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.who-name{font-size:.95rem;color:#1a1a1a;font-weight:700}
+.who-meta{font-size:.75rem;color:#888;margin-top:1px}
+.who-btns{display:flex;gap:7px;flex-wrap:wrap}
+.btn-xs{padding:5px 12px;border-radius:8px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
+.btn-xs:hover{background:#e8e8e6}
+.btn-xs:disabled{opacity:.7;cursor:not-allowed}
+.btn-xs.red{background:#fff5f5;border-color:#f5c6c6;color:#c0392b}
+.btn-xs.red:hover{background:#fee2e2}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-.stat{background:#fff;border:.5px solid #e4e4e2;border-radius:12px;padding:14px;text-align:center}
-.stat-n{font-size:26px;font-weight:700;line-height:1}
-.stat-l{font-size:10px;color:#888;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.stat{background:white;border-radius:12px;padding:13px;text-align:center;border:.5px solid #e4e4e2}
+.stat-n{font-size:24px;font-weight:700;line-height:1}
+.stat-l{font-size:10px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
 .sg{color:#639922}.st{color:#1D9E75}.sa{color:#BA7517}
-
-.lv-card{background:#fff;border:.5px solid #e4e4e2;border-radius:14px;padding:16px 20px;margin-bottom:18px}
-.lv-card h3{font-size:.92rem;margin-bottom:11px}
-.pb-wrap,.tpb-wrap{height:10px;background:#ececec;border-radius:999px;overflow:hidden}
-.pb-fill,.tpb-fill{height:100%;background:#639922;border-radius:999px;transition:width .3s}
-.pb-meta{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-top:6px}
-.ms-row{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
-.ms{text-align:center;font-size:9px;color:#aaa;flex:1}
-.ms-dot{width:8px;height:8px;border-radius:50%;background:#ddd;margin:0 auto 4px}
+.lv-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
+.lv-card h3{font-size:.9rem;color:#1a1a1a;margin-bottom:11px}
+.pb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
+.pb-fill{height:100%;border-radius:999px;background:#639922;transition:width .3s}
+.pb-meta{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.ms-row{display:flex;justify-content:space-between;margin-top:11px}
+.ms{text-align:center;font-size:9px;color:#aaa}
 .ms.on{color:#27500A;font-weight:700}
+.ms-dot{width:7px;height:7px;border-radius:50%;background:#ddd;margin:0 auto 3px}
 .ms.on .ms-dot{background:#639922}
-.ms.cur .ms-dot{box-shadow:0 0 0 4px #eaf3de}
-
-.cats-heading{padding:12px 16px;margin-bottom:12px;display:flex;gap:10px;align-items:center;font-size:.96rem;font-weight:700}
-.cats-heading-bar{display:inline-block;width:4px;height:20px;background:#639922;border-radius:2px}
-.cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.cat-pill{
-  padding:7px 14px;border-radius:999px;border:1px solid #ddd;background:#fff;color:#555;
-  font-size:12px;font-weight:700;cursor:pointer
-}
+.ms.cur .ms-dot{background:#639922;box-shadow:0 0 0 3px #EAF3DE}
+.ms.cur{color:#27500A;font-weight:700}
+.cats-section{margin-bottom:6px}
+.cats-heading{font-size:.95rem;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding:12px 16px;background:white;border-radius:12px;border:.5px solid #e4e4e2;display:flex;align-items:center;gap:10px}
+.cats-heading-bar{display:inline-block;width:4px;height:20px;background:#639922;border-radius:2px;flex-shrink:0}
+.cats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.cat-pill{padding:6px 14px;border-radius:999px;border:1px solid #ddd;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#555;font-family:inherit}
 .cat-pill:hover{border-color:#639922;color:#639922}
-.cat-pill.active{background:#639922;border-color:#639922;color:#fff}
-
-.panel{padding:16px 18px;margin-bottom:18px}
-.ph{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.ptitle{font-size:.96rem;font-weight:700}
-.psub{font-size:11px;color:#999}
-.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.ftag{
-  padding:4px 10px;border-radius:999px;border:.5px solid #ddd;background:#fff;color:#888;
-  font-size:10px;cursor:pointer
-}
-.ftag.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.act-list{display:flex;flex-direction:column;gap:6px}
-.act{
-  display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;border:.5px solid #e8e8e6;
-  background:#fafafa;cursor:pointer
-}
-.act:hover{background:#f2f2ef}
-.act.done{background:#eaf3de;border-color:#98c55c}
-.act.pending{background:#fff6dd;border-color:#f0c040}
-.chk{
-  width:19px;height:19px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center
-}
-.tick{
-  width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;
-  transform:rotate(-45deg) translateY(-1px);opacity:0
-}
+.cat-pill.active{background:#639922;border-color:#639922;color:white}
+.filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.ftag{padding:3px 10px;border-radius:999px;border:.5px solid #ddd;background:white;font-size:10px;cursor:pointer;color:#888;font-family:inherit}
+.ftag.active{background:#1a1a1a;border-color:#1a1a1a;color:white}
+.panel{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.ptitle{font-size:.95rem;color:#1a1a1a}
+.psub{font-size:11px;color:#aaa}
+.act-list{display:flex;flex-direction:column;gap:5px}
+.act{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer;transition:background .1s}
+.act:hover{background:#f0f0ee}
+.act.done{background:#EAF3DE;border-color:#97C459}
+.chk{width:18px;height:18px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s}
 .act.done .chk{background:#639922;border-color:#639922}
-.act.pending .chk{background:#f0c040;border-color:#f0c040}
-.act.done .tick,.act.pending .tick{opacity:1}
+.tick{width:7px;height:4px;border-left:2px solid white;border-bottom:2px solid white;transform:rotate(-45deg) translateY(-1px);opacity:0;transition:opacity .1s}
+.act.done .tick{opacity:1}
 .act-body{flex:1;min-width:0}
-.act-text{font-size:12px;line-height:1.4}
-.act-tag{font-size:10px;color:#999;margin-top:2px}
-.act-pts{font-size:11px;font-weight:700;color:#888;flex-shrink:0}
-.act.done .act-text,.act.done .act-pts{color:#27500A}
-.act.pending .act-text,.act.pending .act-pts{color:#8a5e00}
-.no-cat{display:flex;align-items:center;justify-content:center;height:120px;border:.5px dashed #ddd;border-radius:10px;color:#bbb;font-size:12px}
-
-.team-card,.log-card{padding:16px 20px;margin-bottom:18px}
-.team-card h3,.log-card h3{font-size:.92rem;margin-bottom:12px}
+.act-text{font-size:12px;color:#1a1a1a;line-height:1.4}
+.act.done .act-text{color:#27500A}
+.act-tag{font-size:10px;color:#aaa;margin-top:1px}
+.act.done .act-tag{color:#3B6D11}
+.act-pts{font-size:11px;font-weight:700;color:#aaa;flex-shrink:0}
+.act.done .act-pts{color:#639922}
+.no-cat{display:flex;align-items:center;justify-content:center;height:110px;border:.5px dashed #ddd;border-radius:10px}
+.no-cat p{font-size:12px;color:#bbb}
+.team-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px;margin-bottom:18px}
+.team-card h3{font-size:.9rem;color:#1a1a1a;margin-bottom:12px}
 .team-big{font-size:2rem;font-weight:700;color:#639922;line-height:1}
-.team-sub{font-size:.8rem;color:#888;margin-top:4px;margin-bottom:12px}
-.tpb-lbl{font-size:10px;color:#999;text-align:right;margin-top:6px;margin-bottom:10px}
-.mlist{display:flex;flex-direction:column;gap:6px}
-.mrow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f7f7f5;border-radius:8px;border:.5px solid #ececec}
-.mname{font-size:12px;font-weight:700;min-width:110px;flex-shrink:0}
-.mbar-wrap{flex:1;height:4px;background:#ececec;border-radius:999px;overflow:hidden}
-.mbar-fill{height:100%;background:#639922;border-radius:999px}
-.mpts{font-size:11px;font-weight:700;color:#639922;min-width:48px;text-align:right;flex-shrink:0}
-.macts{font-size:10px;color:#999;min-width:60px;text-align:right;flex-shrink:0}
-.you-tag{font-size:9px;padding:1px 6px;border-radius:999px;background:#eaf3de;color:#27500A;font-weight:700}
-
-.log-entry{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:.5px solid #f0f0ee}
+.team-sub{font-size:.78rem;color:#888;margin-top:2px;margin-bottom:12px}
+.tpb-wrap{height:9px;background:#eee;border-radius:999px;overflow:hidden;margin-bottom:5px}
+.tpb-fill{height:100%;border-radius:999px;background:#639922;transition:width .3s}
+.tpb-lbl{font-size:10px;color:#aaa;text-align:right;margin-bottom:10px}
+.mlist{display:flex;flex-direction:column;gap:5px}
+.mrow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f7f7f5;border-radius:8px;border:.5px solid #ebebeb}
+.mname{font-size:12px;font-weight:700;color:#1a1a1a;min-width:100px;flex-shrink:0}
+.mbar-wrap{flex:1;height:4px;background:#eee;border-radius:999px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:999px;background:#639922;transition:width .3s}
+.mpts{font-size:11px;font-weight:700;color:#639922;min-width:45px;text-align:right;flex-shrink:0}
+.macts{font-size:10px;color:#aaa;min-width:55px;text-align:right;flex-shrink:0}
+.you-tag{font-size:9px;padding:1px 6px;background:#EAF3DE;color:#27500A;border-radius:999px;font-weight:700;flex-shrink:0}
+.log-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px}
+.log-card h3{font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
+.log-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f0f0ee;font-size:12px;color:#666;gap:7px}
 .log-entry:last-child{border-bottom:none}
-.le-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#666}
-.le-cat{font-size:10px;padding:1px 7px;border-radius:999px;background:#eaf3de;color:#27500A;flex-shrink:0}
-.le-pts{font-size:11px;font-weight:700;color:#639922;flex-shrink:0}
+.le-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.le-cat{font-size:10px;padding:1px 7px;border-radius:999px;background:#EAF3DE;color:#27500A;flex-shrink:0}
+.le-pts{color:#639922;font-weight:700;flex-shrink:0;font-size:11px}
 .empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
-
-.submit-bar{
-  position:sticky;bottom:16px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;
-  box-shadow:0 6px 24px rgba(0,0,0,.08)
-}
-.submit-summary{font-size:.84rem;color:#555;line-height:1.4}
-.submit-summary strong{color:#1a1a1a}
-.submit-actions{display:flex;gap:8px}
-.btn-clear{
-  padding:10px 14px;border-radius:10px;border:.5px solid #ddd;background:#f0f0ee;color:#555;
-  font-size:.82rem;font-weight:700;cursor:pointer
-}
-.btn-clear:hover{background:#e4e4e1}
-.submit-flash{
-  display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);
-  background:#27500A;color:#fff;padding:10px 18px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.18);
-  font-size:.88rem;font-weight:700;z-index:999
-}
-
-.badge{font-size:9px;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:4px}
+.badge{font-size:9px;padding:2px 7px;border-radius:999px;font-weight:700;margin-left:3px}
 .badge-easy{background:#E1F5EE;color:#085041}
 .badge-medium{background:#FAEEDA;color:#633806}
 .badge-family{background:#EEEDFE;color:#3C3489}
 .badge-group{background:#FBEAF0;color:#72243E}
-
-@media (max-width:700px){
+.hidden{display:none}
+.notice{background:#e8f5e9;border-left:3px solid #639922;padding:10px 14px;border-radius:0 8px 8px 0;font-size:.78rem;color:#2e7d32;margin-bottom:14px;line-height:1.5}
+.notice.local{background:#fff8e1;border-left-color:#f9a825;color:#795548}
+.notice.error{background:#fff1f1;border-left-color:#c0392b;color:#8f2f24}
+.act.pending{background:#FFF8E7;border-color:#F0C040}
+.act.pending .chk{background:#F0C040;border-color:#F0C040}
+.act.pending .tick{opacity:1}
+.act.pending .act-text{color:#5C3D00}
+.act.pending .act-tag{color:#8A5E00}
+.act.pending .act-pts{color:#B07D00}
+.submit-bar{position:sticky;bottom:16px;margin-top:14px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:12px 16px;box-shadow:0 4px 18px rgba(0,0,0,.10)}
+.submit-bar.hidden{display:none}
+.submit-summary{font-size:.82rem;color:#555;line-height:1.4}
+.submit-summary strong{color:#1a1a1a}
+.btn-submit{padding:10px 22px;background:#639922;color:white;border:none;border-radius:10px;font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .12s}
+.btn-submit:hover{background:#4e7a1a}
+.btn-submit:disabled{background:#aaa;cursor:not-allowed}
+.btn-clear{padding:10px 14px;background:#f0f0ee;color:#555;border:.5px solid #ddd;border-radius:10px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-clear:hover{background:#e4e4e2}
+.submit-flash{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27500A;color:white;padding:10px 22px;border-radius:10px;font-size:.88rem;font-weight:700;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+@media (max-width:680px){
+  .gate-row,.who-bar,.submit-bar{flex-direction:column;align-items:stretch}
   .stats-row{grid-template-columns:1fr}
-  .gate-row{flex-direction:column}
-  .submit-bar{flex-direction:column;align-items:stretch}
-  .submit-actions{justify-content:stretch}
-  .submit-actions button{flex:1}
 }
 </style>
 </head>
 <body>
-
 <div class="page" id="gate-page">
   <div class="gate">
-    <h2>🌍 Activity Log</h2>
+    <h2>&#127757; Activity Log</h2>
     <p>Enter your name or identifier to log activities and earn points for the team tree.</p>
     <div class="gate-row">
-      <input id="name-in" type="text" maxlength="60" placeholder="Your name or identifier">
+      <input type="text" id="name-in" placeholder="Your name or identifier" maxlength="60"/>
       <button class="btn-go" onclick="startSession()">Start</button>
     </div>
     <div class="gate-err" id="gate-err"></div>
-
-    <div class="prev-wrap hidden" id="prev-wrap">
+    <div class="prev-wrap" id="prev-wrap">
       <div class="prev-lbl">Team members — click to sign in:</div>
       <div class="chip-row" id="chip-row"></div>
     </div>
@@ -199,7 +151,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 </div>
 
 <div class="page hidden" id="app-page">
-  <div class="notice" id="sync-notice">Loading…</div>
+  <div class="notice" id="sync-notice">&#128994; Loading...</div>
 
   <div class="who-bar">
     <div>
@@ -209,14 +161,14 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
     <div class="who-btns">
       <button class="btn-xs" id="refresh-btn" onclick="refreshFromServer()">Refresh</button>
       <button class="btn-xs" onclick="switchUser()">Switch user</button>
-      <button class="btn-xs red" onclick="resetMyPoints()">Reset my points</button>
+      <button class="btn-xs red" onclick="resetCurrentUser()">Reset my points</button>
     </div>
   </div>
 
   <div class="stats-row">
     <div class="stat"><div class="stat-n sg" id="s-pts">0</div><div class="stat-l">My points</div></div>
     <div class="stat"><div class="stat-n st" id="s-acts">0</div><div class="stat-l">Actions done</div></div>
-    <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:18px">Seedling</div><div class="stat-l">My level</div></div>
+    <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">Seedling</div><div class="stat-l">My level</div></div>
   </div>
 
   <div class="lv-card">
@@ -232,12 +184,12 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
     </div>
   </div>
 
-  <div class="cats-heading"><span class="cats-heading-bar"></span>Activity Categories</div>
-  <div class="cats" id="cats"></div>
-
-  <div class="panel" id="panel">
-    <div class="no-cat">Select a category above to see activities</div>
+  <div class="cats-section">
+    <div class="cats-heading"><span class="cats-heading-bar"></span>Activity Categories</div>
+    <div class="cats" id="cats"></div>
   </div>
+
+  <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
 
   <div class="team-card">
     <h3>Team total</h3>
@@ -245,7 +197,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
     <div class="team-sub" id="team-sub">0 participants</div>
     <div class="tpb-wrap"><div class="tpb-fill" id="tpb" style="width:0%"></div></div>
     <div class="tpb-lbl" id="tpb-lbl">0 / 500 pts team goal</div>
-    <div class="mlist" id="mlist"><div class="empty">No participants yet</div></div>
+    <div class="mlist" id="mlist"></div>
   </div>
 
   <div class="log-card">
@@ -257,7 +209,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 <div class="page">
   <div class="submit-bar hidden" id="submit-bar">
     <div class="submit-summary" id="submit-summary"></div>
-    <div class="submit-actions">
+    <div style="display:flex;gap:8px">
       <button class="btn-clear" onclick="clearPending()">Clear</button>
       <button class="btn-submit" id="btn-submit" onclick="submitActivities()">Log Activities</button>
     </div>
@@ -267,27 +219,27 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 <div class="submit-flash" id="submit-flash"></div>
 
 <script>
-var JSONBIN_ID  = '69cff25faaba882197c08a39';
-var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
-var LOCAL_KEY   = 'ed_team_v2';
-var TEAM_GOAL   = 500;
-var POLL_MS     = 600000;
+var JSONBIN_ID='69cff25faaba882197c08a39';
+var JSONBIN_KEY='$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
+var LOCAL_KEY='ed_team_v2';
+var TEAM_GOAL=500;
+var POLL_MS=600000;
 
-var LEVELS = [
-  {name:'Seedling', min:0, next:125},
-  {name:'Sprout', min:125, next:250},
-  {name:'Grower', min:250, next:375},
-  {name:'Guardian', min:375, next:500},
-  {name:'Champion', min:500, next:null}
+var LEVELS=[
+  {name:'Seedling',min:0,next:125},
+  {name:'Sprout',min:125,next:250},
+  {name:'Grower',min:250,next:375},
+  {name:'Guardian',min:375,next:500},
+  {name:'Champion',min:500,next:null}
 ];
 
-var CATS = [
+var CATS=[
   {id:'energy',name:'Energy at Home',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Turn off lights when leaving a room',tag:'quick win',pts:1},
     {text:'Unplug one unused device or charger',tag:'quick win',pts:1},
     {text:'Wash clothes in cold water',tag:'quick win',pts:2},
     {text:'Air-dry one load of laundry',tag:'quick win',pts:3},
-    {text:'Adjust thermostat by 1–2 degrees',tag:'medium effort',pts:3},
+    {text:'Adjust thermostat by 1-2 degrees',tag:'medium effort',pts:3},
     {text:'Run dishwasher only when full',tag:'quick win',pts:2},
     {text:'Replace one bulb with LED',tag:'medium effort',pts:3},
     {text:'Take a shorter shower',tag:'quick win',pts:2},
@@ -315,7 +267,7 @@ var CATS = [
     {text:'Identify 5 local birds or plants',tag:'quick win',pts:2},
     {text:'Water plants using collected rainwater',tag:'medium effort',pts:3},
     {text:'Clean up a garden or green space',tag:'family fun',pts:4},
-    {text:'Create a pollinator-friendly pot or patch',tag:'weekend project',pts:6},
+    {text:'Create a pollinator-friendly pot or patch',tag:'medium effort',pts:6},
     {text:'Share a photo from nature with your team',tag:'quick win',pts:1}
   ]},
   {id:'community',name:'Community Impact',badge:'Group',bc:'badge-group',actions:[
@@ -356,495 +308,459 @@ var CATS = [
   ]}
 ];
 
-var CAT_NAMES = {};
-for(var i=0;i<CATS.length;i++) CAT_NAMES[CATS[i].id] = CATS[i].name;
+var CAT_NAMES={};
+for(var ci=0;ci<CATS.length;ci++) CAT_NAMES[CATS[ci].id]=CATS[ci].name;
 
-var teamData = {members:{}};
-var currentUser = '';
-var activeCat = null;
-var activeTag = 'all';
-var pending = {};
-var pollTimer = null;
-var syncStatus = 'local';
+var teamData={members:{}};
+var currentUser='';
+var activeCat=null;
+var activeTag='all';
+var pending={};
+var pollTimer=null;
+var syncMode='local';
 
 function escH(s){
-  return String(s || '').replace(/[&<>"']/g,function(m){
+  return String(s||'').replace(/[&<>"']/g,function(m){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
   });
 }
 function slug(s){
-  return String(s || '').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');
+  return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');
 }
+function clone(v){ return JSON.parse(JSON.stringify(v)); }
+
 function readLocal(){
   try{
-    var raw = localStorage.getItem(LOCAL_KEY);
+    var raw=localStorage.getItem(LOCAL_KEY);
     if(!raw) return null;
-    var parsed = JSON.parse(raw);
-    if(parsed && parsed.members) return parsed;
+    var parsed=JSON.parse(raw);
+    if(parsed&&parsed.members) return parsed;
   }catch(e){}
   return null;
 }
 function writeLocal(){
   try{
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(teamData));
-    localStorage.setItem('ed_pts_tick', String(Date.now()));
+    localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));
+    localStorage.setItem('ed_pts_tick',String(Date.now()));
   }catch(e){}
 }
-function emptyUser(name){
-  return {name:name, pts:0, acts:0, done:{}, log:[], updatedAt:Date.now()};
+function userTemplate(name){
+  return {name:name,pts:0,acts:0,done:{},log:[],updatedAt:Date.now()};
+}
+function normalizeUser(u,fallbackName){
+  var x=clone(u||{});
+  x.name=x.name||fallbackName||'';
+  x.pts=Number(x.pts||0);
+  x.acts=Number(x.acts||0);
+  x.done=x.done||{};
+  x.log=Array.isArray(x.log)?x.log:[];
+  x.updatedAt=Number(x.updatedAt||0);
+  return x;
 }
 function getUser(name){
-  var key = slug(name);
-  if(!teamData.members[key]){
-    teamData.members[key] = emptyUser(name);
-  }
-  if(!teamData.members[key].name) teamData.members[key].name = name;
-  if(!teamData.members[key].done) teamData.members[key].done = {};
-  if(!teamData.members[key].log) teamData.members[key].log = [];
-  if(typeof teamData.members[key].pts !== 'number') teamData.members[key].pts = Number(teamData.members[key].pts || 0);
-  if(typeof teamData.members[key].acts !== 'number') teamData.members[key].acts = Number(teamData.members[key].acts || 0);
+  var key=slug(name);
+  if(!teamData.members[key]) teamData.members[key]=userTemplate(name);
+  teamData.members[key]=normalizeUser(teamData.members[key],name);
   return teamData.members[key];
 }
 function userScore(u){
   if(!u) return -1;
-  var pts = Number(u.pts || 0);
-  var acts = Number(u.acts || 0);
-  var logLen = Array.isArray(u.log) ? u.log.length : 0;
-  var doneLen = u.done ? Object.keys(u.done).length : 0;
-  var updated = Number(u.updatedAt || 0);
-  return (pts * 100000000) + (acts * 1000000) + (logLen * 1000) + doneLen + (updated / 10000000000000);
+  var pts=Number(u.pts||0);
+  var acts=Number(u.acts||0);
+  var logLen=(u.log&&Array.isArray(u.log))?u.log.length:0;
+  var doneLen=u.done?Object.keys(u.done).length:0;
+  var updated=Number(u.updatedAt||0);
+  return (pts*100000000)+(acts*1000000)+(logLen*1000)+doneLen+(updated/10000000000000);
 }
-function clone(obj){
-  return JSON.parse(JSON.stringify(obj));
+function mergeUser(localUser,remoteUser,fallbackName){
+  if(localUser&&remoteUser){
+    localUser=normalizeUser(localUser,fallbackName);
+    remoteUser=normalizeUser(remoteUser,fallbackName);
+    return userScore(localUser)>=userScore(remoteUser)?localUser:remoteUser;
+  }
+  if(localUser) return normalizeUser(localUser,fallbackName);
+  if(remoteUser) return normalizeUser(remoteUser,fallbackName);
+  return normalizeUser(null,fallbackName);
 }
-function smartMerge(remote){
-  if(!remote || !remote.members) return;
+function mergeDatasets(localData,remoteData){
+  var merged={members:{}};
+  var localMembers=(localData&&localData.members)?localData.members:{};
+  var remoteMembers=(remoteData&&remoteData.members)?remoteData.members:{};
+  var all={};
 
-  var merged = {members:{}};
-  var localMembers = (teamData && teamData.members) ? teamData.members : {};
-  var remoteMembers = remote.members || {};
-  var all = {};
-
-  Object.keys(localMembers).forEach(function(k){ all[k] = true; });
-  Object.keys(remoteMembers).forEach(function(k){ all[k] = true; });
+  Object.keys(localMembers).forEach(function(k){all[k]=true;});
+  Object.keys(remoteMembers).forEach(function(k){all[k]=true;});
 
   Object.keys(all).forEach(function(k){
-    var localUser = localMembers[k];
-    var remoteUser = remoteMembers[k];
-
-    if(localUser && remoteUser){
-      merged.members[k] = userScore(localUser) >= userScore(remoteUser) ? clone(localUser) : clone(remoteUser);
-    }else if(localUser){
-      merged.members[k] = clone(localUser);
-    }else if(remoteUser){
-      merged.members[k] = clone(remoteUser);
-    }
+    var fallbackName=(localMembers[k]&&localMembers[k].name)||(remoteMembers[k]&&remoteMembers[k].name)||'';
+    merged.members[k]=mergeUser(localMembers[k],remoteMembers[k],fallbackName);
   });
 
-  teamData = merged;
+  return merged;
+}
+function smartMerge(remote){
+  teamData=mergeDatasets(teamData,remote);
 }
 function levelForPoints(pts){
-  var lv = LEVELS[0];
-  for(var i=0;i<LEVELS.length;i++){
-    if(pts >= LEVELS[i].min) lv = LEVELS[i];
-  }
+  var lv=LEVELS[0];
+  for(var i=0;i<LEVELS.length;i++) if(pts>=LEVELS[i].min) lv=LEVELS[i];
   return lv;
 }
 function updateNotice(){
-  var el = document.getElementById('sync-notice');
-  if(syncStatus === 'remote'){
-    el.className = 'notice';
-    el.textContent = '🟢 Synced with saved team data.';
-  }else if(syncStatus === 'saving'){
-    el.className = 'notice warn';
-    el.textContent = '🟡 Saving your latest updates…';
-  }else if(syncStatus === 'error'){
-    el.className = 'notice err';
-    el.textContent = '🔴 Could not save to the shared tracker. Your local copy is still on this device. Click Refresh and try again.';
+  var el=document.getElementById('sync-notice');
+  if(syncMode==='remote'){
+    el.className='notice';
+    el.innerHTML='&#128994; Shared team data synced.';
+  }else if(syncMode==='saving'){
+    el.className='notice';
+    el.innerHTML='&#128336; Merging local + shared points and saving...';
+  }else if(syncMode==='error'){
+    el.className='notice error';
+    el.innerHTML='&#9888;&#65039; Save failed. Local points are still on this device. Click Refresh and try again.';
   }else{
-    el.className = 'notice warn';
-    el.textContent = '🟡 Using local data until shared data is loaded.';
+    el.className='notice local';
+    el.innerHTML='&#128993; Using local data until shared data loads.';
   }
-}
-function renderGate(){
-  refreshGate();
 }
 function refreshGate(){
-  var keys = Object.keys(teamData.members || {});
-  keys.sort(function(a,b){
-    return (teamData.members[a].name || '').localeCompare(teamData.members[b].name || '');
-  });
-
-  var wrap = document.getElementById('prev-wrap');
-  var row = document.getElementById('chip-row');
-
+  var keys=Object.keys(teamData.members||{});
+  var wrap=document.getElementById('prev-wrap');
   if(!keys.length){
-    wrap.classList.add('hidden');
-    row.innerHTML = '';
+    wrap.style.display='none';
+    document.getElementById('chip-row').innerHTML='';
     return;
   }
-
-  var h = '';
+  keys.sort(function(a,b){
+    var ap=Number(teamData.members[a].pts||0), bp=Number(teamData.members[b].pts||0);
+    if(bp!==ap) return bp-ap;
+    return String(teamData.members[a].name||'').localeCompare(String(teamData.members[b].name||''));
+  });
+  var h='';
   for(var i=0;i<keys.length;i++){
-    var m = teamData.members[keys[i]];
-    h += '<button class="chip" type="button" onclick="useExistingUser(\'' + escH(m.name).replace(/'/g,"&#39;") + '\')">' + escH(m.name) + '</button>';
+    var m=normalizeUser(teamData.members[keys[i]]);
+    h+='<button class="chip" data-name="'+escH(m.name)+'">'+escH(m.name)+' · '+m.pts+' pts</button>';
   }
-  row.innerHTML = h;
-  wrap.classList.remove('hidden');
+  document.getElementById('chip-row').innerHTML=h;
+  wrap.style.display='block';
 }
 function renderCategories(){
-  var el = document.getElementById('cats');
-  var h = '';
+  var el=document.getElementById('cats'),h='';
   for(var i=0;i<CATS.length;i++){
-    var c = CATS[i];
-    h += '<button type="button" class="cat-pill' + (activeCat && activeCat.id === c.id ? ' active' : '') + '" onclick="selectCategory(\'' + c.id + '\')">' + escH(c.name) + '</button>';
+    var c=CATS[i];
+    h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" onclick="selectCategory(\''+c.id+'\')">'+escH(c.name)+'</button>';
   }
-  el.innerHTML = h;
+  el.innerHTML=h;
 }
 function selectCategory(id){
-  for(var i=0;i<CATS.length;i++){
-    if(CATS[i].id === id){
-      activeCat = CATS[i];
-      activeTag = 'all';
-      break;
-    }
-  }
+  for(var i=0;i<CATS.length;i++) if(CATS[i].id===id){ activeCat=CATS[i]; break; }
+  activeTag='all';
   renderCategories();
   renderPanel(getUser(currentUser));
 }
-function allTagsForCat(cat){
-  var map = {};
-  for(var i=0;i<cat.actions.length;i++) map[cat.actions[i].tag] = true;
-  return Object.keys(map);
+function tagsForCat(cat){
+  var map={},out=[];
+  for(var i=0;i<cat.actions.length;i++) map[cat.actions[i].tag]=true;
+  for(var k in map) out.push(k);
+  return out;
 }
-function renderPanel(user){
-  var panel = document.getElementById('panel');
+function renderPanel(d){
+  var panel=document.getElementById('panel');
   if(!activeCat){
-    panel.innerHTML = '<div class="no-cat">Select a category above to see activities</div>';
+    panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';
     updateSubmitBar();
     return;
   }
-
-  var tags = allTagsForCat(activeCat);
-  var h = '<div class="ph"><div class="ptitle">' + escH(activeCat.name) + ' <span class="badge ' + activeCat.bc + '">' + escH(activeCat.badge) + '</span></div><div class="psub">Select activities, then click Log Activities</div></div>';
-
-  h += '<div class="filter-row">';
-  h += '<button type="button" class="ftag' + (activeTag === 'all' ? ' active' : '') + '" data-tag="all">All</button>';
-  for(var i=0;i<tags.length;i++){
-    h += '<button type="button" class="ftag' + (activeTag === tags[i] ? ' active' : '') + '" data-tag="' + escH(tags[i]) + '">' + escH(tags[i]) + '</button>';
-  }
-  h += '</div>';
-
-  h += '<div class="act-list">';
+  var tags=tagsForCat(activeCat);
+  var h='<div class="ph"><div class="ptitle">'+escH(activeCat.name)+' <span class="badge '+activeCat.bc+'">'+escH(activeCat.badge)+'</span></div><div class="psub">Choose activities, then log them</div></div>';
+  h+='<div class="filter-row">';
+  h+='<button class="ftag'+(activeTag==='all'?' active':'')+'" data-tag="all">All</button>';
+  for(var i=0;i<tags.length;i++) h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+escH(tags[i])+'">'+escH(tags[i])+'</button>';
+  h+='</div><div class="act-list">';
   for(var j=0;j<activeCat.actions.length;j++){
-    var a = activeCat.actions[j];
-    if(activeTag !== 'all' && a.tag !== activeTag) continue;
-
-    var key = activeCat.id + '|' + a.text;
-    var done = !!user.done[key];
-    var pend = !!pending[key];
-    var cls = 'act' + (done ? ' done' : (pend ? ' pending' : ''));
-    var ptsLabel = (done ? 'Done' : '+' + a.pts + ' pts');
-
-    h += '<div class="' + cls + '" data-key="' + escH(key) + '" data-pts="' + a.pts + '" data-text="' + escH(a.text) + '">';
-    h += '<div class="chk"><div class="tick"></div></div>';
-    h += '<div class="act-body"><div class="act-text">' + escH(a.text) + '</div><div class="act-tag">' + escH(a.tag) + '</div></div>';
-    h += '<div class="act-pts">' + escH(ptsLabel) + '</div>';
-    h += '</div>';
+    var a=activeCat.actions[j];
+    if(activeTag!=='all'&&a.tag!==activeTag) continue;
+    var key=activeCat.id+'|'+a.text;
+    var done=!!d.done[key];
+    var pend=!!pending[key];
+    var cls='act'+(done?' done':(pend?' pending':''));
+    var ptsLbl=done?'Done':('+'+a.pts+' pts');
+    h+='<div class="'+cls+'" data-key="'+escH(key)+'" data-pts="'+a.pts+'" data-text="'+escH(a.text)+'">';
+    h+='<div class="chk"><div class="tick"></div></div>';
+    h+='<div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+escH(a.tag)+'</div></div>';
+    h+='<div class="act-pts">'+ptsLbl+'</div></div>';
   }
-  h += '</div>';
-
-  panel.innerHTML = h;
+  h+='</div>';
+  panel.innerHTML=h;
   updateSubmitBar();
 }
-function renderStats(user){
-  document.getElementById('who-name').textContent = user.name;
-  document.getElementById('who-meta').textContent = 'Your saved actions and points stay attached to this name.';
-  document.getElementById('s-pts').textContent = user.pts;
-  document.getElementById('s-acts').textContent = user.acts;
+function renderStats(d){
+  document.getElementById('who-name').textContent=d.name;
+  document.getElementById('who-meta').textContent='Saved points stay attached to this name across refreshes.';
+  document.getElementById('s-pts').textContent=d.pts;
+  document.getElementById('s-acts').textContent=d.acts;
+  var lv=levelForPoints(d.pts);
+  document.getElementById('s-lvl').textContent=lv.name;
 
-  var lv = levelForPoints(user.pts);
-  document.getElementById('s-lvl').textContent = lv.name;
-
-  var pct = 100, lbl = 'Champion reached';
-  if(lv.next !== null){
-    pct = Math.max(0, Math.min(100, Math.round(((user.pts - lv.min) / (lv.next - lv.min)) * 100)));
-    lbl = user.pts + ' / ' + lv.next + ' pts to ' + LEVELS[Math.min(LEVELS.length - 1, LEVELS.indexOf ? LEVELS.indexOf(lv) + 1 : 1)]?.name;
-    if(lv.name === 'Seedling') lbl = user.pts + ' / 125 pts to Sprout';
-    if(lv.name === 'Sprout') lbl = user.pts + ' / 250 pts to Grower';
-    if(lv.name === 'Grower') lbl = user.pts + ' / 375 pts to Guardian';
-    if(lv.name === 'Guardian') lbl = user.pts + ' / 500 pts to Champion';
+  var pct=100,lbl='Champion reached';
+  if(lv.next!==null){
+    pct=Math.max(0,Math.min(100,Math.round(((d.pts-lv.min)/(lv.next-lv.min))*100)));
+    if(lv.name==='Seedling') lbl=d.pts+' / 125 pts to Sprout';
+    if(lv.name==='Sprout') lbl=d.pts+' / 250 pts to Grower';
+    if(lv.name==='Grower') lbl=d.pts+' / 375 pts to Guardian';
+    if(lv.name==='Guardian') lbl=d.pts+' / 500 pts to Champion';
   }
+  document.getElementById('pb').style.width=pct+'%';
+  document.getElementById('pb-lbl').textContent=lbl;
+  document.getElementById('pb-pct').textContent=pct+'%';
 
-  document.getElementById('pb').style.width = pct + '%';
-  document.getElementById('pb-lbl').textContent = lbl;
-  document.getElementById('pb-pct').textContent = pct + '%';
-
-  for(var i=0;i<5;i++){
-    document.getElementById('ms' + i).className = 'ms';
-  }
-  var mins = [0,125,250,375,500];
-  var curIdx = 0;
+  for(var i=0;i<5;i++) document.getElementById('ms'+i).className='ms';
+  var mins=[0,125,250,375,500],cur=0;
   for(var j=0;j<mins.length;j++){
-    if(user.pts >= mins[j]) curIdx = j;
-    if(user.pts >= mins[j]) document.getElementById('ms' + j).classList.add('on');
+    if(d.pts>=mins[j]){ cur=j; document.getElementById('ms'+j).classList.add('on'); }
   }
-  document.getElementById('ms' + curIdx).classList.add('cur');
+  document.getElementById('ms'+cur).classList.add('cur');
 }
 function renderTeam(){
-  var keys = Object.keys(teamData.members || {});
-  var total = 0;
-  var list = [];
-
+  var keys=Object.keys(teamData.members||{}),total=0,list=[];
   for(var i=0;i<keys.length;i++){
-    var m = teamData.members[keys[i]];
-    total += Number(m.pts || 0);
-    list.push({name:m.name, pts:Number(m.pts || 0), acts:Number(m.acts || 0)});
+    var m=normalizeUser(teamData.members[keys[i]]);
+    total+=m.pts;
+    list.push({name:m.name,pts:m.pts,acts:m.acts});
   }
-
   list.sort(function(a,b){
-    if(b.pts !== a.pts) return b.pts - a.pts;
+    if(b.pts!==a.pts) return b.pts-a.pts;
     return a.name.localeCompare(b.name);
   });
 
-  var pct = Math.min(Math.round((total / TEAM_GOAL) * 100), 100);
-  document.getElementById('team-total').textContent = total;
-  document.getElementById('team-sub').textContent = list.length + (list.length === 1 ? ' participant' : ' participants');
-  document.getElementById('tpb').style.width = pct + '%';
-  document.getElementById('tpb-lbl').textContent = total + ' / ' + TEAM_GOAL + ' pts team goal';
+  document.getElementById('team-total').textContent=total;
+  document.getElementById('team-sub').textContent=list.length+' participant'+(list.length===1?'':'s');
+  document.getElementById('tpb').style.width=Math.min(100,Math.round((total/TEAM_GOAL)*100))+'%';
+  document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
 
-  var maxPts = list.length && list[0].pts > 0 ? list[0].pts : 1;
-  var h = '';
+  var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
+  var h='';
   for(var j=0;j<list.length;j++){
-    var item = list[j];
-    var isMe = slug(item.name) === slug(currentUser);
-    var bp = Math.round((item.pts / maxPts) * 100);
-    h += '<div class="mrow"><span class="mname">' + escH(item.name) + (isMe ? ' <span class="you-tag">you</span>' : '') + '</span><div class="mbar-wrap"><div class="mbar-fill" style="width:' + bp + '%"></div></div><span class="mpts">' + item.pts + ' pts</span><span class="macts">' + item.acts + ' actions</span></div>';
+    var item=list[j];
+    var isMe=slug(item.name)===slug(currentUser);
+    var wp=Math.round((item.pts/maxPts)*100);
+    h+='<div class="mrow"><span class="mname">'+escH(item.name)+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+wp+'%"></div></div><span class="mpts">'+item.pts+' pts</span><span class="macts">'+item.acts+' actions</span></div>';
   }
-  document.getElementById('mlist').innerHTML = h || '<div class="empty">No participants yet</div>';
+  document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
-function renderMyLog(user){
-  var el = document.getElementById('my-log');
-  if(!user.log || !user.log.length){
-    el.innerHTML = '<div class="empty">No activities logged yet</div>';
-    return;
+function renderMyLog(d){
+  var el=document.getElementById('my-log');
+  if(!d.log||!d.log.length){ el.innerHTML='<div class="empty">No activities logged yet</div>'; return; }
+  var h='';
+  for(var i=d.log.length-1;i>=0;i--){
+    h+='<div class="log-entry"><span class="le-text">'+escH(d.log[i].text)+'</span><span class="le-cat">'+escH(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
   }
-  var h = '';
-  for(var i=user.log.length-1;i>=0;i--){
-    var item = user.log[i];
-    h += '<div class="log-entry"><span class="le-text">' + escH(item.text) + '</span><span class="le-cat">' + escH(CAT_NAMES[item.catId] || item.catId) + '</span><span class="le-pts">+' + item.pts + ' pts</span></div>';
-  }
-  el.innerHTML = h;
+  el.innerHTML=h;
 }
 function renderAll(){
   if(!currentUser) return;
-  var user = getUser(currentUser);
-  renderStats(user);
+  var d=getUser(currentUser);
+  renderStats(d);
   renderCategories();
-  renderPanel(user);
+  renderPanel(d);
   renderTeam();
-  renderMyLog(user);
+  renderMyLog(d);
   updateNotice();
 }
 function updateSubmitBar(){
-  var keys = Object.keys(pending);
-  var bar = document.getElementById('submit-bar');
-  if(!keys.length){
-    bar.classList.add('hidden');
-    return;
-  }
+  var keys=Object.keys(pending),bar=document.getElementById('submit-bar');
+  if(!keys.length){ bar.classList.add('hidden'); return; }
   bar.classList.remove('hidden');
-  var total = 0;
-  for(var i=0;i<keys.length;i++) total += pending[keys[i]].pts;
-  document.getElementById('submit-summary').innerHTML = '<strong>' + keys.length + ' activit' + (keys.length === 1 ? 'y' : 'ies') + ' selected</strong> — +' + total + ' pts';
+  var totalPts=0;
+  for(var i=0;i<keys.length;i++) totalPts+=pending[keys[i]].pts;
+  document.getElementById('submit-summary').innerHTML='<strong>'+keys.length+' activit'+(keys.length===1?'y':'ies')+' selected</strong> &mdash; +'+totalPts+' pts';
 }
 function clearPending(){
-  pending = {};
+  pending={};
   renderPanel(getUser(currentUser));
 }
-function flashMsg(msg, isError){
-  var flash = document.getElementById('submit-flash');
-  flash.textContent = msg;
-  flash.style.background = isError ? '#8f2f24' : '#27500A';
-  flash.style.display = 'block';
-  setTimeout(function(){ flash.style.display = 'none'; }, 2200);
+function showFlash(msg,isError){
+  var flash=document.getElementById('submit-flash');
+  flash.textContent=msg;
+  flash.style.background=isError?'#8f2f24':'#27500A';
+  flash.style.display='block';
+  setTimeout(function(){ flash.style.display='none'; },2200);
 }
-function loadRemote(callback){
-  if(!JSONBIN_ID || !JSONBIN_KEY){
-    if(callback) callback(false);
+
+function parseRemoteResponse(text){
+  try{
+    var r=JSON.parse(text);
+    var rem=(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);
+    if(rem&&rem.members) return rem;
+  }catch(e){}
+  return {members:{}};
+}
+
+function loadRemote(cb){
+  if(!JSONBIN_ID||!JSONBIN_KEY){
+    if(cb) cb(false);
     return;
   }
-
-  var x = new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest',true);
+  var x=new XMLHttpRequest();
+  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout = 10000;
-
-  x.onload = function(){
-    var ok = false;
-    try{
-      if(x.status === 200){
-        var r = JSON.parse(x.responseText);
-        var rem = (r && r.members) ? r : (r && r.record && r.record.members ? r.record : null);
-        if(rem && rem.members){
-          smartMerge(rem);
-          writeLocal();
-          syncStatus = 'remote';
-          ok = true;
-        }
-      }
-    }catch(e){}
-    if(!ok && !readLocal()) syncStatus = 'local';
-    if(callback) callback(ok);
+  x.timeout=10000;
+  x.onload=function(){
+    var ok=false;
+    if(x.status===200){
+      var remote=parseRemoteResponse(x.responseText);
+      teamData=mergeDatasets(teamData,remote);
+      writeLocal();
+      syncMode='remote';
+      ok=true;
+    }
+    updateNotice();
+    if(cb) cb(ok);
   };
-  x.onerror = x.ontimeout = function(){
-    if(callback) callback(false);
+  x.onerror=x.ontimeout=function(){
+    updateNotice();
+    if(cb) cb(false);
   };
   x.send();
 }
-function refreshFromServer(){
-  var btn = document.getElementById('refresh-btn');
-  btn.disabled = true;
-  btn.textContent = 'Refreshing…';
-  loadRemote(function(ok){
-    refreshGate();
-    if(currentUser) renderAll();
-    btn.disabled = false;
-    btn.textContent = 'Refresh';
-    if(ok) flashMsg('✓ Synced latest saved points', false);
-  });
-}
-function saveCurrentUser(doneCb){
-  if(!currentUser || !JSONBIN_ID || !JSONBIN_KEY){
+
+function saveMergedTeam(doneCb){
+  if(!JSONBIN_ID||!JSONBIN_KEY){
     if(doneCb) doneCb(false);
     return;
   }
 
-  syncStatus = 'saving';
+  syncMode='saving';
   updateNotice();
 
-  var userKey = slug(currentUser);
-  var myUser = clone(getUser(currentUser));
-  myUser.updatedAt = Date.now();
+  var localSnapshot=clone(teamData);
 
-  var x = new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest',true);
+  var x=new XMLHttpRequest();
+  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout = 10000;
+  x.timeout=10000;
 
-  x.onload = function(){
+  x.onload=function(){
     try{
-      var latest = {members:{}};
+      var remote={members:{}};
+      if(x.status===200) remote=parseRemoteResponse(x.responseText);
 
-      if(x.status === 200){
-        var r = JSON.parse(x.responseText);
-        var rem = (r && r.members) ? r : (r && r.record && r.record.members ? r.record : null);
-        if(rem && rem.members) latest = rem;
-      }
-
-      if(!latest.members) latest.members = {};
-
-      var remoteUser = latest.members[userKey];
-      latest.members[userKey] = remoteUser && userScore(remoteUser) > userScore(myUser) ? remoteUser : myUser;
-
-      teamData = latest;
+      var merged=mergeDatasets(localSnapshot,remote);
+      teamData=merged;
       writeLocal();
       refreshGate();
-      renderAll();
+      if(currentUser) renderAll();
 
-      var put = new XMLHttpRequest();
-      put.open('PUT','https://api.jsonbin.io/v3/b/' + JSONBIN_ID,true);
+      var put=new XMLHttpRequest();
+      put.open('PUT','https://api.jsonbin.io/v3/b/'+JSONBIN_ID,true);
       put.setRequestHeader('Content-Type','application/json');
       put.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-      put.timeout = 12000;
+      put.timeout=15000;
 
-      put.onload = function(){
-        var ok = put.status >= 200 && put.status < 300;
-        syncStatus = ok ? 'remote' : 'error';
+      put.onload=function(){
+        var ok=put.status>=200&&put.status<300;
+        syncMode=ok?'remote':'error';
         updateNotice();
         if(doneCb) doneCb(ok);
       };
-      put.onerror = put.ontimeout = function(){
-        syncStatus = 'error';
+      put.onerror=put.ontimeout=function(){
+        syncMode='error';
         updateNotice();
         if(doneCb) doneCb(false);
       };
 
       put.send(JSON.stringify(teamData));
     }catch(e){
-      syncStatus = 'error';
+      syncMode='error';
       updateNotice();
       if(doneCb) doneCb(false);
     }
   };
 
-  x.onerror = x.ontimeout = function(){
-    syncStatus = 'error';
+  x.onerror=x.ontimeout=function(){
+    syncMode='error';
     updateNotice();
     if(doneCb) doneCb(false);
   };
 
   x.send();
 }
+
+function startPoll(){
+  if(!JSONBIN_ID||!JSONBIN_KEY) return;
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer=setInterval(function(){
+    loadRemote(function(ok){
+      if(ok){
+        refreshGate();
+        if(currentUser) renderAll();
+      }
+    });
+  },POLL_MS);
+}
+
+function refreshFromServer(){
+  var btn=document.getElementById('refresh-btn');
+  btn.disabled=true;
+  btn.textContent='Refreshing...';
+  loadRemote(function(){
+    refreshGate();
+    if(currentUser) renderAll();
+    btn.disabled=false;
+    btn.textContent='Refresh';
+  });
+}
+
 function submitActivities(){
-  var keys = Object.keys(pending);
+  var keys=Object.keys(pending);
   if(!keys.length) return;
 
-  var btn = document.getElementById('btn-submit');
-  var refreshBtn = document.getElementById('refresh-btn');
-  btn.disabled = true;
-  refreshBtn.disabled = true;
-  btn.textContent = 'Saving…';
+  var btn=document.getElementById('btn-submit');
+  var refreshBtn=document.getElementById('refresh-btn');
+  btn.disabled=true;
+  refreshBtn.disabled=true;
+  btn.textContent='Saving...';
 
-  var user = getUser(currentUser);
-
+  var d=getUser(currentUser);
   for(var i=0;i<keys.length;i++){
-    var key = keys[i], item = pending[key];
-    if(!user.done[key]){
-      user.done[key] = true;
-      user.pts += item.pts;
-      user.acts += 1;
-      user.log.push({text:item.text, pts:item.pts, catId:item.catId, ts:Date.now()});
+    var key=keys[i],item=pending[key];
+    if(!d.done[key]){
+      d.done[key]=true;
+      d.pts+=item.pts;
+      d.acts+=1;
+      d.log.push({text:item.text,pts:item.pts,catId:item.catId,ts:Date.now()});
     }
   }
-  user.updatedAt = Date.now();
+  d.updatedAt=Date.now();
 
-  pending = {};
+  pending={};
   writeLocal();
   renderAll();
 
-  saveCurrentUser(function(success){
-    btn.disabled = false;
-    refreshBtn.disabled = false;
-    btn.textContent = 'Log Activities';
-    if(success){
-      flashMsg('✓ Activities logged!', false);
-    }else{
-      flashMsg('Save failed — click Refresh and try again.', true);
-    }
+  saveMergedTeam(function(success){
+    btn.disabled=false;
+    refreshBtn.disabled=false;
+    btn.textContent='Log Activities';
+    showFlash(success?'✓ Activities logged and merged to team total!':'Save failed — click Refresh and try again.',!success);
   });
 }
-function useExistingUser(name){
-  document.getElementById('name-in').value = name;
-  startSession();
-}
+
 function startSession(){
-  var n = document.getElementById('name-in').value.trim();
+  var n=document.getElementById('name-in').value.trim();
   if(!n){
-    document.getElementById('gate-err').textContent = 'Please enter your name to continue.';
+    document.getElementById('gate-err').textContent='Please enter your name to continue.';
     return;
   }
 
-  currentUser = n;
-  document.getElementById('gate-err').textContent = '';
+  currentUser=n;
+  document.getElementById('gate-err').textContent='';
   document.getElementById('gate-page').classList.add('hidden');
   document.getElementById('app-page').classList.remove('hidden');
 
-  activeCat = null;
-  activeTag = 'all';
-  pending = {};
+  activeCat=null;
+  activeTag='all';
+  pending={};
 
   loadRemote(function(){
     getUser(currentUser);
@@ -855,86 +771,79 @@ function startSession(){
 
   startPoll();
 }
+
 function switchUser(){
-  currentUser = '';
-  activeCat = null;
-  activeTag = 'all';
-  pending = {};
-  if(pollTimer) clearInterval(pollTimer);
+  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+  currentUser='';
+  activeCat=null;
+  activeTag='all';
+  pending={};
   document.getElementById('app-page').classList.add('hidden');
   document.getElementById('gate-page').classList.remove('hidden');
-  document.getElementById('name-in').focus();
+  document.getElementById('name-in').value='';
+  document.getElementById('gate-err').textContent='';
   refreshGate();
 }
-function resetMyPoints(){
+
+function resetCurrentUser(){
   if(!currentUser) return;
   if(!confirm('Reset your saved points and activity log for this name?')) return;
 
-  var u = getUser(currentUser);
-  u.pts = 0;
-  u.acts = 0;
-  u.done = {};
-  u.log = [];
-  u.updatedAt = Date.now();
+  var d=getUser(currentUser);
+  d.pts=0;
+  d.acts=0;
+  d.done={};
+  d.log=[];
+  d.updatedAt=Date.now();
 
   writeLocal();
   renderAll();
-  saveCurrentUser(function(success){
-    flashMsg(success ? '✓ Your points were reset' : 'Reset could not be saved', !success);
+
+  saveMergedTeam(function(success){
+    showFlash(success?'✓ Your points were reset':'Reset failed — click Refresh and try again.',!success);
   });
 }
-function startPoll(){
-  if(!JSONBIN_ID || !JSONBIN_KEY) return;
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(function(){
-    loadRemote(function(ok){
-      if(ok){
-        refreshGate();
-        if(currentUser) renderAll();
-      }
-    });
-  }, POLL_MS);
-}
 
-document.getElementById('name-in').addEventListener('keydown', function(e){
-  if(e.key === 'Enter') startSession();
+document.getElementById('name-in').addEventListener('keydown',function(e){
+  if(e.key==='Enter') startSession();
 });
-document.getElementById('panel').addEventListener('click', function(e){
-  if(!currentUser || !activeCat) return;
+document.getElementById('chip-row').addEventListener('click',function(e){
+  var c=e.target.closest('.chip');
+  if(!c) return;
+  document.getElementById('name-in').value=c.dataset.name;
+  startSession();
+});
+document.getElementById('panel').addEventListener('click',function(e){
+  if(!currentUser||!activeCat) return;
 
-  var ftag = e.target.closest('.ftag');
+  var ftag=e.target.closest('.ftag');
   if(ftag){
-    activeTag = ftag.dataset.tag;
+    activeTag=ftag.dataset.tag;
     renderPanel(getUser(currentUser));
     return;
   }
 
-  var act = e.target.closest('.act');
-  if(!act || !act.dataset.key) return;
+  var act=e.target.closest('.act');
+  if(!act||!act.dataset.key) return;
 
-  var key = act.dataset.key;
-  var user = getUser(currentUser);
-  if(user.done[key]) return;
+  var key=act.dataset.key;
+  var d=getUser(currentUser);
+  if(d.done[key]) return;
 
-  if(pending[key]){
-    delete pending[key];
-  }else{
-    pending[key] = {
-      pts: parseInt(act.dataset.pts, 10),
-      text: act.dataset.text,
-      catId: activeCat.id
-    };
-  }
-  renderPanel(user);
+  if(pending[key]) delete pending[key];
+  else pending[key]={pts:parseInt(act.dataset.pts,10),text:act.dataset.text,catId:activeCat.id};
+
+  renderPanel(d);
 });
 
-(function init(){
-  var local = readLocal();
+(function(){
+  var local=readLocal();
   if(local){
-    teamData = local;
-    syncStatus = 'local';
+    teamData=local;
+    syncMode='local';
   }
-  renderGate();
+  refreshGate();
+  updateNotice();
   loadRemote(function(){
     refreshGate();
     if(currentUser) renderAll();
