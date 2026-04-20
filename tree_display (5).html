@@ -408,21 +408,18 @@ function setStatus(message, type = "") {
    - { members: { Name: 10, Other: 15 } }
    - { entries: [{points:10}, {points:15}] }
    ========================================== */
-function sumMembers(data) {
-  if (!data || typeof data !== "object") return 0;
-
-  if (typeof data.totalPoints === "number") return data.totalPoints;
-  if (typeof data.total === "number") return data.total;
-  if (typeof data.points === "number") return data.points;
-
+function sumMembers(data){
   if (data.members && typeof data.members === "object") {
     return Object.values(data.members).reduce((sum, member) => {
       if (typeof member === "number") return sum + member;
+      if (member && typeof member.pts === "number") return sum + member.pts; // ⭐ THIS IS THE FIX
       if (member && typeof member.points === "number") return sum + member.points;
       if (member && typeof member.totalPoints === "number") return sum + member.totalPoints;
       return sum;
     }, 0);
   }
+  return 0;
+}
 
   if (Array.isArray(data.entries)) {
     return data.entries.reduce((sum, entry) => {
