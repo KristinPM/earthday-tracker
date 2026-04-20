@@ -193,110 +193,59 @@ function badges(){
   });
 }
 
-<script>
 /* JSONBIN SYNC */
 var JSONBIN_ID  = '69cff25faaba882197c08a39';
 var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
 var LOCAL_KEY   = 'ed_team_v2';
 
 function applyPts(total){
-  var capped = Math.max(0, Math.min(Number(total || 0), SP_GOAL));
-  pts = capped;
-  tT = pts / SP_GOAL;
-  badges();
+  var capped=Math.min(total,SP_GOAL);
+  if(capped!==pts){pts=capped;tT=pts/SP_GOAL;badges();}
 }
-
 function sumMembers(obj){
-  var total = 0;
-  if(!obj || !obj.members) return 0;
-  var keys = Object.keys(obj.members);
-  for(var i=0;i<keys.length;i++){
-    total += Number(obj.members[keys[i]].pts || 0);
-  }
+  var total=0;
+  if(!obj||!obj.members)return 0;
+  var keys=Object.keys(obj.members);
+  for(var i=0;i<keys.length;i++) total+=obj.members[keys[i]].pts||0;
   return total;
 }
-
-function syncLocal(){
-  try{
-    var s = localStorage.getItem(LOCAL_KEY);
-    if(!s) return;
-    applyPts(sumMembers(JSON.parse(s)));
-  }catch(e){}
-}
-
 function syncRemote(showBusy){
-  var btn = document.getElementById('refreshBtn');
-  if(btn && showBusy){
-    btn.disabled = true;
-    btn.textContent = 'Refreshing...';
-  }
-
-  if(!JSONBIN_ID || !JSONBIN_KEY){
-    syncLocal();
-    if(btn && showBusy){
-      btn.disabled = false;
-      btn.textContent = 'Refresh';
-    }
-    return;
-  }
-
-  var xhr = new XMLHttpRequest();
+  var btn=document.getElementById('refreshBtn');
+  if(btn&&showBusy){btn.disabled=true;btn.textContent='Refreshing...';}
+  if(!JSONBIN_ID||!JSONBIN_KEY){syncLocal();if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}return;}
+  var xhr=new XMLHttpRequest();
   xhr.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   xhr.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   xhr.setRequestHeader('X-Bin-Meta','false');
-  xhr.timeout = 5000;
-
-  xhr.onload = function(){
-    if(xhr.status === 200){
+  xhr.timeout=5000;
+  xhr.onload=function(){
+    if(xhr.status===200){
       try{
-        var parsed = JSON.parse(xhr.responseText);
-        var d = null;
-
-        if(parsed && parsed.members) d = parsed;
-        else if(parsed && parsed.record && parsed.record.members) d = parsed.record;
-
-        if(d && d.members){
-          applyPts(sumMembers(d));
-        }else{
-          syncLocal();
-        }
-      }catch(ex){
-        syncLocal();
-      }
+        var parsed=JSON.parse(xhr.responseText);
+        var d=null;
+        if(parsed&&parsed.members) d=parsed;
+        else if(parsed&&parsed.record&&parsed.record.members) d=parsed.record;
+        if(d&&Object.keys(d.members).length>0){applyPts(sumMembers(d));}
+      }catch(ex){}
     }else{
       syncLocal();
     }
-
-    if(btn && showBusy){
-      btn.disabled = false;
-      btn.textContent = 'Refresh';
-    }
+    if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}
   };
-
-  xhr.ontimeout = function(){
-    syncLocal();
-    if(btn && showBusy){
-      btn.disabled = false;
-      btn.textContent = 'Refresh';
-    }
-  };
-
-  xhr.onerror = function(){
-    syncLocal();
-    if(btn && showBusy){
-      btn.disabled = false;
-      btn.textContent = 'Refresh';
-    }
-  };
-
+  xhr.ontimeout=function(){syncLocal();if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}};
+  xhr.onerror=function(){syncLocal();if(btn&&showBusy){btn.disabled=false;btn.textContent='Refresh';}};
   xhr.send();
 }
-
 function startPolling(){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(function(){
-    syncRemote(false);
-  }, POLL_MS);
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(function(){syncRemote(false);},POLL_MS);
+}
+function syncLocal(){
+  try{
+    var s=localStorage.getItem(LOCAL_KEY);
+    if(!s)return;
+    applyPts(sumMembers(JSON.parse(s)));
+  }catch(e){}
 }
 
 window.addEventListener('resize',function(){rsz();doBW();});
@@ -304,24 +253,19 @@ if(typeof ResizeObserver!=='undefined'){
   new ResizeObserver(function(){rsz();doBW();}).observe(document.querySelector('.cv'));
 }
 
-var lastUpdatedSeen = '';
+var lastUpdatedSeen='';
 function init(){
   rsz();
-  if(!W || !H){ setTimeout(init,100); return; }
-  if(!IMG_READY){ setTimeout(init,100); return; }
-
-  doBW();
-  badges();
+  if(!W||!H){setTimeout(init,100);return;}
+  /* wait for image before first draw */
+  if(!IMG_READY){setTimeout(init,100);return;}
+  doBW();badges();
   syncRemote(false);
   startPolling();
-
   setInterval(function(){
     try{
-      var ts = localStorage.getItem('ed_pts_tick') || '';
-      if(ts && ts !== lastUpdatedSeen){
-        lastUpdatedSeen = ts;
-        syncRemote(false);
-      }
+      var ts=localStorage.getItem('ed_pts_tick')||'';
+      if(ts&&ts!==lastUpdatedSeen){lastUpdatedSeen=ts;syncRemote(false);}
     }catch(e){}
   },1000);
 }
@@ -330,10 +274,10 @@ document.getElementById('refreshBtn').addEventListener('click',function(){
   syncRemote(true);
 });
 
-if(document.fonts && document.fonts.ready){
-  document.fonts.ready.then(function(){ setTimeout(init,50); });
+if(document.fonts&&document.fonts.ready){
+  document.fonts.ready.then(function(){setTimeout(init,50);});
 } else {
-  window.addEventListener('load',function(){ setTimeout(init,50); });
+  window.addEventListener('load',function(){setTimeout(init,50);});
 }
 </script>
 </body>
