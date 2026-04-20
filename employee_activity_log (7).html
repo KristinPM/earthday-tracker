@@ -131,6 +131,8 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 .btn-clear{padding:10px 14px;background:#f0f0ee;color:#555;border:.5px solid #ddd;border-radius:10px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
 .btn-clear:hover{background:#e4e4e2}
 .submit-flash{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27500A;color:white;padding:10px 22px;border-radius:10px;font-size:.88rem;font-weight:700;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+/* Loading spinner for gate */
+.gate-loading{font-size:.78rem;color:#639922;margin-top:10px;display:none}
 </style>
 </head>
 <body>
@@ -143,8 +145,9 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
       <button class="btn-go" onclick="startSession()">Start</button>
     </div>
     <div class="gate-err" id="gate-err"></div>
+    <div class="gate-loading" id="gate-loading">&#8635; Loading team members…</div>
     <div class="prev-wrap" id="prev-wrap">
-      <div class="prev-lbl">Return as:</div>
+      <div class="prev-lbl">Team members — click to sign in:</div>
       <div class="chip-row" id="chip-row"></div>
     </div>
   </div>
@@ -219,8 +222,7 @@ var TEAM_GOAL   = 500;
 var POLL_MS     = 8000;
 var pollTimer=null,pushTimer=null,pushing=false,pendingSave=false;
 var teamData={members:{}},currentUser='',activeCat=null,activeTag='all';
-var pending={};  /* key -> {pts,text,catId} — staged but not yet saved */
-/* BroadcastChannel lets the tree react instantly in same browser */
+var pending={};
 var BC=null;try{BC=new BroadcastChannel('ed_tree_sync');}catch(e){}
 var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:125},{name:'Grower',min:250},{name:'Guardian',min:375},{name:'Champion',min:500}];
 var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
@@ -333,7 +335,7 @@ function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function glv(p){var l=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(p>=LEVELS[i].min)l=LEVELS[i];}return l;}
 function nlv(p){for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].min>p)return LEVELS[i];}return null;}
 function getUser(n){var k=slug(n);if(!teamData.members[k])teamData.members[k]={name:n,pts:0,acts:0,done:{},log:[]};return teamData.members[k];}
-/* --- Storage: localStorage is instant primary; JSONBin is background sync --- */
+
 function sumTeamPts(){
   var t=0,keys=Object.keys(teamData.members);
   for(var i=0;i<keys.length;i++)t+=teamData.members[keys[i]].pts||0;
@@ -344,13 +346,12 @@ function writeLocal(){
   try{
     localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));
     localStorage.setItem('ed_pts_tick',String(Date.now()));
-    /* broadcast to tree instantly — no polling needed */
     if(BC)BC.postMessage({pts:sumTeamPts()});
   }catch(e){}
 }
 function saveData(){
-  writeLocal();           /* instant — tree reacts immediately */
-  schedulePush();         /* background JSONBin write */
+  writeLocal();
+  schedulePush();
 }
 function schedulePush(){
   if(!JSONBIN_ID||!JSONBIN_KEY)return;
@@ -368,7 +369,31 @@ function doPush(){
   x.onload=x.ontimeout=x.onerror=function(){pushing=false;if(pendingSave){pendingSave=false;doPush();}};
   x.send(JSON.stringify(teamData));
 }
-/* On load: apply local data instantly, then fetch remote in background */
+
+/*
+ * smartMerge: remote is the source of truth for ALL members.
+ * Only override the current user's entry if our local version is
+ * strictly ahead (i.e. we have unsaved changes not yet on the server).
+ */
+function smartMerge(remote){
+  if(!remote||!remote.members)return;
+  if(currentUser){
+    var k=slug(currentUser);
+    var mine=teamData.members[k];
+    var remMine=remote.members[k];
+    teamData=remote;
+    /* keep local copy only if it has MORE points (pending unsaved work) */
+    if(mine&&mine.pts>=(remMine?remMine.pts:0)){
+      teamData.members[k]=mine;
+    }
+  } else {
+    teamData=remote;
+  }
+}
+
+/* On load: apply local data instantly, then fetch remote in background.
+   FIX: refreshGate() is now called after the remote fetch so all
+   coworkers' names appear on the start screen immediately. */
 function loadData(doneCb){
   var local=readLocal();if(local)teamData=local;
   if(doneCb)doneCb();
@@ -384,15 +409,21 @@ function loadData(doneCb){
       var r=JSON.parse(x.responseText);
       var rem=(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);
       if(!rem||!rem.members)return;
-      if(currentUser){var k=slug(currentUser),mine=teamData.members[k];teamData=rem;if(mine)teamData.members[k]=mine;}
-      else teamData=rem;
+      smartMerge(rem);          /* ← use smart merge */
       writeLocal();
+      refreshGate();             /* ← FIX: always refresh gate after remote load */
       if(currentUser)renderAll();
-      refreshGate();
+      document.getElementById('gate-loading').style.display='none';
     }catch(e){}
   };
+  x.onerror=x.ontimeout=function(){
+    document.getElementById('gate-loading').style.display='none';
+  };
+  /* Show a subtle loading hint while fetching */
+  document.getElementById('gate-loading').style.display='block';
   x.send();
 }
+
 function startPoll(){
   if(!JSONBIN_ID||!JSONBIN_KEY)return;
   if(pollTimer)clearInterval(pollTimer);
@@ -408,8 +439,7 @@ function startPoll(){
         var r=JSON.parse(x.responseText);
         var rem=(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);
         if(!rem||!rem.members)return;
-        if(currentUser){var k=slug(currentUser),mine=teamData.members[k];teamData=rem;if(mine)teamData.members[k]=mine;}
-        else teamData=rem;
+        smartMerge(rem);        /* ← use smart merge */
         writeLocal();
         if(currentUser)renderAll();
       }catch(e){}
@@ -417,19 +447,28 @@ function startPoll(){
     x.send();
   },POLL_MS);
 }
+
 function updateNotice(){
   var el=document.getElementById('sync-notice');
   if(JSONBIN_ID&&JSONBIN_KEY){el.innerHTML='&#128994; Cross-device sync active — points shared with all employees in real time.';}
   else{el.innerHTML='&#128993; Local mode — points visible on this device only.';el.style.background='#fff8e1';el.style.borderColor='#f9a825';el.style.color='#795548';}
 }
+
 function refreshGate(){
   var keys=Object.keys(teamData.members),wrap=document.getElementById('prev-wrap');
   if(!keys.length){wrap.style.display='none';return;}
+  /* Sort by points descending so highest scorers show first */
+  var sorted=keys.slice().sort(function(a,b){return (teamData.members[b].pts||0)-(teamData.members[a].pts||0);});
   wrap.style.display='block';
-  var h='';for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];h+='<button class="chip" data-name="'+escH(m.name)+'">'+escH(m.name)+' ('+m.pts+' pts)</button>';}
+  var h='';
+  for(var i=0;i<sorted.length;i++){
+    var m=teamData.members[sorted[i]];
+    h+='<button class="chip" data-name="'+escH(m.name)+'">'+escH(m.name)+' · '+m.pts+' pts</button>';
+  }
   var cr=document.getElementById('chip-row');cr.innerHTML=h;
   cr.onclick=function(e){var c=e.target.closest('.chip');if(!c)return;document.getElementById('name-in').value=c.dataset.name;startSession();};
 }
+
 function startSession(){
   var n=document.getElementById('name-in').value.trim();
   if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
@@ -449,7 +488,8 @@ function switchUser(){
   document.getElementById('gate-page').classList.remove('hidden');
   document.getElementById('name-in').value='';
   document.getElementById('gate-err').textContent='';
-  var local=readLocal();if(local)teamData=local;refreshGate();
+  var local=readLocal();if(local)teamData=local;
+  refreshGate();
 }
 function showReset(){document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s logged activities and points.";document.getElementById('modal').classList.remove('hidden');}
 function hideReset(){document.getElementById('modal').classList.add('hidden');}
@@ -522,11 +562,11 @@ document.getElementById('name-in').addEventListener('keydown',function(e){if(e.k
 document.getElementById('panel').addEventListener('click',function(e){
   if(!currentUser||!activeCat)return;
   var ftag=e.target.closest('.ftag');if(ftag){activeTag=ftag.dataset.tag;renderPanel(getUser(currentUser));return;}
-  var act=e.target.closest('.act');if(!act||!act.dataset.key)return;  /* already-done rows have no data-key */
+  var act=e.target.closest('.act');if(!act||!act.dataset.key)return;
   var key=act.dataset.key,p=parseInt(act.dataset.pts),txt=act.dataset.text;
   if(pending[key])delete pending[key];
   else pending[key]={pts:p,text:txt,catId:activeCat.id};
-  renderPanel(getUser(currentUser));  /* re-render panel only — stats stay as committed */
+  renderPanel(getUser(currentUser));
 });
 function updateSubmitBar(){
   var keys=Object.keys(pending),bar=document.getElementById('submit-bar');
@@ -554,14 +594,19 @@ function submitActivities(){
   pending={};
   renderAll();
   saveData();
-  /* success flash */
   var flash=document.getElementById('submit-flash');
   flash.textContent='&#10003; Activities logged!';
   flash.style.display='block';
   setTimeout(function(){flash.style.display='none';},2200);
   btn.disabled=false;btn.textContent='Log Activities';
 }
-(function(){var local=readLocal();if(local)teamData=local;refreshGate();loadData(function(){});})();
+/* Init: load local immediately, then fetch remote — refreshGate runs in both */
+(function(){
+  var local=readLocal();
+  if(local){teamData=local;}
+  refreshGate();       /* show anyone already in localStorage */
+  loadData(function(){}); /* then fetch remote and refreshGate again inside */
+})();
 </script>
 </body>
 </html>
