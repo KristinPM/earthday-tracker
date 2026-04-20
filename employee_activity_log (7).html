@@ -234,31 +234,13 @@ var JSONBIN_ID  = '69cff25faaba882197c08a39';
 var JSONBIN_KEY = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
 var LOCAL_KEY   = 'ed_team_v2';
 var TEAM_GOAL   = 500;
-
-/* tracker polling disabled by design */
-var POLL_MS     = 0;
+var POLL_MS     = 600000; /* 10 minutes */
 var pollTimer=null,pushTimer=null,pushing=false,pendingSave=false;
 var teamData={members:{}},currentUser='',activeCat=null,activeTag='all';
 var pending={};
 var BC=null;try{BC=new BroadcastChannel('ed_tree_sync');}catch(e){}
-
-var LEVELS=[
-  {name:'Seedling',min:0},
-  {name:'Sprout',min:125},
-  {name:'Grower',min:250},
-  {name:'Guardian',min:375},
-  {name:'Champion',min:500}
-];
-
-var CAT_NAMES={
-  home:'Home & Energy',
-  food:'Food & Waste',
-  nature:'Nature & Outdoors',
-  transport:'Transport & Travel',
-  community:'Community Action',
-  mindset:'Learning & Mindset'
-};
-
+var LEVELS=[{name:'Seedling',min:0},{name:'Sprout',min:125},{name:'Grower',min:250},{name:'Guardian',min:375},{name:'Champion',min:500}];
+var CAT_NAMES={home:'Home & Energy',food:'Food & Waste',nature:'Nature & Outdoors',transport:'Transport & Travel',community:'Community Action',mindset:'Learning & Mindset'};
 var CATS=[
   {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Unplug unused devices for a week',tag:'quick win',pts:3},
@@ -278,8 +260,7 @@ var CATS=[
     {text:'Switch to concentrated or refillable cleaning products',tag:'quick win',pts:3},
     {text:'Insulate your water heater',tag:'weekend project',pts:6},
     {text:'Get a home solar or battery storage quote',tag:'medium effort',pts:5},
-    {text:'Use a programmable thermostat',tag:'medium effort',pts:5}
-  ]},
+    {text:'Use a programmable thermostat',tag:'medium effort',pts:5}]},
   {id:'food',name:'Food & Waste',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Cook a fully plant-based meal',tag:'quick win',pts:3},
     {text:'Shop at a local farmers market',tag:'quick win',pts:4},
@@ -298,8 +279,7 @@ var CATS=[
     {text:'Host a zero-waste dinner party',tag:'weekend project',pts:7},
     {text:'Freeze food before it expires for 2 weeks',tag:'quick win',pts:3},
     {text:'Audit your recycling and learn what your city accepts',tag:'quick win',pts:2},
-    {text:'Try a community fridge or free food share',tag:'medium effort',pts:4}
-  ]},
+    {text:'Try a community fridge or free food share',tag:'medium effort',pts:4}]},
   {id:'nature',name:'Nature & Outdoors',badge:'Family',bc:'badge-family',actions:[
     {text:'Nature scavenger hunt with kids',tag:'family fun',pts:3},
     {text:'Plant a pollinator flower or native herb',tag:'family fun',pts:5},
@@ -318,8 +298,7 @@ var CATS=[
     {text:'Join a citizen science project such as iNaturalist or eBird',tag:'medium effort',pts:5},
     {text:'Collect and dry wildflower seeds to share',tag:'medium effort',pts:4},
     {text:'Photograph and identify 10 local plant species',tag:'family fun',pts:4},
-    {text:'Swap part of your lawn mowing for a wild patch',tag:'quick win',pts:3}
-  ]},
+    {text:'Swap part of your lawn mowing for a wild patch',tag:'quick win',pts:3}]},
   {id:'transport',name:'Transport & Travel',badge:'Medium',bc:'badge-medium',actions:[
     {text:'Walk or bike instead of driving for 3 trips',tag:'quick win',pts:4},
     {text:'Use public transit for your commute for a week',tag:'medium effort',pts:6},
@@ -333,8 +312,7 @@ var CATS=[
     {text:'Take a train instead of flying for a regional trip',tag:'weekend project',pts:8},
     {text:'Park and walk instead of circling for a close spot',tag:'quick win',pts:2},
     {text:'Avoid idling and turn off the engine when parked',tag:'quick win',pts:2},
-    {text:'Choose a staycation or local destination for a trip',tag:'medium effort',pts:6}
-  ]},
+    {text:'Choose a staycation or local destination for a trip',tag:'medium effort',pts:6}]},
   {id:'community',name:'Community Action',badge:'Group',bc:'badge-group',actions:[
     {text:'Organize a neighborhood cleanup event',tag:'group project',pts:10},
     {text:'Plant a tree in your community',tag:'group project',pts:8},
@@ -351,8 +329,7 @@ var CATS=[
     {text:'Advocate for a recycling or composting program at work',tag:'medium effort',pts:6},
     {text:'Create a sustainability bulletin board at work or school',tag:'quick win',pts:3},
     {text:'Donate to an environmental organization',tag:'quick win',pts:4},
-    {text:'Organize a buy-nothing or swap event in your building',tag:'group project',pts:7}
-  ]},
+    {text:'Organize a buy-nothing or swap event in your building',tag:'group project',pts:7}]},
   {id:'mindset',name:'Learning & Mindset',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Watch a nature or climate documentary',tag:'quick win',pts:2},
     {text:'Read one article about local environmental issues',tag:'quick win',pts:2},
@@ -366,50 +343,19 @@ var CATS=[
     {text:'Spend 30 minutes in nature with no screens',tag:'quick win',pts:2},
     {text:'Have a family conversation about sustainability goals',tag:'family fun',pts:3},
     {text:'Research the environmental policies of your city',tag:'medium effort',pts:3},
-    {text:'Explore your local watershed or water source',tag:'family fun',pts:3}
-  ]}
+    {text:'Explore your local watershed or water source',tag:'family fun',pts:3}]}
 ];
 
 function slug(n){return n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function glv(p){var l=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(p>=LEVELS[i].min)l=LEVELS[i];}return l;}
 function nlv(p){for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].min>p)return LEVELS[i];}return null;}
-function getUser(n){
-  var k=slug(n);
-  if(!teamData.members[k])teamData.members[k]={name:n,pts:0,acts:0,done:{},log:[]};
-  return teamData.members[k];
-}
-function sumTeamPts(){
-  var t=0,keys=Object.keys(teamData.members);
-  for(var i=0;i<keys.length;i++)t+=teamData.members[keys[i]].pts||0;
-  return t;
-}
-function readLocal(){
-  try{
-    var s=localStorage.getItem(LOCAL_KEY);
-    if(s){
-      var d=JSON.parse(s);
-      if(d&&d.members)return d;
-    }
-  }catch(e){}
-  return null;
-}
-function writeLocal(){
-  try{
-    localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));
-    localStorage.setItem('ed_pts_tick',String(Date.now()));
-    if(BC)BC.postMessage({pts:sumTeamPts()});
-  }catch(e){}
-}
-function saveData(){
-  writeLocal();
-  schedulePush();
-}
-function schedulePush(){
-  if(!JSONBIN_ID||!JSONBIN_KEY)return;
-  if(pushTimer)clearTimeout(pushTimer);
-  pushTimer=setTimeout(doPush,600);
-}
+function getUser(n){var k=slug(n);if(!teamData.members[k])teamData.members[k]={name:n,pts:0,acts:0,done:{},log:[]};return teamData.members[k];}
+function readLocal(){try{var s=localStorage.getItem(LOCAL_KEY);if(s){var d=JSON.parse(s);if(d&&d.members)return d;}}catch(e){}return null;}
+function writeLocal(){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(teamData));localStorage.setItem('ed_pts_tick',String(Date.now()));if(BC)BC.postMessage({pts:sumTeamPts()});}catch(e){}}
+function sumTeamPts(){var t=0,keys=Object.keys(teamData.members);for(var i=0;i<keys.length;i++)t+=teamData.members[keys[i]].pts||0;return t;}
+function saveData(){writeLocal();schedulePush();}
+function schedulePush(){if(!JSONBIN_ID||!JSONBIN_KEY)return;if(pushTimer)clearTimeout(pushTimer);pushTimer=setTimeout(doPush,600);}
 function doPush(){
   if(pushing){pendingSave=true;return;}
   pushing=true;
@@ -418,17 +364,9 @@ function doPush(){
   x.setRequestHeader('Content-Type','application/json');
   x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   x.timeout=12000;
-  x.onload=x.ontimeout=x.onerror=function(){
-    pushing=false;
-    if(pendingSave){
-      pendingSave=false;
-      doPush();
-    }
-  };
+  x.onload=x.ontimeout=x.onerror=function(){pushing=false;if(pendingSave){pendingSave=false;doPush();}};
   x.send(JSON.stringify(teamData));
 }
-
-/* remote is source of truth for all members, but preserve current user's unsaved progress if local is ahead */
 function smartMerge(remote){
   if(!remote||!remote.members)return;
   if(currentUser){
@@ -443,19 +381,15 @@ function smartMerge(remote){
     teamData=remote;
   }
 }
-
 function loadData(doneCb){
-  var local=readLocal();
-  if(local)teamData=local;
+  var local=readLocal();if(local)teamData=local;
   if(doneCb)doneCb();
   if(!JSONBIN_ID||!JSONBIN_KEY)return;
-
   var x=new XMLHttpRequest();
   x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta','false');
   x.timeout=10000;
-
   x.onload=function(){
     if(x.status!==200)return;
     try{
@@ -469,33 +403,44 @@ function loadData(doneCb){
       document.getElementById('gate-loading').style.display='none';
     }catch(e){}
   };
-
-  x.onerror=x.ontimeout=function(){
-    document.getElementById('gate-loading').style.display='none';
-  };
-
+  x.onerror=x.ontimeout=function(){document.getElementById('gate-loading').style.display='none';};
   document.getElementById('gate-loading').style.display='block';
   x.send();
 }
-
-/* tracker polling intentionally disabled */
 function startPoll(){
-  return;
+  if(!JSONBIN_ID||!JSONBIN_KEY)return;
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(function(){
+    var x=new XMLHttpRequest();
+    x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
+    x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+    x.setRequestHeader('X-Bin-Meta','false');
+    x.timeout=10000;
+    x.onload=function(){
+      if(x.status!==200)return;
+      try{
+        var r=JSON.parse(x.responseText);
+        var rem=(r&&r.members)?r:(r&&r.record&&r.record.members?r.record:null);
+        if(!rem||!rem.members)return;
+        smartMerge(rem);
+        writeLocal();
+        refreshGate();
+        if(currentUser)renderAll();
+      }catch(e){}
+    };
+    x.send();
+  },POLL_MS);
 }
-
 function refreshFromServer(){
   if(!JSONBIN_ID||!JSONBIN_KEY)return;
-
   var btn=document.getElementById('refresh-btn');
   btn.disabled=true;
   btn.textContent='Refreshing...';
-
   var x=new XMLHttpRequest();
   x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta','false');
   x.timeout=10000;
-
   x.onload=function(){
     try{
       if(x.status===200){
@@ -512,19 +457,16 @@ function refreshFromServer(){
     btn.disabled=false;
     btn.textContent='Refresh';
   };
-
   x.onerror=x.ontimeout=function(){
     btn.disabled=false;
     btn.textContent='Refresh';
   };
-
   x.send();
 }
-
 function updateNotice(){
   var el=document.getElementById('sync-notice');
   if(JSONBIN_ID&&JSONBIN_KEY){
-    el.innerHTML='&#128994; Cross-device sync active — points are shared when activities are submitted. Use Refresh to pull the latest team totals.';
+    el.innerHTML='&#128994; Cross-device sync active — team totals auto-refresh every 10 minutes. Use Refresh to pull the latest submitted points anytime.';
     el.style.background='#e8f5e9';
     el.style.borderColor='#639922';
     el.style.color='#2e7d32';
@@ -535,16 +477,10 @@ function updateNotice(){
     el.style.color='#795548';
   }
 }
-
 function refreshGate(){
   var keys=Object.keys(teamData.members),wrap=document.getElementById('prev-wrap');
-  if(!keys.length){
-    wrap.style.display='none';
-    return;
-  }
-  var sorted=keys.slice().sort(function(a,b){
-    return (teamData.members[b].pts||0)-(teamData.members[a].pts||0);
-  });
+  if(!keys.length){wrap.style.display='none';return;}
+  var sorted=keys.slice().sort(function(a,b){return (teamData.members[b].pts||0)-(teamData.members[a].pts||0);});
   wrap.style.display='block';
   var h='';
   for(var i=0;i<sorted.length;i++){
@@ -553,76 +489,39 @@ function refreshGate(){
   }
   var cr=document.getElementById('chip-row');
   cr.innerHTML=h;
-  cr.onclick=function(e){
-    var c=e.target.closest('.chip');
-    if(!c)return;
-    document.getElementById('name-in').value=c.dataset.name;
-    startSession();
-  };
+  cr.onclick=function(e){var c=e.target.closest('.chip');if(!c)return;document.getElementById('name-in').value=c.dataset.name;startSession();};
 }
-
 function startSession(){
   var n=document.getElementById('name-in').value.trim();
-  if(!n){
-    document.getElementById('gate-err').textContent='Please enter your name to continue.';
-    return;
-  }
-  currentUser=n;
-  getUser(n);
+  if(!n){document.getElementById('gate-err').textContent='Please enter your name to continue.';return;}
+  currentUser=n;getUser(n);
   document.getElementById('gate-page').classList.add('hidden');
   document.getElementById('app-page').classList.remove('hidden');
-  updateNotice();
-  activeCat=null;
-  activeTag='all';
+  updateNotice();activeCat=null;activeTag='all';
   renderAll();
   loadData(function(){renderAll();});
-  schedulePush();
+  startPoll();
 }
-
 function switchUser(){
-  if(pollTimer){
-    clearInterval(pollTimer);
-    pollTimer=null;
-  }
-  if(pushTimer){
-    clearTimeout(pushTimer);
-    pushTimer=null;
-  }
-  currentUser='';
-  activeCat=null;
-  activeTag='all';
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  if(pushTimer){clearTimeout(pushTimer);pushTimer=null;}
+  currentUser='';activeCat=null;activeTag='all';
   document.getElementById('app-page').classList.add('hidden');
   document.getElementById('gate-page').classList.remove('hidden');
   document.getElementById('name-in').value='';
   document.getElementById('gate-err').textContent='';
-  var local=readLocal();
-  if(local)teamData=local;
+  var local=readLocal();if(local)teamData=local;
   refreshGate();
 }
-
-function showReset(){
-  document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s logged activities and points.";
-  document.getElementById('modal').classList.remove('hidden');
-}
-function hideReset(){
-  document.getElementById('modal').classList.add('hidden');
-}
-function doReset(){
-  hideReset();
-  teamData.members[slug(currentUser)]={name:currentUser,pts:0,acts:0,done:{},log:[]};
-  activeCat=null;
-  activeTag='all';
-  renderAll();
-  saveData();
-}
-
+function showReset(){document.getElementById('modal-msg').textContent='This will clear all of '+currentUser+"'s logged activities and points.";document.getElementById('modal').classList.remove('hidden');}
+function hideReset(){document.getElementById('modal').classList.add('hidden');}
+function doReset(){hideReset();teamData.members[slug(currentUser)]={name:currentUser,pts:0,acts:0,done:{},log:[]};activeCat=null;activeTag='all';renderAll();saveData();}
 function renderAll(){
   var d=getUser(currentUser);
   document.getElementById('who-name').textContent=d.name;
   document.getElementById('who-meta').textContent=d.pts+' points · '+d.acts+' actions completed';
   document.getElementById('s-pts').textContent=d.pts;
   document.getElementById('s-acts').textContent=d.acts;
-
   var lv=glv(d.pts),nx=nlv(d.pts);
   document.getElementById('s-lvl').textContent=lv.name;
   var pct=nx?Math.round(((d.pts-lv.min)/(nx.min-lv.min))*100):100;
@@ -630,57 +529,21 @@ function renderAll(){
   document.getElementById('pb').style.width=pct+'%';
   document.getElementById('pb-lbl').textContent=lbl;
   document.getElementById('pb-pct').textContent=pct+'%';
-
-  for(var i=0;i<LEVELS.length;i++){
-    var el=document.getElementById('ms'+i);
-    el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');
-  }
-
-  renderCats(d);
-  renderPanel(d);
-  renderTeam();
-  renderMyLog(d);
+  for(var i=0;i<LEVELS.length;i++){var el=document.getElementById('ms'+i);el.className='ms'+(d.pts>=LEVELS[i].min?(lv.name===LEVELS[i].name?' cur':' on'):'');}
+  renderCats(d);renderPanel(d);renderTeam();renderMyLog(d);
 }
-
 function renderCats(d){
-  var h='';
-  for(var i=0;i<CATS.length;i++){
-    var c=CATS[i];
-    h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>';
-  }
-  var el=document.getElementById('cats');
-  el.innerHTML=h;
-  el.onclick=function(e){
-    var p=e.target.closest('.cat-pill');
-    if(!p)return;
-    for(var j=0;j<CATS.length;j++){
-      if(CATS[j].id===p.dataset.id){
-        activeCat=CATS[j];
-        break;
-      }
-    }
-    activeTag='all';
-    renderCats(getUser(currentUser));
-    renderPanel(getUser(currentUser));
-  };
+  var h='';for(var i=0;i<CATS.length;i++){var c=CATS[i];h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" data-id="'+c.id+'">'+c.name+' <span class="badge '+c.bc+'">'+c.badge+'</span></button>';}
+  var el=document.getElementById('cats');el.innerHTML=h;
+  el.onclick=function(e){var p=e.target.closest('.cat-pill');if(!p)return;for(var j=0;j<CATS.length;j++){if(CATS[j].id===p.dataset.id){activeCat=CATS[j];break;}}activeTag='all';renderCats(getUser(currentUser));renderPanel(getUser(currentUser));};
 }
-
 function renderPanel(d){
   var panel=document.getElementById('panel');
-  if(!activeCat){
-    panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';
-    updateSubmitBar();
-    return;
-  }
+  if(!activeCat){panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';updateSubmitBar();return;}
   var cat=activeCat,tags=['all'];
-  for(var i=0;i<cat.actions.length;i++){
-    if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);
-  }
+  for(var i=0;i<cat.actions.length;i++){if(tags.indexOf(cat.actions[i].tag)===-1)tags.push(cat.actions[i].tag);}
   var filtered=(activeTag==='all')?cat.actions.slice():cat.actions.filter(function(a){return a.tag===activeTag;});
-  var dc=0;
-  for(var i=0;i<cat.actions.length;i++){
-    if(d.done[cat.id+'_'+i])dc++;
-  }
+  var dc=0;for(var i=0;i<cat.actions.length;i++){if(d.done[cat.id+'_'+i])dc++;}
   var h='<div class="ph"><span class="ptitle">'+escH(cat.name)+'</span><span class="psub">'+dc+' of '+cat.actions.length+' done</span></div><div class="filter-row">';
   for(var i=0;i<tags.length;i++)h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+tags[i]+'">'+(tags[i]==='all'?'All':tags[i])+'</button>';
   h+='</div><div class="act-list">';
@@ -690,23 +553,13 @@ function renderPanel(d){
     var cls=done?' done':pend?' pending':'';
     var ptsLabel=done?'&#10003; logged':pend?'&#9733; +'+a.pts+' pts':'+'+a.pts+' pts';
     var dataAttrs=done?'':' data-key="'+key+'" data-pts="'+a.pts+'" data-text="'+escH(a.text)+'"';
-    h+='<div class="act'+cls+'"'+dataAttrs+'>';
-    h+='<div class="chk"><div class="tick"></div></div>';
-    h+='<div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+a.tag+'</div></div>';
-    h+='<span class="act-pts">'+ptsLabel+'</span></div>';
+    h+='<div class="act'+cls+'"'+dataAttrs+'><div class="chk"><div class="tick"></div></div><div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+a.tag+'</div></div><span class="act-pts">'+ptsLabel+'</span></div>';
   }
-  h+='</div>';
-  panel.innerHTML=h;
-  updateSubmitBar();
+  h+='</div>';panel.innerHTML=h;updateSubmitBar();
 }
-
 function renderTeam(){
   var keys=Object.keys(teamData.members),total=0,list=[];
-  for(var i=0;i<keys.length;i++){
-    var m=teamData.members[keys[i]];
-    total+=m.pts||0;
-    list.push({name:m.name,pts:m.pts||0,acts:m.acts||0});
-  }
+  for(var i=0;i<keys.length;i++){var m=teamData.members[keys[i]];total+=m.pts||0;list.push({name:m.name,pts:m.pts||0,acts:m.acts||0});}
   list.sort(function(a,b){return b.pts-a.pts;});
   var pct=Math.min(Math.round(total/TEAM_GOAL*100),100);
   document.getElementById('team-total').textContent=total;
@@ -714,96 +567,54 @@ function renderTeam(){
   document.getElementById('tpb').style.width=pct+'%';
   document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
   var maxPts=(list.length&&list[0].pts>0)?list[0].pts:1,h='';
-  for(var i=0;i<list.length;i++){
-    var m=list[i],isMe=slug(m.name)===slug(currentUser),bp=Math.round(m.pts/maxPts*100);
-    h+='<div class="mrow"><span class="mname">'+escH(m.name)+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';
-  }
+  for(var i=0;i<list.length;i++){var m=list[i],isMe=slug(m.name)===slug(currentUser),bp=Math.round(m.pts/maxPts*100);h+='<div class="mrow"><span class="mname">'+escH(m.name)+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+bp+'%"></div></div><span class="mpts">'+m.pts+' pts</span><span class="macts">'+m.acts+' actions</span></div>';}
   document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
-
 function renderMyLog(d){
   var el=document.getElementById('my-log');
-  if(!d.log||!d.log.length){
-    el.innerHTML='<div class="empty">No activities logged yet</div>';
-    return;
-  }
-  var h='';
-  for(var i=d.log.length-1;i>=0;i--){
-    h+='<div class="log-entry"><span class="le-text">'+escH(d.log[i].text)+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
-  }
+  if(!d.log||!d.log.length){el.innerHTML='<div class="empty">No activities logged yet</div>';return;}
+  var h='';for(var i=d.log.length-1;i>=0;i--)h+='<div class="log-entry"><span class="le-text">'+escH(d.log[i].text)+'</span><span class="le-cat">'+(CAT_NAMES[d.log[i].catId]||d.log[i].catId)+'</span><span class="le-pts">+'+d.log[i].pts+' pts</span></div>';
   el.innerHTML=h;
 }
-
-document.getElementById('name-in').addEventListener('keydown',function(e){
-  if(e.key==='Enter')startSession();
-});
-
+document.getElementById('name-in').addEventListener('keydown',function(e){if(e.key==='Enter')startSession();});
 document.getElementById('panel').addEventListener('click',function(e){
   if(!currentUser||!activeCat)return;
-  var ftag=e.target.closest('.ftag');
-  if(ftag){
-    activeTag=ftag.dataset.tag;
-    renderPanel(getUser(currentUser));
-    return;
-  }
-  var act=e.target.closest('.act');
-  if(!act||!act.dataset.key)return;
+  var ftag=e.target.closest('.ftag');if(ftag){activeTag=ftag.dataset.tag;renderPanel(getUser(currentUser));return;}
+  var act=e.target.closest('.act');if(!act||!act.dataset.key)return;
   var key=act.dataset.key,p=parseInt(act.dataset.pts,10),txt=act.dataset.text;
   if(pending[key])delete pending[key];
   else pending[key]={pts:p,text:txt,catId:activeCat.id};
   renderPanel(getUser(currentUser));
 });
-
 function updateSubmitBar(){
   var keys=Object.keys(pending),bar=document.getElementById('submit-bar');
-  if(!keys.length){
-    bar.classList.add('hidden');
-    return;
-  }
+  if(!keys.length){bar.classList.add('hidden');return;}
   bar.classList.remove('hidden');
-  var totalPts=0;
-  for(var i=0;i<keys.length;i++)totalPts+=pending[keys[i]].pts;
+  var totalPts=0;for(var i=0;i<keys.length;i++)totalPts+=pending[keys[i]].pts;
   document.getElementById('submit-summary').innerHTML='<strong>'+keys.length+' activit'+(keys.length===1?'y':'ies')+' selected</strong> &mdash; +'+totalPts+' pts';
 }
-
-function clearPending(){
-  pending={};
-  renderPanel(getUser(currentUser));
-}
-
+function clearPending(){pending={};renderPanel(getUser(currentUser));}
 function submitActivities(){
-  var keys=Object.keys(pending);
-  if(!keys.length)return;
-
+  var keys=Object.keys(pending);if(!keys.length)return;
   var btn=document.getElementById('btn-submit');
-  btn.disabled=true;
-  btn.textContent='Saving...';
-
+  btn.disabled=true;btn.textContent='Saving...';
   var d=getUser(currentUser);
   for(var i=0;i<keys.length;i++){
     var key=keys[i],item=pending[key];
     if(!d.done[key]){
-      d.done[key]=true;
-      d.pts+=item.pts;
-      d.acts+=1;
+      d.done[key]=true;d.pts+=item.pts;d.acts+=1;
       d.log.push({text:item.text,pts:item.pts,catId:item.catId});
     }
   }
-
   pending={};
   renderAll();
   saveData();
-
   var flash=document.getElementById('submit-flash');
   flash.textContent='✓ Activities logged!';
   flash.style.display='block';
   setTimeout(function(){flash.style.display='none';},2200);
-
-  btn.disabled=false;
-  btn.textContent='Log Activities';
+  btn.disabled=false;btn.textContent='Log Activities';
 }
-
-/* init: show local first, then fetch remote once */
 (function(){
   var local=readLocal();
   if(local){teamData=local;}
