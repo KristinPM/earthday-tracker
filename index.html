@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Our Virtual Tree</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-family:Aptos,"Segoe UI",sans-serif}
+.wrap{display:flex;flex-direction:column;width:100%;height:100%;padding:14px 14px 12px}
+.hdr{text-align:center;margin-bottom:10px;flex-shrink:0}
+.hdr h1{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700;color:#1a1a1a}
+.hdr p{font-size:clamp(.9rem,1.5vw,1.2rem);color:#7a7a7a;margin-top:6px}
+.cv{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden}
+.tree-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.tree-bw{filter:grayscale(1) brightness(0.88) contrast(1.05);z-index:1}
+.tree-colour{z-index:2;clip-path:inset(var(--clip-top,100%) 0 0 0);transition:clip-path 1.4s cubic-bezier(0.34,1.05,0.64,1)}
+.pts-label{
+  position:absolute;bottom:12px;left:14px;z-index:5;
+  background:rgba(0,0,0,0.48);color:white;
+  padding:5px 14px;border-radius:999px;
+  font-size:clamp(.7rem,1.5vw,.84rem);font-weight:700;letter-spacing:.3px;
+  backdrop-filter:blur(6px);
+}
+.lvs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:10px;flex-shrink:0}
+.lb{display:flex;flex-direction:column;align-items:center;padding:7px 10px 6px;border-radius:10px;background:#e8e8e6;border:2px solid #ccc;min-width:82px;flex:1;max-width:130px;transition:all .5s;position:relative;overflow:hidden}
+.lb.on{border-color:transparent;box-shadow:0 3px 14px rgba(0,0,0,.14)}
+.lb.cur{transform:translateY(-3px);box-shadow:0 5px 20px rgba(0,0,0,.2)}
+.lbf{position:absolute;inset:0;background:var(--c);transform:translateY(100%);transition:transform .9s cubic-bezier(.34,1.2,.64,1);z-index:0}
+.lb.on .lbf{transform:translateY(0)}
+.li{font-size:1.2rem;position:relative;z-index:1;margin-bottom:2px}
+.ln{font-size:clamp(.6rem,1.4vw,.78rem);font-weight:700;position:relative;z-index:1;color:#1a1a1a;transition:color .4s}
+.lp{font-size:clamp(.54rem,1.1vw,.64rem);font-weight:700;letter-spacing:.4px;position:relative;z-index:1;color:#888;transition:color .4s;margin-top:1px}
+.lck{position:absolute;top:4px;right:6px;font-size:.62rem;z-index:2}
+.lb.on .ln,.lb.on .lp{color:rgba(255,255,255,.92)}
+.refresh-btn{display:flex;align-items:center;gap:6px;margin:8px auto 0;padding:6px 16px;background:transparent;border:1px solid #ccc;border-radius:999px;font-family:inherit;font-size:.72rem;color:#999;cursor:pointer;transition:all .2s;flex-shrink:0}
+.refresh-btn:hover{border-color:#639922;color:#639922;background:rgba(99,153,34,.06)}
+.refresh-btn.spinning .icon{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.icon{font-size:.8rem;line-height:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>Our Virtual Tree</h1>
+    <p>As employees log activities across regions, our tree grows more vibrant with every contribution.</p>
+  </div>
+  <div class="cv">
+    <img class="tree-layer tree-bw"    src="tree-layer-1.jpg" alt=""/>
+    <img class="tree-layer tree-colour" id="tree-colour" src="tree-layer-2.jpg" alt=""/>
+    <div class="pts-label" id="pts-label">Seedling &nbsp;·&nbsp; 0 / 500 pts</div>
+  </div>
+  <div class="lvs" id="LV"></div>
+  <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
+    <span class="icon" id="refresh-icon">&#8635;</span>
+    <span id="refresh-lbl">Refresh</span>
+  </button>
+</div>
+<script>
+
+var SP_GOAL=500;
+var JSONBIN_ID='69cff25faaba882197c08a39';
+var JSONBIN_KEY='$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
+var LOCAL_KEY='ed_team_v3_events';
+var LEGACY_LOCAL_KEY='ed_team_v2';
+var LOCAL_TICK_KEY='ed_pts_tick';
+var LVS=[
+  {n:'Seedling',e:'&#127807;',p:0,  c:'#66bb6a'},
+  {n:'Sprout',  e:'&#127807;',p:125,c:'#26a69a'},
+  {n:'Grower',  e:'&#127795;',p:250,c:'#42a5f5'},
+  {n:'Guardian',e:'&#128737;',p:375,c:'#ab47bc'},
+  {n:'Champion',e:'&#127942;',p:500,c:'#ffa726'}
+];
+var pts=0;
+var bc=null;
+
+function glv(p){var l=LVS[0];for(var i=0;i<LVS.length;i++){if(p>=LVS[i].p)l=LVS[i];}return l;}
+
+function normalizeEvent(ev){
+  if(!ev || !ev.id || !ev.userKey) return null;
+  var out={
+    id:String(ev.id),
+    type:ev.type==='reset'?'reset':'activity',
+    userKey:String(ev.userKey),
+    name:String(ev.name||''),
+    ts:Number(ev.ts||Date.now())
+  };
+  if(out.type==='activity'){
+    out.activityKey=String(ev.activityKey||'');
+    out.text=String(ev.text||'');
+    out.catId=String(ev.catId||'');
+    out.pts=Number(ev.pts||0);
+    if(!out.activityKey) return null;
+  }
+  return out;
+}
+
+function slug(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-'); }
+function legacyMembersToEvents(raw){
+  var out=[], seen={};
+  var members = raw && raw.members ? raw.members : {};
+  Object.keys(members).forEach(function(k){
+    var m = members[k] || {};
+    var userKey = slug(m.name || k || 'member');
+    var name = String(m.name || k || userKey);
+    var updatedAt = Number(m.updatedAt || Date.now());
+    var importedPts = 0;
+    if(Array.isArray(m.log) && m.log.length){
+      for(var i=0;i<m.log.length;i++){
+        var lg = m.log[i] || {};
+        var text = String(lg.text || 'Imported activity');
+        var catId = String(lg.catId || 'legacy');
+        var pts = Number(lg.pts || 0);
+        var ts = Number(lg.ts || (updatedAt + i));
+        var activityKey = String(lg.activityKey || (catId + '|' + text));
+        var id = String(lg.id || ('legacy_' + userKey + '_' + ts + '_' + slug(activityKey).slice(0,40)));
+        if(!seen[id]){
+          seen[id]=true;
+          out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:activityKey,text:text,catId:catId,pts:pts,ts:ts});
+          importedPts += pts;
+        }
+      }
+    }
+    var memberPts = Number(m.pts || 0);
+    if(memberPts > importedPts){
+      var carryId = 'legacycarry_' + userKey;
+      if(!seen[carryId]){
+        seen[carryId]=true;
+        out.push({id:carryId,type:'activity',userKey:userKey,name:name,activityKey:'legacy|carryover',text:'Imported prior points',catId:'legacy',pts:(memberPts-importedPts),ts:updatedAt + 999});
+      }
+    }
+  });
+  return out;
+}
+function hydrate(raw){
+  var src=(raw&&Array.isArray(raw.events))?raw.events.slice():[];
+  if((!src || !src.length) && raw && raw.members) src = legacyMembersToEvents(raw);
+  var map={}, events=[];
+  for(var i=0;i<src.length;i++){
+    var ev=normalizeEvent(src[i]);
+    if(ev && !map[ev.id]){
+      map[ev.id]=true;
+      events.push(ev);
+    }
+  }
+  events.sort(function(a,b){
+    var at=Number(a.ts||0), bt=Number(b.ts||0);
+    if(at!==bt) return at-bt;
+    return String(a.id).localeCompare(String(b.id));
+  });
+  return {events:events};
+}
+function sumPts(raw){
+  var data=hydrate(raw), totals={};
+  for(var i=0;i<data.events.length;i++){
+    var ev=data.events[i];
+    if(!totals[ev.userKey]) totals[ev.userKey]={pts:0,done:{}};
+    if(ev.type==='reset'){
+      totals[ev.userKey]={pts:0,done:{}};
+      continue;
+    }
+    if(!totals[ev.userKey].done[ev.activityKey]){
+      totals[ev.userKey].done[ev.activityKey]=true;
+      totals[ev.userKey].pts += Number(ev.pts||0);
+    }
+  }
+  var total=0, keys=Object.keys(totals);
+  for(var j=0;j<keys.length;j++) total += Number(totals[keys[j]].pts||0);
+  return total;
+}
+function readLocalPts(){
+  try{
+    var s=localStorage.getItem(LOCAL_KEY);
+    if(s) return sumPts(JSON.parse(s));
+  }catch(e){}
+  try{
+    var legacy=localStorage.getItem(LEGACY_LOCAL_KEY);
+    if(legacy) return sumPts(JSON.parse(legacy));
+  }catch(e){}
+  return 0;
+}
+
+function applyPts(total){
+  var n=Math.min(Math.max(Number(total)||0,0),SP_GOAL);
+  if(n===pts&&total>0)return;
+  pts=n;
+  var clipTop=Math.round((1-pts/SP_GOAL)*100);
+  document.getElementById('tree-colour').style.setProperty('--clip-top',clipTop+'%');
+  var lv=glv(pts);
+  document.getElementById('pts-label').textContent=lv.n+' · '+pts+' / '+SP_GOAL+' pts';
+  renderBadges();
+}
+
+function renderBadges(){
+  var lv=glv(pts),row=document.getElementById('LV');
+  row.innerHTML='';
+  LVS.forEach(function(l){
+    var on=pts>=l.p,cur=lv.n===l.n,el=document.createElement('div');
+    el.className='lb'+(on?' on':'')+(cur?' cur':'');
+    el.style.setProperty('--c',l.c);
+    el.innerHTML='<div class="lbf"></div>'
+      +'<span class="li">'+l.e+'</span>'
+      +'<span class="ln">'+l.n+'</span>'
+      +'<span class="lp">'+l.p+' pts</span>'
+      +(cur?'<span class="lck">&#11088;</span>':on?'<span class="lck">&#10004;</span>':'');
+    row.appendChild(el);
+  });
+}
+
+function parseRemoteResponse(text){
+  try{
+    var r=JSON.parse(text);
+    return (r&&Array.isArray(r.events))?r:(r&&r.record&&Array.isArray(r.record.events)?r.record:{events:[]});
+  }catch(e){}
+  return {events:[]};
+}
+function fetchRemote(done){
+  if(!JSONBIN_ID||!JSONBIN_KEY){
+    if(done) done(false, readLocalPts());
+    return;
+  }
+  var x=new XMLHttpRequest();
+  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
+  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+  x.setRequestHeader('X-Bin-Meta','false');
+  x.timeout=8000;
+  x.onload=function(){
+    if(x.status!==200){
+      if(done) done(false, readLocalPts());
+      return;
+    }
+    var total=sumPts(parseRemoteResponse(x.responseText));
+    applyPts(total);
+    if(done) done(true,total);
+  };
+  x.onerror=x.ontimeout=function(){
+    if(done) done(false, readLocalPts());
+  };
+  x.send();
+}
+
+function manualRefresh(){
+  var btn=document.getElementById('refresh-btn');
+  var lbl=document.getElementById('refresh-lbl');
+  btn.classList.add('spinning');
+  lbl.textContent='Refreshing...';
+  btn.disabled=true;
+  fetchRemote(function(ok){
+    btn.classList.remove('spinning');
+    lbl.textContent=ok
+      ? 'Updated '+(new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))
+      : 'Refresh failed';
+    btn.disabled=false;
+  });
+}
+
+try{
+  bc=new BroadcastChannel('ed_tree_sync');
+  bc.onmessage=function(e){
+    if(e && e.data && typeof e.data.pts==='number') applyPts(e.data.pts);
+    else applyPts(readLocalPts());
+  };
+}catch(e){}
+
+window.addEventListener('storage',function(e){
+  if(e.key===LOCAL_KEY||e.key===LOCAL_TICK_KEY) applyPts(readLocalPts());
+});
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden) fetchRemote();
+});
+
+applyPts(readLocalPts());
+fetchRemote();
+
+</script>
+</body>
+</html>
