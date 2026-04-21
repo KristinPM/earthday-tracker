@@ -217,23 +217,24 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 <div class="submit-flash" id="submit-flash"></div>
 
 <script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+var JSONBIN_ID       = '69cff25faaba882197c08a39';
+var JSONBIN_KEY      = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
+var LOCAL_KEY        = 'ed_team_v3_events';
+var LEGACY_LOCAL_KEY = 'ed_team_v2';
+var LOCAL_TICK_KEY   = 'ed_pts_tick';
+var TEAM_GOAL        = 500;
+var MAX_RETRY        = 5; // max PUT attempts before giving up
 
-var JSONBIN_ID='69cff25faaba882197c08a39';
-var JSONBIN_KEY='$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
-var LOCAL_KEY='ed_team_v3_events';
-var LEGACY_LOCAL_KEY='ed_team_v2';
-var LOCAL_TICK_KEY='ed_pts_tick';
-var TEAM_GOAL=500;
-
-var LEVELS=[
-  {name:'Seedling',min:0,next:125},
-  {name:'Sprout',min:125,next:250},
-  {name:'Grower',min:250,next:375},
-  {name:'Guardian',min:375,next:500},
-  {name:'Champion',min:500,next:null}
+var LEVELS = [
+  { name: 'Seedling',  min: 0,   next: 125  },
+  { name: 'Sprout',    min: 125, next: 250  },
+  { name: 'Grower',    min: 250, next: 375  },
+  { name: 'Guardian',  min: 375, next: 500  },
+  { name: 'Champion',  min: 500, next: null }
 ];
 
-var CATS=[
+var CATS = [
   {id:'energy',name:'Energy at Home',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Turn off lights when leaving a room',tag:'quick win',pts:1},
     {text:'Unplug one unused device or charger',tag:'quick win',pts:1},
@@ -308,415 +309,378 @@ var CATS=[
   ]}
 ];
 
-var CAT_NAMES={};
-for(var ci=0;ci<CATS.length;ci++) CAT_NAMES[CATS[ci].id]=CATS[ci].name;
+var CAT_NAMES = {};
+for (var ci = 0; ci < CATS.length; ci++) CAT_NAMES[CATS[ci].id] = CATS[ci].name;
 
-var store={events:[],members:{}};
-var currentUser='';
-var activeCat=null;
-var activeTag='all';
-var pending={};
-var syncMode='local';
-var bc=null;
+// ─── State ────────────────────────────────────────────────────────────────────
+var store       = { events: [], members: {} };
+var currentUser = '';
+var activeCat   = null;
+var activeTag   = 'all';
+var pending     = {};
+var syncMode    = 'local';
+var bc          = null;
 
-function escH(s){
-  return String(s||'').replace(/[&<>"']/g,function(m){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function escH(s) {
+  return String(s || '').replace(/[&<>"']/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
   });
 }
-function slug(s){
-  return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');
+function slug(s) {
+  return String(s || '').trim().toLowerCase()
+    .replace(/\s+/g, ' ').replace(/[^\w ]+/g, '').replace(/\s/g, '-');
 }
-function clone(v){ return JSON.parse(JSON.stringify(v)); }
-
-function userTemplate(name){
-  return {name:name,pts:0,acts:0,done:{},log:[],updatedAt:0,lastResetAt:0};
+function userTemplate(name) {
+  return { name: name, pts: 0, acts: 0, done: {}, log: [], updatedAt: 0, lastResetAt: 0 };
 }
 
-function normalizeEvent(ev){
-  if(!ev || !ev.id || !ev.userKey) return null;
+// ─── Event normalisation ──────────────────────────────────────────────────────
+function normalizeEvent(ev) {
+  if (!ev || !ev.id || !ev.userKey) return null;
   var out = {
-    id:String(ev.id),
-    type:ev.type==='reset'?'reset':'activity',
-    userKey:String(ev.userKey),
-    name:String(ev.name||''),
-    ts:Number(ev.ts||Date.now())
+    id:      String(ev.id),
+    type:    ev.type === 'reset' ? 'reset' : 'activity',
+    userKey: String(ev.userKey),
+    name:    String(ev.name || ''),
+    ts:      Number(ev.ts || Date.now())
   };
-  if(out.type==='activity'){
-    out.activityKey=String(ev.activityKey||'');
-    out.text=String(ev.text||'');
-    out.catId=String(ev.catId||'');
-    out.pts=Number(ev.pts||0);
-    if(!out.activityKey || !out.text) return null;
+  if (out.type === 'activity') {
+    out.activityKey = String(ev.activityKey || '');
+    out.text        = String(ev.text || '');
+    out.catId       = String(ev.catId || '');
+    out.pts         = Number(ev.pts || 0);
+    if (!out.activityKey || !out.text) return null;
   }
   return out;
 }
 
-function legacyMembersToEvents(raw){
-  var out=[], seen={};
-  var members = raw && raw.members ? raw.members : {};
-  Object.keys(members).forEach(function(k){
-    var m = members[k] || {};
-    var userKey = slug(m.name || k || 'member');
-    var name = String(m.name || k || userKey);
-    var updatedAt = Number(m.updatedAt || Date.now());
+// ─── Legacy migration ─────────────────────────────────────────────────────────
+function legacyMembersToEvents(raw) {
+  var out = [], seen = {};
+  var members = (raw && raw.members) ? raw.members : {};
+  Object.keys(members).forEach(function (k) {
+    var m          = members[k] || {};
+    var userKey    = slug(m.name || k || 'member');
+    var name       = String(m.name || k || userKey);
+    var updatedAt  = Number(m.updatedAt || Date.now());
     var importedPts = 0;
 
-    if(Array.isArray(m.log) && m.log.length){
-      for(var i=0;i<m.log.length;i++){
+    if (Array.isArray(m.log) && m.log.length) {
+      for (var i = 0; i < m.log.length; i++) {
         var lg = m.log[i] || {};
-        var text = String(lg.text || 'Imported activity');
-        var catId = String(lg.catId || 'legacy');
-        var pts = Number(lg.pts || 0);
-        var ts = Number(lg.ts || (updatedAt + i));
+        var text        = String(lg.text || 'Imported activity');
+        var catId       = String(lg.catId || 'legacy');
+        var pts         = Number(lg.pts || 0);
+        var ts          = Number(lg.ts || (updatedAt + i));
         var activityKey = String(lg.activityKey || (catId + '|' + text));
-        var id = String(lg.id || ('legacy_' + userKey + '_' + ts + '_' + slug(activityKey).slice(0,40)));
-        if(!seen[id]){
-          seen[id]=true;
-          out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:activityKey,text:text,catId:catId,pts:pts,ts:ts});
+        var id          = String(lg.id || ('legacy_' + userKey + '_' + ts + '_' + slug(activityKey).slice(0, 40)));
+        if (!seen[id]) {
+          seen[id] = true;
+          out.push({ id: id, type: 'activity', userKey: userKey, name: name, activityKey: activityKey, text: text, catId: catId, pts: pts, ts: ts });
           importedPts += pts;
         }
       }
     }
 
-    if((!Array.isArray(m.log) || !m.log.length) && m.done && typeof m.done==='object'){
-      Object.keys(m.done).forEach(function(activityKey, idx){
-        var ts = updatedAt + idx;
+    if ((!Array.isArray(m.log) || !m.log.length) && m.done && typeof m.done === 'object') {
+      Object.keys(m.done).forEach(function (activityKey, idx) {
+        var ts    = updatedAt + idx;
         var parts = String(activityKey).split('|');
         var catId = parts[0] || 'legacy';
-        var text = parts.slice(1).join('|') || 'Imported activity';
-        var id = 'legacydone_' + userKey + '_' + slug(activityKey).slice(0,40);
-        if(!seen[id]){
-          seen[id]=true;
-          out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:String(activityKey),text:text,catId:catId,pts:0,ts:ts});
+        var text  = parts.slice(1).join('|') || 'Imported activity';
+        var id    = 'legacydone_' + userKey + '_' + slug(activityKey).slice(0, 40);
+        if (!seen[id]) {
+          seen[id] = true;
+          out.push({ id: id, type: 'activity', userKey: userKey, name: name, activityKey: String(activityKey), text: text, catId: catId, pts: 0, ts: ts });
         }
       });
     }
 
     var memberPts = Number(m.pts || 0);
-    if(memberPts > importedPts){
-      var carryPts = memberPts - importedPts;
+    if (memberPts > importedPts) {
       var carryId = 'legacycarry_' + userKey;
-      if(!seen[carryId]){
-        seen[carryId]=true;
-        out.push({id:carryId,type:'activity',userKey:userKey,name:name,activityKey:'legacy|carryover',text:'Imported prior points',catId:'legacy',pts:carryPts,ts:updatedAt + 999});
+      if (!seen[carryId]) {
+        seen[carryId] = true;
+        out.push({ id: carryId, type: 'activity', userKey: userKey, name: name, activityKey: 'legacy|carryover', text: 'Imported prior points', catId: 'legacy', pts: memberPts - importedPts, ts: updatedAt + 999 });
       }
     }
   });
   return out;
 }
 
-function deriveMembers(events){
-  var members={};
-  var list=(events||[]).slice().sort(function(a,b){
-    var at=Number(a.ts||0), bt=Number(b.ts||0);
-    if(at!==bt) return at-bt;
+// ─── Derive member map from events ───────────────────────────────────────────
+function deriveMembers(events) {
+  var members = {};
+  var list = (events || []).slice().sort(function (a, b) {
+    var at = Number(a.ts || 0), bt = Number(b.ts || 0);
+    if (at !== bt) return at - bt;
     return String(a.id).localeCompare(String(b.id));
   });
-  for(var i=0;i<list.length;i++){
-    var ev=normalizeEvent(list[i]);
-    if(!ev) continue;
-    if(!members[ev.userKey]) members[ev.userKey]=userTemplate(ev.name||ev.userKey);
-    var m=members[ev.userKey];
-    if(ev.name) m.name=ev.name;
-    m.updatedAt=Math.max(m.updatedAt||0, ev.ts||0);
-    if(ev.type==='reset'){
-      m.pts=0;
-      m.acts=0;
-      m.done={};
-      m.log=[];
-      m.lastResetAt=ev.ts||0;
+  for (var i = 0; i < list.length; i++) {
+    var ev = normalizeEvent(list[i]);
+    if (!ev) continue;
+    if (!members[ev.userKey]) members[ev.userKey] = userTemplate(ev.name || ev.userKey);
+    var m = members[ev.userKey];
+    if (ev.name) m.name = ev.name;
+    m.updatedAt = Math.max(m.updatedAt || 0, ev.ts || 0);
+    if (ev.type === 'reset') {
+      m.pts = 0; m.acts = 0; m.done = {}; m.log = []; m.lastResetAt = ev.ts || 0;
       continue;
     }
-    if(m.lastResetAt && ev.ts<m.lastResetAt) continue;
-    if(!m.done[ev.activityKey]){
-      m.done[ev.activityKey]=true;
-      m.pts+=Number(ev.pts||0);
-      m.acts+=1;
-      m.log.push({id:ev.id,text:ev.text,pts:Number(ev.pts||0),catId:ev.catId,ts:ev.ts});
+    if (m.lastResetAt && ev.ts < m.lastResetAt) continue;
+    if (!m.done[ev.activityKey]) {
+      m.done[ev.activityKey] = true;
+      m.pts  += Number(ev.pts || 0);
+      m.acts += 1;
+      m.log.push({ id: ev.id, text: ev.text, pts: Number(ev.pts || 0), catId: ev.catId, ts: ev.ts });
     }
   }
-  Object.keys(members).forEach(function(k){
-    members[k].log.sort(function(a,b){ return Number(a.ts||0)-Number(b.ts||0); });
+  Object.keys(members).forEach(function (k) {
+    members[k].log.sort(function (a, b) { return Number(a.ts || 0) - Number(b.ts || 0); });
   });
   return members;
 }
 
-function hydrateStore(raw){
-  var events=[], seen={};
-  var src = raw && Array.isArray(raw.events) ? raw.events.slice() : [];
-  if((!src || !src.length) && raw && raw.members) src = legacyMembersToEvents(raw);
-  for(var i=0;i<src.length;i++){
-    var ev=normalizeEvent(src[i]);
-    if(ev && !seen[ev.id]){
-      seen[ev.id]=true;
-      events.push(ev);
-    }
+function hydrateStore(raw) {
+  var events = [], seen = {};
+  var src = (raw && Array.isArray(raw.events)) ? raw.events.slice() : [];
+  if ((!src || !src.length) && raw && raw.members) src = legacyMembersToEvents(raw);
+  for (var i = 0; i < src.length; i++) {
+    var ev = normalizeEvent(src[i]);
+    if (ev && !seen[ev.id]) { seen[ev.id] = true; events.push(ev); }
   }
-  return {events:events,members:deriveMembers(events)};
+  return { events: events, members: deriveMembers(events) };
 }
 
-function readLocal(){
-  try{
-    var raw=localStorage.getItem(LOCAL_KEY);
-    if(raw) return hydrateStore(JSON.parse(raw));
-  }catch(e){}
-  try{
-    var legacyRaw=localStorage.getItem(LEGACY_LOCAL_KEY);
-    if(legacyRaw) return hydrateStore(JSON.parse(legacyRaw));
-  }catch(e){}
-  return null;
-}
-function writeLocal(){
-  try{
-    localStorage.setItem(LOCAL_KEY,JSON.stringify({events:store.events}));
-    localStorage.setItem(LOCAL_TICK_KEY,String(Date.now()));
-  }catch(e){}
-}
-function broadcastTotal(){
-  var total=sumTeamPoints();
-  try{
-    if(!bc) bc=new BroadcastChannel('ed_tree_sync');
-    bc.postMessage({pts:total,ts:Date.now()});
-  }catch(e){}
-}
-function saveLocalAndBroadcast(){
-  writeLocal();
-  broadcastTotal();
-}
-
-function sumTeamPoints(){
-  var total=0, keys=Object.keys(store.members||{});
-  for(var i=0;i<keys.length;i++) total+=Number(store.members[keys[i]].pts||0);
-  return total;
-}
-
-function mergeEventLists(baseEvents,incomingEvents){
-  var map={}, merged=[];
-  function add(arr){
-    (arr||[]).forEach(function(ev){
-      var n=normalizeEvent(ev);
-      if(n && !map[n.id]){
-        map[n.id]=true;
-        merged.push(n);
-      }
+// ─── Merge two event lists (dedup by id, sort by ts) ─────────────────────────
+function mergeEventLists(baseEvents, incomingEvents) {
+  var map = {}, merged = [];
+  function add(arr) {
+    (arr || []).forEach(function (ev) {
+      var n = normalizeEvent(ev);
+      if (n && !map[n.id]) { map[n.id] = true; merged.push(n); }
     });
   }
   add(baseEvents);
   add(incomingEvents);
-  merged.sort(function(a,b){
-    var at=Number(a.ts||0), bt=Number(b.ts||0);
-    if(at!==bt) return at-bt;
+  merged.sort(function (a, b) {
+    var at = Number(a.ts || 0), bt = Number(b.ts || 0);
+    if (at !== bt) return at - bt;
     return String(a.id).localeCompare(String(b.id));
   });
   return merged;
 }
 
-function applyStore(raw){
-  store=hydrateStore(raw||{events:[]});
+// ─── Storage ──────────────────────────────────────────────────────────────────
+function readLocal() {
+  try {
+    var raw = localStorage.getItem(LOCAL_KEY);
+    if (raw) return hydrateStore(JSON.parse(raw));
+  } catch (e) {}
+  try {
+    var legacyRaw = localStorage.getItem(LEGACY_LOCAL_KEY);
+    if (legacyRaw) return hydrateStore(JSON.parse(legacyRaw));
+  } catch (e) {}
+  return null;
+}
+function writeLocal() {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify({ events: store.events }));
+    localStorage.setItem(LOCAL_TICK_KEY, String(Date.now()));
+  } catch (e) {}
+}
+function broadcastTotal() {
+  var total = sumTeamPoints();
+  try {
+    if (!bc) bc = new BroadcastChannel('ed_tree_sync');
+    bc.postMessage({ pts: total, ts: Date.now() });
+  } catch (e) {}
+}
+function saveLocalAndBroadcast() { writeLocal(); broadcastTotal(); }
+
+function applyStore(raw) {
+  store = hydrateStore(raw || { events: [] });
   saveLocalAndBroadcast();
   return store;
 }
 
-function parseRemoteResponse(text){
-  try{
-    var r=JSON.parse(text);
-    var data=(r&&r.record!==undefined)?r.record:r;
-    if(!data) return hydrateStore({events:[]});
-    if(!Array.isArray(data.events)||!data.events.length){
-      var legacyEvents=legacyMembersToEvents(data);
-      return hydrateStore({events:legacyEvents});
+// ─── Remote response parser ───────────────────────────────────────────────────
+function parseRemoteResponse(text) {
+  try {
+    var r    = JSON.parse(text);
+    var data = (r && r.record !== undefined) ? r.record : r;
+    if (!data) return hydrateStore({ events: [] });
+    if (!Array.isArray(data.events) || !data.events.length) {
+      return hydrateStore({ events: legacyMembersToEvents(data) });
     }
     return hydrateStore(data);
-  }catch(e){}
-  return hydrateStore({events:[]});
+  } catch (e) {}
+  return hydrateStore({ events: [] });
 }
 
-function getUser(name){
-  var key=slug(name);
-  if(!store.members[key]) store.members[key]=userTemplate(name);
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function sumTeamPoints() {
+  var total = 0, keys = Object.keys(store.members || {});
+  for (var i = 0; i < keys.length; i++) total += Number(store.members[keys[i]].pts || 0);
+  return total;
+}
+function getUser(name) {
+  var key = slug(name);
+  if (!store.members[key]) store.members[key] = userTemplate(name);
   return store.members[key];
 }
-function levelForPoints(pts){
-  var lv=LEVELS[0];
-  for(var i=0;i<LEVELS.length;i++) if(pts>=LEVELS[i].min) lv=LEVELS[i];
+function levelForPoints(pts) {
+  var lv = LEVELS[0];
+  for (var i = 0; i < LEVELS.length; i++) if (pts >= LEVELS[i].min) lv = LEVELS[i];
   return lv;
 }
-function updateNotice(){
-  var el=document.getElementById('sync-notice');
-  if(syncMode==='remote'){
-    el.className='notice';
-    el.innerHTML='&#128994; Shared team data synced.';
-  }else if(syncMode==='saving'){
-    el.className='notice';
-    el.innerHTML='&#128336; Saving new activity entries to the shared tracker...';
-  }else if(syncMode==='error'){
-    el.className='notice error';
-    el.innerHTML='&#9888;&#65039; Save failed. Your selections are still on this device. Click Refresh and try again.';
-  }else{
-    el.className='notice local';
-    el.innerHTML='&#128993; Using cached data until shared data loads.';
-  }
+function makeEventId(userKey, activityKey, ts) {
+  return 'evt_' + userKey + '_' + String(ts) + '_' + slug(activityKey).slice(0, 40) + '_' + Math.random().toString(36).slice(2, 8);
 }
-function refreshGate(){
-  var keys=Object.keys(store.members||{});
-  var wrap=document.getElementById('prev-wrap');
-  if(!keys.length){
-    wrap.style.display='none';
-    document.getElementById('chip-row').innerHTML='';
-    return;
-  }
-  keys.sort(function(a,b){
-    var ap=Number(store.members[a].pts||0), bp=Number(store.members[b].pts||0);
-    if(bp!==ap) return bp-ap;
-    return String(store.members[a].name||'').localeCompare(String(store.members[b].name||''));
+function makeResetId(userKey, ts) {
+  return 'reset_' + userKey + '_' + String(ts) + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+// ─── UI ───────────────────────────────────────────────────────────────────────
+function updateNotice() {
+  var el = document.getElementById('sync-notice');
+  if (syncMode === 'remote')  { el.className = 'notice';       el.innerHTML = '&#128994; Shared team data synced.'; }
+  else if (syncMode === 'saving') { el.className = 'notice';   el.innerHTML = '&#128336; Saving new activity entries to the shared tracker...'; }
+  else if (syncMode === 'error')  { el.className = 'notice error'; el.innerHTML = '&#9888;&#65039; Save failed. Your selections are still on this device. Click Refresh and try again.'; }
+  else                            { el.className = 'notice local'; el.innerHTML = '&#128993; Using cached data until shared data loads.'; }
+}
+function refreshGate() {
+  var keys  = Object.keys(store.members || {});
+  var wrap  = document.getElementById('prev-wrap');
+  if (!keys.length) { wrap.style.display = 'none'; document.getElementById('chip-row').innerHTML = ''; return; }
+  keys.sort(function (a, b) {
+    var ap = Number(store.members[a].pts || 0), bp = Number(store.members[b].pts || 0);
+    if (bp !== ap) return bp - ap;
+    return String(store.members[a].name || '').localeCompare(String(store.members[b].name || ''));
   });
-  var h='';
-  for(var i=0;i<keys.length;i++){
-    var m=store.members[keys[i]];
-    h+='<button class="chip" data-name="'+escH(m.name)+'">'+escH(m.name)+' · '+m.pts+' pts</button>';
+  var h = '';
+  for (var i = 0; i < keys.length; i++) {
+    var m = store.members[keys[i]];
+    h += '<button class="chip" data-name="' + escH(m.name) + '">' + escH(m.name) + ' · ' + m.pts + ' pts</button>';
   }
-  document.getElementById('chip-row').innerHTML=h;
-  wrap.style.display='block';
+  document.getElementById('chip-row').innerHTML = h;
+  wrap.style.display = 'block';
 }
-function renderCategories(){
-  var el=document.getElementById('cats'),h='';
-  for(var i=0;i<CATS.length;i++){
-    var c=CATS[i];
-    h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" onclick="selectCategory(\''+c.id+'\')">'+escH(c.name)+'</button>';
+function renderCategories() {
+  var el = document.getElementById('cats'), h = '';
+  for (var i = 0; i < CATS.length; i++) {
+    var c = CATS[i];
+    h += '<button class="cat-pill' + (activeCat && activeCat.id === c.id ? ' active' : '') + '" onclick="selectCategory(\'' + c.id + '\')">' + escH(c.name) + '</button>';
   }
-  el.innerHTML=h;
+  el.innerHTML = h;
 }
-function selectCategory(id){
-  for(var i=0;i<CATS.length;i++) if(CATS[i].id===id){ activeCat=CATS[i]; break; }
-  activeTag='all';
+function selectCategory(id) {
+  for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) { activeCat = CATS[i]; break; }
+  activeTag = 'all';
   renderCategories();
   renderPanel(getUser(currentUser));
 }
-function tagsForCat(cat){
-  var map={},out=[];
-  for(var i=0;i<cat.actions.length;i++) map[cat.actions[i].tag]=true;
-  for(var k in map) out.push(k);
+function tagsForCat(cat) {
+  var map = {}, out = [];
+  for (var i = 0; i < cat.actions.length; i++) map[cat.actions[i].tag] = true;
+  for (var k in map) out.push(k);
   return out;
 }
-function renderPanel(d){
-  var panel=document.getElementById('panel');
-  if(!activeCat){
-    panel.innerHTML='<div class="no-cat"><p>Select a category above to see activities</p></div>';
-    updateSubmitBar();
-    return;
+function renderPanel(d) {
+  var panel = document.getElementById('panel');
+  if (!activeCat) { panel.innerHTML = '<div class="no-cat"><p>Select a category above to see activities</p></div>'; updateSubmitBar(); return; }
+  var tags = tagsForCat(activeCat);
+  var h = '<div class="ph"><div class="ptitle">' + escH(activeCat.name) + ' <span class="badge ' + activeCat.bc + '">' + escH(activeCat.badge) + '</span></div><div class="psub">Choose activities, then log them</div></div>';
+  h += '<div class="filter-row">';
+  h += '<button class="ftag' + (activeTag === 'all' ? ' active' : '') + '" data-tag="all">All</button>';
+  for (var i = 0; i < tags.length; i++) h += '<button class="ftag' + (activeTag === tags[i] ? ' active' : '') + '" data-tag="' + escH(tags[i]) + '">' + escH(tags[i]) + '</button>';
+  h += '</div><div class="act-list">';
+  for (var j = 0; j < activeCat.actions.length; j++) {
+    var a    = activeCat.actions[j];
+    if (activeTag !== 'all' && a.tag !== activeTag) continue;
+    var key  = activeCat.id + '|' + a.text;
+    var done = !!d.done[key];
+    var pend = !!pending[key];
+    var cls  = 'act' + (done ? ' done' : (pend ? ' pending' : ''));
+    var ptsLbl = done ? 'Done' : ('+' + a.pts + ' pts');
+    h += '<div class="' + cls + '" data-key="' + escH(key) + '" data-pts="' + a.pts + '" data-text="' + escH(a.text) + '">';
+    h += '<div class="chk"><div class="tick"></div></div>';
+    h += '<div class="act-body"><div class="act-text">' + escH(a.text) + '</div><div class="act-tag">' + escH(a.tag) + '</div></div>';
+    h += '<div class="act-pts">' + ptsLbl + '</div></div>';
   }
-  var tags=tagsForCat(activeCat);
-  var h='<div class="ph"><div class="ptitle">'+escH(activeCat.name)+' <span class="badge '+activeCat.bc+'">'+escH(activeCat.badge)+'</span></div><div class="psub">Choose activities, then log them</div></div>';
-  h+='<div class="filter-row">';
-  h+='<button class="ftag'+(activeTag==='all'?' active':'')+'" data-tag="all">All</button>';
-  for(var i=0;i<tags.length;i++) h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" data-tag="'+escH(tags[i])+'">'+escH(tags[i])+'</button>';
-  h+='</div><div class="act-list">';
-  for(var j=0;j<activeCat.actions.length;j++){
-    var a=activeCat.actions[j];
-    if(activeTag!=='all'&&a.tag!==activeTag) continue;
-    var key=activeCat.id+'|'+a.text;
-    var done=!!d.done[key];
-    var pend=!!pending[key];
-    var cls='act'+(done?' done':(pend?' pending':''));
-    var ptsLbl=done?'Done':('+'+a.pts+' pts');
-    h+='<div class="'+cls+'" data-key="'+escH(key)+'" data-pts="'+a.pts+'" data-text="'+escH(a.text)+'">';
-    h+='<div class="chk"><div class="tick"></div></div>';
-    h+='<div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+escH(a.tag)+'</div></div>';
-    h+='<div class="act-pts">'+ptsLbl+'</div></div>';
-  }
-  h+='</div>';
-  panel.innerHTML=h;
+  h += '</div>';
+  panel.innerHTML = h;
   updateSubmitBar();
 }
-function renderStats(d){
-  document.getElementById('who-name').textContent=d.name;
-  document.getElementById('who-meta').textContent='Saved points stay attached to this name across refreshes.';
-  document.getElementById('s-pts').textContent=d.pts;
-  document.getElementById('s-acts').textContent=d.acts;
-  var lv=levelForPoints(d.pts);
-  document.getElementById('s-lvl').textContent=lv.name;
-
-  var pct=100,lbl='Champion reached';
-  if(lv.next!==null){
-    pct=Math.max(0,Math.min(100,Math.round(((d.pts-lv.min)/(lv.next-lv.min))*100)));
-    if(lv.name==='Seedling') lbl=d.pts+' / 125 pts to Sprout';
-    if(lv.name==='Sprout') lbl=d.pts+' / 250 pts to Grower';
-    if(lv.name==='Grower') lbl=d.pts+' / 375 pts to Guardian';
-    if(lv.name==='Guardian') lbl=d.pts+' / 500 pts to Champion';
+function renderStats(d) {
+  document.getElementById('who-name').textContent = d.name;
+  document.getElementById('who-meta').textContent = 'Saved points stay attached to this name across refreshes.';
+  document.getElementById('s-pts').textContent  = d.pts;
+  document.getElementById('s-acts').textContent = d.acts;
+  var lv = levelForPoints(d.pts);
+  document.getElementById('s-lvl').textContent = lv.name;
+  var pct = 100, lbl = 'Champion reached';
+  if (lv.next !== null) {
+    pct = Math.max(0, Math.min(100, Math.round(((d.pts - lv.min) / (lv.next - lv.min)) * 100)));
+    if (lv.name === 'Seedling')  lbl = d.pts + ' / 125 pts to Sprout';
+    if (lv.name === 'Sprout')    lbl = d.pts + ' / 250 pts to Grower';
+    if (lv.name === 'Grower')    lbl = d.pts + ' / 375 pts to Guardian';
+    if (lv.name === 'Guardian')  lbl = d.pts + ' / 500 pts to Champion';
   }
-  document.getElementById('pb').style.width=pct+'%';
-  document.getElementById('pb-lbl').textContent=lbl;
-  document.getElementById('pb-pct').textContent=pct+'%';
-
-  for(var i=0;i<5;i++) document.getElementById('ms'+i).className='ms';
-  var mins=[0,125,250,375,500],cur=0;
-  for(var j=0;j<mins.length;j++){
-    if(d.pts>=mins[j]){ cur=j; document.getElementById('ms'+j).classList.add('on'); }
+  document.getElementById('pb').style.width = pct + '%';
+  document.getElementById('pb-lbl').textContent = lbl;
+  document.getElementById('pb-pct').textContent = pct + '%';
+  for (var i = 0; i < 5; i++) document.getElementById('ms' + i).className = 'ms';
+  var mins = [0, 125, 250, 375, 500], cur = 0;
+  for (var j = 0; j < mins.length; j++) {
+    if (d.pts >= mins[j]) { cur = j; document.getElementById('ms' + j).classList.add('on'); }
   }
-  document.getElementById('ms'+cur).classList.add('cur');
+  document.getElementById('ms' + cur).classList.add('cur');
 }
-function renderTeam(){
-  var keys=Object.keys(store.members||{}),total=0,list=[];
-  for(var i=0;i<keys.length;i++){
-    var m=store.members[keys[i]];
-    total+=m.pts;
-    list.push({name:m.name,pts:m.pts,acts:m.acts});
+function renderTeam() {
+  var keys = Object.keys(store.members || {}), total = 0, list = [];
+  for (var i = 0; i < keys.length; i++) {
+    var m = store.members[keys[i]];
+    total += m.pts;
+    list.push({ name: m.name, pts: m.pts, acts: m.acts });
   }
-  list.sort(function(a,b){
-    if(b.pts!==a.pts) return b.pts-a.pts;
-    return a.name.localeCompare(b.name);
-  });
-
-  document.getElementById('team-total').textContent=total;
-  document.getElementById('team-sub').textContent=list.length+' participant'+(list.length===1?'':'s');
-  document.getElementById('tpb').style.width=Math.min(100,Math.round((total/TEAM_GOAL)*100))+'%';
-  document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
-
-  var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
-  var h='';
-  for(var j=0;j<list.length;j++){
-    var item=list[j];
-    var isMe=slug(item.name)===slug(currentUser);
-    var wp=Math.round((item.pts/maxPts)*100);
-    h+='<div class="mrow"><span class="mname">'+escH(item.name)+(isMe?' <span class="you-tag">you</span>':'')+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+wp+'%"></div></div><span class="mpts">'+item.pts+' pts</span><span class="macts">'+item.acts+' actions</span></div>';
+  list.sort(function (a, b) { return b.pts !== a.pts ? b.pts - a.pts : a.name.localeCompare(b.name); });
+  document.getElementById('team-total').textContent = total;
+  document.getElementById('team-sub').textContent   = list.length + ' participant' + (list.length === 1 ? '' : 's');
+  document.getElementById('tpb').style.width = Math.min(100, Math.round((total / TEAM_GOAL) * 100)) + '%';
+  document.getElementById('tpb-lbl').textContent = total + ' / ' + TEAM_GOAL + ' pts team goal';
+  var maxPts = list.length && list[0].pts > 0 ? list[0].pts : 1;
+  var h = '';
+  for (var j = 0; j < list.length; j++) {
+    var item = list[j];
+    var isMe = slug(item.name) === slug(currentUser);
+    var wp   = Math.round((item.pts / maxPts) * 100);
+    h += '<div class="mrow"><span class="mname">' + escH(item.name) + (isMe ? ' <span class="you-tag">you</span>' : '') + '</span><div class="mbar-wrap"><div class="mbar-fill" style="width:' + wp + '%"></div></div><span class="mpts">' + item.pts + ' pts</span><span class="macts">' + item.acts + ' actions</span></div>';
   }
-  document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
+  document.getElementById('mlist').innerHTML = h || '<div class="empty">No participants yet</div>';
 }
-
-function renderMyLog(){
-  var el=document.getElementById('my-log');
-  var entries=[];
-  var keys=Object.keys(store.members||{});
-  for(var i=0;i<keys.length;i++){
-    var m=store.members[keys[i]];
-    var log=m.log||[];
-    for(var j=0;j<log.length;j++){
-      entries.push({
-        name:m.name||keys[i],
-        text:log[j].text||'',
-        pts:Number(log[j].pts||0),
-        catId:log[j].catId||'',
-        ts:Number(log[j].ts||0)
-      });
+function renderMyLog() {
+  var el = document.getElementById('my-log'), entries = [];
+  var keys = Object.keys(store.members || {});
+  for (var i = 0; i < keys.length; i++) {
+    var m = store.members[keys[i]], log = m.log || [];
+    for (var j = 0; j < log.length; j++) {
+      entries.push({ name: m.name || keys[i], text: log[j].text || '', pts: Number(log[j].pts || 0), catId: log[j].catId || '', ts: Number(log[j].ts || 0) });
     }
   }
-  entries.sort(function(a,b){ return Number(b.ts||0)-Number(a.ts||0); });
-  if(!entries.length){
-    el.innerHTML='<div class="empty">No activities logged yet</div>';
-    return;
+  entries.sort(function (a, b) { return Number(b.ts || 0) - Number(a.ts || 0); });
+  if (!entries.length) { el.innerHTML = '<div class="empty">No activities logged yet</div>'; return; }
+  var h = '';
+  for (var i = 0; i < entries.length; i++) {
+    var ev = entries[i];
+    h += '<div class="log-entry"><span class="le-text">' + escH((ev.name || 'User') + ': ' + (ev.text || '')) + '</span><span class="le-cat">' + escH(CAT_NAMES[ev.catId] || ev.catId) + '</span><span class="le-pts">+' + ev.pts + ' pts</span></div>';
   }
-  var h='';
-  for(var i=0;i<entries.length;i++){
-    var ev=entries[i];
-    h+='<div class="log-entry"><span class="le-text">'+escH((ev.name||'User')+': '+(ev.text||''))+'</span><span class="le-cat">'+escH(CAT_NAMES[ev.catId]||ev.catId)+'</span><span class="le-pts">+'+ev.pts+' pts</span></div>';
-  }
-  el.innerHTML=h;
+  el.innerHTML = h;
 }
-
-function renderAll(){
-  if(!currentUser) return;
-  var d=getUser(currentUser);
+function renderAll() {
+  if (!currentUser) return;
+  var d = getUser(currentUser);
   renderStats(d);
   renderCategories();
   renderPanel(d);
@@ -724,359 +688,328 @@ function renderAll(){
   renderMyLog();
   updateNotice();
 }
-function updateSubmitBar(){
-  var keys=Object.keys(pending),bar=document.getElementById('submit-bar');
-  if(!keys.length){ bar.classList.add('hidden'); return; }
+function updateSubmitBar() {
+  var keys = Object.keys(pending), bar = document.getElementById('submit-bar');
+  if (!keys.length) { bar.classList.add('hidden'); return; }
   bar.classList.remove('hidden');
-  var totalPts=0;
-  for(var i=0;i<keys.length;i++) totalPts+=pending[keys[i]].pts;
-  document.getElementById('submit-summary').innerHTML='<strong>'+keys.length+' activit'+(keys.length===1?'y':'ies')+' selected</strong> &mdash; +'+totalPts+' pts';
+  var totalPts = 0;
+  for (var i = 0; i < keys.length; i++) totalPts += pending[keys[i]].pts;
+  document.getElementById('submit-summary').innerHTML = '<strong>' + keys.length + ' activit' + (keys.length === 1 ? 'y' : 'ies') + ' selected</strong> &mdash; +' + totalPts + ' pts';
 }
-function clearPending(){
-  pending={};
-  renderPanel(getUser(currentUser));
-}
-function showFlash(msg,isError){
-  var flash=document.getElementById('submit-flash');
-  flash.textContent=msg;
-  flash.style.background=isError?'#8f2f24':'#27500A';
-  flash.style.display='block';
-  setTimeout(function(){ flash.style.display='none'; },2200);
+function clearPending() { pending = {}; renderPanel(getUser(currentUser)); }
+function showFlash(msg, isError) {
+  var flash = document.getElementById('submit-flash');
+  flash.textContent = msg;
+  flash.style.background = isError ? '#8f2f24' : '#27500A';
+  flash.style.display = 'block';
+  setTimeout(function () { flash.style.display = 'none'; }, 2200);
 }
 
-// FIX: merge remote events WITH existing local events before applying.
-// Previously, loadRemote replaced the store with only what JSONBin returned,
-// which dropped any local events not yet synced to the server — causing the
-// visible total to fall whenever a remote fetch completed.
-function loadRemote(cb){
-  if(!JSONBIN_ID||!JSONBIN_KEY){
-    if(cb) cb(false);
-    return;
-  }
-  var x=new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout=10000;
-  x.onload=function(){
-    var ok=false;
-    if(x.status===200){
-      var remote=parseRemoteResponse(x.responseText);
-      // Always merge remote into current local events — never replace
-      var merged=mergeEventLists(store.events, remote.events);
-      applyStore({events:merged});
-      syncMode='remote';
-      ok=true;
+// ─── Remote load (read-only, always merges) ───────────────────────────────────
+function loadRemote(cb) {
+  if (!JSONBIN_ID || !JSONBIN_KEY) { if (cb) cb(false); return; }
+  var x = new XMLHttpRequest();
+  x.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+  x.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+  x.setRequestHeader('X-Bin-Meta', 'false');
+  x.timeout = 10000;
+  x.onload = function () {
+    var ok = false;
+    if (x.status === 200) {
+      var remote = parseRemoteResponse(x.responseText);
+      var merged = mergeEventLists(store.events, remote.events);
+      applyStore({ events: merged });
+      syncMode = 'remote';
+      ok = true;
     }
-    updateNotice();
-    refreshGate();
-    if(currentUser) renderAll();
-    if(cb) cb(ok);
+    updateNotice(); refreshGate();
+    if (currentUser) renderAll();
+    if (cb) cb(ok);
   };
-  x.onerror=x.ontimeout=function(){
-    updateNotice();
-    if(cb) cb(false);
-  };
+  x.onerror = x.ontimeout = function () { updateNotice(); if (cb) cb(false); };
   x.send();
 }
 
-function makeEventId(userKey,activityKey,ts){
-  return 'evt_'+userKey+'_'+String(ts)+'_'+slug(activityKey).slice(0,40)+'_'+Math.random().toString(36).slice(2,8);
-}
-function makeResetId(userKey,ts){
-  return 'reset_'+userKey+'_'+String(ts)+'_'+Math.random().toString(36).slice(2,8);
-}
-
-function persistNewEvents(newEvents, doneCb, attempt){
+// ─── persistNewEvents — optimistic locking with up to MAX_RETRY attempts ──────
+//
+// Key change from original:
+//   • GET now keeps the X-Bin-Version header returned by JSONBin.
+//   • PUT sends that version back via X-Bin-Version.
+//   • JSONBin returns HTTP 409 if the bin was written by someone else between
+//     our GET and PUT — we back off with jitter and retry automatically.
+//   • Backoff grows with each attempt (attempt * 800ms + up to 600ms random)
+//     so simultaneous users spread out naturally.
+//
+function persistNewEvents(newEvents, doneCb, attempt) {
   attempt = attempt || 1;
-  if(!JSONBIN_ID||!JSONBIN_KEY){
-    if(doneCb) doneCb(false);
+  if (attempt > MAX_RETRY) {
+    syncMode = 'error';
+    updateNotice();
+    if (doneCb) doneCb(false);
     return;
   }
 
-  syncMode='saving';
+  syncMode = 'saving';
   updateNotice();
 
-  var getReq=new XMLHttpRequest();
-  getReq.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  getReq.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  getReq.setRequestHeader('X-Bin-Meta','false');
-  getReq.timeout=10000;
+  // ── Step 1: GET the current bin state (with version header) ──────────────
+  var getReq = new XMLHttpRequest();
+  getReq.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+  getReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+  // NOTE: do NOT set X-Bin-Meta: false here — we need full response headers
+  //       including X-Bin-Version for optimistic locking.
+  getReq.timeout = 10000;
 
-  getReq.onload=function(){
-    if(getReq.status!==200){
-      syncMode='error';
-      updateNotice();
-      if(doneCb) doneCb(false);
+  getReq.onload = function () {
+    if (getReq.status !== 200) {
+      syncMode = 'error'; updateNotice();
+      if (doneCb) doneCb(false);
       return;
     }
-    var remote=parseRemoteResponse(getReq.responseText);
+
+    // Capture the version at read time
+    var binVersion = getReq.getResponseHeader('X-Bin-Version');
+
+    // Parse the response — the record is nested when X-Bin-Meta is not suppressed
+    var remoteData;
+    try {
+      var raw = JSON.parse(getReq.responseText);
+      remoteData = parseRemoteResponse(JSON.stringify(raw.record !== undefined ? raw.record : raw));
+    } catch (e) {
+      remoteData = hydrateStore({ events: [] });
+    }
+
     // Merge: remote + local store + new events — nothing gets dropped
-    var mergedEvents=mergeEventLists(mergeEventLists(remote.events, store.events), newEvents);
-    applyStore({events:mergedEvents});
+    var mergedEvents = mergeEventLists(
+      mergeEventLists(remoteData.events, store.events),
+      newEvents
+    );
+    applyStore({ events: mergedEvents });
 
-    var putReq=new XMLHttpRequest();
-    putReq.open('PUT','https://api.jsonbin.io/v3/b/'+JSONBIN_ID,true);
-    putReq.setRequestHeader('Content-Type','application/json');
-    putReq.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-    putReq.timeout=15000;
+    // ── Step 2: PUT the merged state back ────────────────────────────────────
+    var putReq = new XMLHttpRequest();
+    putReq.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
+    putReq.setRequestHeader('Content-Type', 'application/json');
+    putReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
 
-    putReq.onload=function(){
-      if(!(putReq.status>=200&&putReq.status<300)){
-        syncMode='error';
-        updateNotice();
-        if(doneCb) doneCb(false);
+    // Send the version we read — JSONBin will reject with 409 if it has changed
+    if (binVersion) putReq.setRequestHeader('X-Bin-Version', binVersion);
+
+    putReq.timeout = 15000;
+
+    putReq.onload = function () {
+      if (putReq.status === 409) {
+        // Conflict: another user wrote between our GET and PUT.
+        // Back off with increasing jitter and retry.
+        var delay = attempt * 800 + Math.floor(Math.random() * 600);
+        setTimeout(function () {
+          persistNewEvents(newEvents, doneCb, attempt + 1);
+        }, delay);
         return;
       }
 
-      var verifyReq=new XMLHttpRequest();
-      verifyReq.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-      verifyReq.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-      verifyReq.setRequestHeader('X-Bin-Meta','false');
-      verifyReq.timeout=10000;
-      verifyReq.onload=function(){
-        if(verifyReq.status!==200){
-          syncMode='error';
-          updateNotice();
-          if(doneCb) doneCb(false);
+      if (!(putReq.status >= 200 && putReq.status < 300)) {
+        syncMode = 'error'; updateNotice();
+        if (doneCb) doneCb(false);
+        return;
+      }
+
+      // ── Step 3: Verify our events actually landed ─────────────────────────
+      var verifyReq = new XMLHttpRequest();
+      verifyReq.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+      verifyReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+      verifyReq.setRequestHeader('X-Bin-Meta', 'false');
+      verifyReq.timeout = 10000;
+
+      verifyReq.onload = function () {
+        if (verifyReq.status !== 200) {
+          syncMode = 'error'; updateNotice();
+          if (doneCb) doneCb(false);
           return;
         }
-        var verified=parseRemoteResponse(verifyReq.responseText);
-        var allPresent=true, ids={};
-        for(var i=0;i<verified.events.length;i++) ids[verified.events[i].id]=true;
-        for(var j=0;j<newEvents.length;j++) if(!ids[newEvents[j].id]) allPresent=false;
-        if(allPresent){
+        var verified    = parseRemoteResponse(verifyReq.responseText);
+        var allPresent  = true;
+        var ids         = {};
+        for (var i = 0; i < verified.events.length; i++) ids[verified.events[i].id] = true;
+        for (var j = 0; j < newEvents.length; j++) if (!ids[newEvents[j].id]) allPresent = false;
+
+        if (allPresent) {
           // Merge verified remote with local to keep everything
-          var finalMerged=mergeEventLists(verified.events, store.events);
-          applyStore({events:finalMerged});
-          syncMode='remote';
-          updateNotice();
-          if(doneCb) doneCb(true);
-        }else if(attempt<2){
-          persistNewEvents(newEvents, doneCb, attempt+1);
-        }else{
-          syncMode='error';
-          updateNotice();
-          if(doneCb) doneCb(false);
+          var finalMerged = mergeEventLists(verified.events, store.events);
+          applyStore({ events: finalMerged });
+          syncMode = 'remote'; updateNotice();
+          if (doneCb) doneCb(true);
+        } else if (attempt < MAX_RETRY) {
+          // Events missing from verify — retry the whole flow
+          persistNewEvents(newEvents, doneCb, attempt + 1);
+        } else {
+          syncMode = 'error'; updateNotice();
+          if (doneCb) doneCb(false);
         }
       };
-      verifyReq.onerror=verifyReq.ontimeout=function(){
-        syncMode='error';
-        updateNotice();
-        if(doneCb) doneCb(false);
+      verifyReq.onerror = verifyReq.ontimeout = function () {
+        syncMode = 'error'; updateNotice();
+        if (doneCb) doneCb(false);
       };
       verifyReq.send();
     };
 
-    putReq.onerror=putReq.ontimeout=function(){
-      syncMode='error';
-      updateNotice();
-      if(doneCb) doneCb(false);
+    putReq.onerror = putReq.ontimeout = function () {
+      syncMode = 'error'; updateNotice();
+      if (doneCb) doneCb(false);
     };
 
-    putReq.send(JSON.stringify({events:mergedEvents}));
+    putReq.send(JSON.stringify({ events: mergedEvents }));
   };
 
-  getReq.onerror=getReq.ontimeout=function(){
-    syncMode='error';
-    updateNotice();
-    if(doneCb) doneCb(false);
+  getReq.onerror = getReq.ontimeout = function () {
+    syncMode = 'error'; updateNotice();
+    if (doneCb) doneCb(false);
   };
 
   getReq.send();
 }
 
-function refreshFromServer(){
-  var btn=document.getElementById('refresh-btn');
-  btn.disabled=true;
-  btn.textContent='Refreshing...';
-  loadRemote(function(){
+// ─── User-facing actions ──────────────────────────────────────────────────────
+function refreshFromServer() {
+  var btn = document.getElementById('refresh-btn');
+  btn.disabled = true; btn.textContent = 'Refreshing...';
+  loadRemote(function () {
     refreshGate();
-    if(currentUser) renderAll();
-    btn.disabled=false;
-    btn.textContent='Refresh';
+    if (currentUser) renderAll();
+    btn.disabled = false; btn.textContent = 'Refresh';
   });
 }
 
-function submitActivities(){
-  var keys=Object.keys(pending);
-  if(!keys.length) return;
+function submitActivities() {
+  var keys = Object.keys(pending);
+  if (!keys.length) return;
+  var btn        = document.getElementById('btn-submit');
+  var refreshBtn = document.getElementById('refresh-btn');
+  btn.disabled = true; refreshBtn.disabled = true; btn.textContent = 'Saving...';
 
-  var btn=document.getElementById('btn-submit');
-  var refreshBtn=document.getElementById('refresh-btn');
-  btn.disabled=true;
-  refreshBtn.disabled=true;
-  btn.textContent='Saving...';
+  loadRemote(function () {
+    var userKey  = slug(currentUser);
+    var d        = getUser(currentUser);
+    var tsBase   = Date.now();
+    var newEvents = [];
 
-  loadRemote(function(){
-    var userKey=slug(currentUser);
-    var d=getUser(currentUser);
-    var tsBase=Date.now();
-    var newEvents=[];
-
-    for(var i=0;i<keys.length;i++){
-      var key=keys[i],item=pending[key];
-      if(!d.done[key]){
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i], item = pending[key];
+      if (!d.done[key]) {
         newEvents.push({
-          id:makeEventId(userKey,key,tsBase+i),
-          type:'activity',
-          userKey:userKey,
-          name:currentUser,
-          activityKey:key,
-          text:item.text,
-          catId:item.catId,
-          pts:Number(item.pts||0),
-          ts:tsBase+i
+          id:          makeEventId(userKey, key, tsBase + i),
+          type:        'activity',
+          userKey:     userKey,
+          name:        currentUser,
+          activityKey: key,
+          text:        item.text,
+          catId:       item.catId,
+          pts:         Number(item.pts || 0),
+          ts:          tsBase + i
         });
       }
     }
 
-    if(!newEvents.length){
-      pending={};
-      renderAll();
-      btn.disabled=false;
-      refreshBtn.disabled=false;
-      btn.textContent='Log Activities';
-      showFlash('All selected activities were already logged for this name.',true);
+    if (!newEvents.length) {
+      pending = {}; renderAll();
+      btn.disabled = false; refreshBtn.disabled = false; btn.textContent = 'Log Activities';
+      showFlash('All selected activities were already logged for this name.', true);
       return;
     }
 
-    persistNewEvents(newEvents,function(success){
-      pending={};
-      refreshGate();
-      renderAll();
-      btn.disabled=false;
-      refreshBtn.disabled=false;
-      btn.textContent='Log Activities';
-      showFlash(success?'✓ Activities logged and merged to team total!':'Save failed — click Refresh and try again.',!success);
+    persistNewEvents(newEvents, function (success) {
+      pending = {}; refreshGate(); renderAll();
+      btn.disabled = false; refreshBtn.disabled = false; btn.textContent = 'Log Activities';
+      showFlash(success ? '✓ Activities logged and merged to team total!' : 'Save failed — click Refresh and try again.', !success);
     });
   });
 }
 
-function startSession(){
-  var n=document.getElementById('name-in').value.trim();
-  if(!n){
-    document.getElementById('gate-err').textContent='Please enter your name to continue.';
-    return;
-  }
-
-  currentUser=n;
-  document.getElementById('gate-err').textContent='';
+function startSession() {
+  var n = document.getElementById('name-in').value.trim();
+  if (!n) { document.getElementById('gate-err').textContent = 'Please enter your name to continue.'; return; }
+  currentUser = n;
+  document.getElementById('gate-err').textContent = '';
   document.getElementById('gate-page').classList.add('hidden');
   document.getElementById('app-page').classList.remove('hidden');
-
-  activeCat=null;
-  activeTag='all';
-  pending={};
-
-  loadRemote(function(){
-    getUser(currentUser);
-    saveLocalAndBroadcast();
-    refreshGate();
-    renderAll();
-  });
+  activeCat = null; activeTag = 'all'; pending = {};
+  loadRemote(function () { getUser(currentUser); saveLocalAndBroadcast(); refreshGate(); renderAll(); });
 }
 
-function switchUser(){
-  currentUser='';
-  activeCat=null;
-  activeTag='all';
-  pending={};
+function switchUser() {
+  currentUser = ''; activeCat = null; activeTag = 'all'; pending = {};
   document.getElementById('app-page').classList.add('hidden');
   document.getElementById('gate-page').classList.remove('hidden');
-  document.getElementById('name-in').value='';
-  document.getElementById('gate-err').textContent='';
+  document.getElementById('name-in').value = '';
+  document.getElementById('gate-err').textContent = '';
   refreshGate();
 }
 
-function resetCurrentUser(){
-  if(!currentUser) return;
-  if(!confirm('Reset your saved points and activity log for this name?')) return;
-
-  var btn=document.getElementById('refresh-btn');
-  btn.disabled=true;
-  loadRemote(function(){
-    var userKey=slug(currentUser);
-    var resetEvent={
-      id:makeResetId(userKey,Date.now()),
-      type:'reset',
-      userKey:userKey,
-      name:currentUser,
-      ts:Date.now()
-    };
-    persistNewEvents([resetEvent],function(success){
-      pending={};
-      refreshGate();
-      renderAll();
-      btn.disabled=false;
-      showFlash(success?'✓ Your points were reset':'Reset failed — click Refresh and try again.',!success);
+function resetCurrentUser() {
+  if (!currentUser) return;
+  if (!confirm('Reset your saved points and activity log for this name?')) return;
+  var btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  loadRemote(function () {
+    var userKey = slug(currentUser);
+    var resetEvent = { id: makeResetId(userKey, Date.now()), type: 'reset', userKey: userKey, name: currentUser, ts: Date.now() };
+    persistNewEvents([resetEvent], function (success) {
+      pending = {}; refreshGate(); renderAll(); btn.disabled = false;
+      showFlash(success ? '✓ Your points were reset' : 'Reset failed — click Refresh and try again.', !success);
     });
   });
 }
 
-document.getElementById('name-in').addEventListener('keydown',function(e){
-  if(e.key==='Enter') startSession();
+// ─── Event listeners ──────────────────────────────────────────────────────────
+document.getElementById('name-in').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') startSession();
 });
-document.getElementById('chip-row').addEventListener('click',function(e){
-  var c=e.target.closest('.chip');
-  if(!c) return;
-  document.getElementById('name-in').value=c.dataset.name;
+document.getElementById('chip-row').addEventListener('click', function (e) {
+  var c = e.target.closest('.chip');
+  if (!c) return;
+  document.getElementById('name-in').value = c.dataset.name;
   startSession();
 });
-document.getElementById('panel').addEventListener('click',function(e){
-  if(!currentUser||!activeCat) return;
-
-  var ftag=e.target.closest('.ftag');
-  if(ftag){
-    activeTag=ftag.dataset.tag;
-    renderPanel(getUser(currentUser));
-    return;
-  }
-
-  var act=e.target.closest('.act');
-  if(!act||!act.dataset.key) return;
-
-  var key=act.dataset.key;
-  var d=getUser(currentUser);
-  if(d.done[key]) return;
-
-  if(pending[key]) delete pending[key];
-  else pending[key]={pts:parseInt(act.dataset.pts,10),text:act.dataset.text,catId:activeCat.id};
-
+document.getElementById('panel').addEventListener('click', function (e) {
+  if (!currentUser || !activeCat) return;
+  var ftag = e.target.closest('.ftag');
+  if (ftag) { activeTag = ftag.dataset.tag; renderPanel(getUser(currentUser)); return; }
+  var act = e.target.closest('.act');
+  if (!act || !act.dataset.key) return;
+  var key = act.dataset.key;
+  var d   = getUser(currentUser);
+  if (d.done[key]) return;
+  if (pending[key]) delete pending[key];
+  else pending[key] = { pts: parseInt(act.dataset.pts, 10), text: act.dataset.text, catId: activeCat.id };
   renderPanel(d);
 });
 
-window.addEventListener('storage',function(e){
-  if(e.key===LOCAL_KEY||e.key===LOCAL_TICK_KEY){
-    var local=readLocal();
-    if(local){
-      // Merge incoming local changes with current store rather than replacing
-      var merged=mergeEventLists(store.events, local.events);
-      store=hydrateStore({events:merged});
+// Cross-tab sync
+window.addEventListener('storage', function (e) {
+  if (e.key === LOCAL_KEY || e.key === LOCAL_TICK_KEY) {
+    var local = readLocal();
+    if (local) {
+      var merged = mergeEventLists(store.events, local.events);
+      store = hydrateStore({ events: merged });
       refreshGate();
-      if(currentUser) renderAll();
+      if (currentUser) renderAll();
       else updateNotice();
     }
   }
 });
 
-try{
-  bc=new BroadcastChannel('ed_tree_sync');
-}catch(e){}
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+try { bc = new BroadcastChannel('ed_tree_sync'); } catch (e) {}
 
-(function(){
-  var local=readLocal();
-  if(local){
-    store=local;
-    syncMode='local';
-  }else{
-    store=hydrateStore({events:[]});
-  }
+(function () {
+  var local = readLocal();
+  if (local) { store = local; syncMode = 'local'; }
+  else        { store = hydrateStore({ events: [] }); }
   refreshGate();
   updateNotice();
   loadRemote();
 })();
-
 </script>
 </body>
 </html>
