@@ -117,7 +117,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 .act.pending .act-text{color:#5C3D00}
 .act.pending .act-tag{color:#8A5E00}
 .act.pending .act-pts{color:#B07D00}
-.submit-bar{position:sticky;bottom:16px;margin-top:14px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:12px 16px;box-shadow:0 4px 18px rgba(0,0,0,.10)}
+.submit-bar{margin-top:0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:12px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .submit-bar.hidden{display:none}
 .submit-summary{font-size:.82rem;color:#555;line-height:1.4}
 .submit-summary strong{color:#1a1a1a}
@@ -128,7 +128,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 .btn-clear:hover{background:#e4e4e2}
 .submit-flash{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27500A;color:white;padding:10px 22px;border-radius:10px;font-size:.88rem;font-weight:700;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 @media (max-width:680px){
-  .gate-row,.who-bar,.submit-bar{flex-direction:column;align-items:stretch}
+  .gate-row,.who-bar{flex-direction:column;align-items:stretch}
   .stats-row{grid-template-columns:1fr}
 }
 </style>
@@ -189,6 +189,14 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
     <div class="cats" id="cats"></div>
   </div>
 
+  <div class="submit-bar hidden" id="submit-bar">
+    <div class="submit-summary" id="submit-summary"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-clear" onclick="clearPending()">Clear</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitActivities()">Log Activities</button>
+    </div>
+  </div>
+
   <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
 
   <div class="team-card">
@@ -206,15 +214,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
   </div>
 </div>
 
-<div class="page">
-  <div class="submit-bar hidden" id="submit-bar">
-    <div class="submit-summary" id="submit-summary"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-clear" onclick="clearPending()">Clear</button>
-      <button class="btn-submit" id="btn-submit" onclick="submitActivities()">Log Activities</button>
-    </div>
-  </div>
-</div>
+
 
 <div class="submit-flash" id="submit-flash"></div>
 
