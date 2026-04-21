@@ -680,28 +680,38 @@ function renderTeam(){
   }
   document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
+
+// Reads from derived member logs — deduped and reset-aware — not raw events
 function renderMyLog(){
   var el=document.getElementById('my-log');
-  var events=(store&&Array.isArray(store.events))?store.events.slice():[];
-
-  events=events.filter(function(ev){
-    return ev&&ev.type==='activity';
-  }).sort(function(a,b){
-    return Number(b.ts||0)-Number(a.ts||0);
-  });
-
-  if(!events.length){
+  var entries=[];
+  var keys=Object.keys(store.members||{});
+  for(var i=0;i<keys.length;i++){
+    var m=store.members[keys[i]];
+    var log=m.log||[];
+    for(var j=0;j<log.length;j++){
+      entries.push({
+        name:m.name||keys[i],
+        text:log[j].text||'',
+        pts:Number(log[j].pts||0),
+        catId:log[j].catId||'',
+        ts:Number(log[j].ts||0)
+      });
+    }
+  }
+  entries.sort(function(a,b){ return Number(b.ts||0)-Number(a.ts||0); });
+  if(!entries.length){
     el.innerHTML='<div class="empty">No activities logged yet</div>';
     return;
   }
-
   var h='';
-  for(var i=0;i<events.length;i++){
-    var ev=events[i];
-    h+='<div class="log-entry"><span class="le-text">'+escH((ev.name||ev.userKey||'User')+': '+(ev.text||''))+'</span><span class="le-cat">'+escH(CAT_NAMES[ev.catId]||ev.catId)+'</span><span class="le-pts">+'+Number(ev.pts||0)+' pts</span></div>';
+  for(var i=0;i<entries.length;i++){
+    var ev=entries[i];
+    h+='<div class="log-entry"><span class="le-text">'+escH((ev.name||'User')+': '+(ev.text||''))+'</span><span class="le-cat">'+escH(CAT_NAMES[ev.catId]||ev.catId)+'</span><span class="le-pts">+'+ev.pts+' pts</span></div>';
   }
   el.innerHTML=h;
 }
+
 function renderAll(){
   if(!currentUser) return;
   var d=getUser(currentUser);
