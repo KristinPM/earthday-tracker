@@ -14,7 +14,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .cv{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#f4f4f2}
 .tree-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
 .tree-bw{filter:grayscale(1) brightness(0.88) contrast(1.05);z-index:1}
-.tree-colour{z-index:2;opacity:0;transition:opacity 1.4s ease}
+.tree-colour{z-index:2;clip-path:inset(100% 0 0 0);transition:clip-path 1.4s cubic-bezier(0.4,0,0.2,1)}
 .pts-label{
   position:absolute;bottom:12px;left:14px;z-index:5;
   background:rgba(0,0,0,0.48);color:white;
@@ -264,9 +264,11 @@ function updateLevels(total) {
 }
 
 function updateTree(total) {
-  var opacity     = Math.max(0, Math.min(1, total / TEAM_GOAL));
+  // pct = how much of the image is revealed from the bottom, 0→100
+  var pct         = Math.max(0, Math.min(100, (total / TEAM_GOAL) * 100));
+  var topInset    = (100 - pct).toFixed(2); // inset shrinks from top as pct grows
   var colourLayer = document.getElementById('tree-colour');
-  if (colourLayer) colourLayer.style.opacity = opacity;
+  if (colourLayer) colourLayer.style.clipPath = 'inset(' + topInset + '% 0 0 0)';
   var pts = document.getElementById('pts-label');
   if (pts) pts.textContent = total + ' / ' + TEAM_GOAL + ' pts';
   updateLevels(total);
