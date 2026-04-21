@@ -767,6 +767,8 @@ function loadRemote(cb){
       ok=true;
     }
     updateNotice();
+    refreshGate();
+    if(currentUser) renderAll();
     if(cb) cb(ok);
   };
   x.onerror=x.ontimeout=function(){
@@ -1065,10 +1067,7 @@ try{
   }
   refreshGate();
   updateNotice();
-  loadRemote(function(){
-    refreshGate();
-    if(currentUser) renderAll();
-  });
+  loadRemote();
 })();
 
 </script>
