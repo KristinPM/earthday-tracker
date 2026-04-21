@@ -14,7 +14,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .cv{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#f4f4f2}
 .tree-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
 .tree-bw{filter:grayscale(1) brightness(0.88) contrast(1.05);z-index:1}
-.tree-colour{z-index:2;clip-path:inset(var(--clip-top,100%) 0 0 0);transition:clip-path 1.4s cubic-bezier(0.34,1.05,0.64,1)}
+.tree-colour{z-index:2;opacity:0;transition:opacity 1.4s ease}
 .pts-label{
   position:absolute;bottom:12px;left:14px;z-index:5;
   background:rgba(0,0,0,0.48);color:white;
@@ -50,7 +50,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 
   <div class="cv">
     <img class="tree-layer tree-bw" src="./tree-layer-1.jpg" alt="Tree background in black and white">
-    <img class="tree-layer tree-colour" src="./tree-layer-2.jpg" alt="Tree background in color">
+    <img class="tree-layer tree-colour" id="tree-colour" src="./tree-layer-2.jpg" alt="Tree background in color">
     <div class="pts-label" id="pts-label">0 / 500 pts</div>
   </div>
 
@@ -83,7 +83,7 @@ var JSONBIN_ID='69cff25faaba882197c08a39';
 var JSONBIN_KEY='$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
 var TEAM_GOAL=500;
 var LOCAL_KEY='ed_team_v3_events';
-var POLL_INTERVAL=24*60*60*1000; // 24 hours
+var POLL_INTERVAL=24*60*60*1000;
 var pollTimer=null;
 
 function setStatus(msg){
@@ -141,7 +141,6 @@ function normalizeEvent(ev){
   return out;
 }
 
-// Mirrors deriveMembers in the activity log — dedup + reset aware
 function deriveTotal(events){
   var members={};
   var list=(events||[]).slice().sort(function(a,b){
@@ -174,7 +173,6 @@ function parseRemoteResponse(text){
     var r=JSON.parse(text);
     var data=(r&&r.record!==undefined)?r.record:r;
     if(!data) return {};
-    // Convert legacy members-only format to events so totals are always accurate
     if(!Array.isArray(data.events)||!data.events.length){
       var legacyEvents=legacyMembersToEvents(data);
       return {events:legacyEvents};
@@ -194,11 +192,9 @@ function readLocal(){
 }
 
 function getTotalPoints(data){
-  // Always use event-log derivation for accuracy
   if(data&&Array.isArray(data.events)&&data.events.length){
     return deriveTotal(data.events);
   }
-  // Legacy fallback: members-based format
   var members=(data&&data.members)?data.members:{};
   var total=0;
   Object.keys(members).forEach(function(k){
@@ -230,8 +226,11 @@ function updateLevels(total){
 }
 
 function updateTree(total){
-  var pct=Math.max(0,Math.min(100,Math.round((total/TEAM_GOAL)*100)));
-  document.documentElement.style.setProperty('--clip-top',(100-pct)+'%');
+  // Opacity scales 0→1 as points go 0→TEAM_GOAL
+  var opacity=Math.max(0,Math.min(1,total/TEAM_GOAL));
+  var colourLayer=document.getElementById('tree-colour');
+  if(colourLayer) colourLayer.style.opacity=opacity;
+
   var pts=document.getElementById('pts-label');
   if(pts) pts.textContent=total+' / '+TEAM_GOAL+' pts';
   updateLevels(total);
@@ -282,11 +281,10 @@ function refreshTree(silent){
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
   pollTimer=setInterval(function(){
-    refreshTree(true); // silent background refresh
+    refreshTree(true);
   }, POLL_INTERVAL);
 }
 
-// Sync from same-device activity log submissions
 window.addEventListener('storage',function(e){
   if(e.key==='ed_pts_tick'||e.key===LOCAL_KEY){
     applyLocalFirst();
