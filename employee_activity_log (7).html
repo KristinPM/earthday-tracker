@@ -523,10 +523,14 @@ function applyStore(raw){
 function parseRemoteResponse(text){
   try{
     var r=JSON.parse(text);
-    // Unwrap JSONbin envelope if present
     var data=(r&&r.record!==undefined)?r.record:r;
-    // data may be events-format {events:[]} or legacy members-format {members:{}}
-    return hydrateStore(data||{events:[]});
+    if(!data) return hydrateStore({events:[]});
+    // If legacy members-only format, convert to events first so PUT never drops them
+    if(!Array.isArray(data.events)||!data.events.length){
+      var legacyEvents=legacyMembersToEvents(data);
+      return hydrateStore({events:legacyEvents});
+    }
+    return hydrateStore(data);
   }catch(e){}
   return hydrateStore({events:[]});
 }
