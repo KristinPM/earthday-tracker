@@ -14,9 +14,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .cv{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#f4f4f2}
 .tree-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
 .tree-bw{filter:grayscale(1) brightness(0.88) contrast(1.05);z-index:1}
-.tree-colour{z-index:2}
-#wave-clip-svg{position:absolute;width:0;height:0;overflow:hidden}
-.wave-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.tree-colour{z-index:2;clip-path:inset(var(--clip-top,100%) 0 0 0);transition:clip-path 1.4s cubic-bezier(0.34,1.05,0.64,1)}
 .pts-label{
   position:absolute;bottom:12px;left:14px;z-index:5;
   background:rgba(0,0,0,0.48);color:white;
@@ -52,8 +50,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 
   <div class="cv">
     <img class="tree-layer tree-bw" src="./tree-layer-1.jpg" alt="Tree background in black and white">
-    <img class="tree-layer tree-colour" id="tree-colour" src="./tree-layer-2.jpg" alt="Tree background in color" style="z-index:2;display:none">
-    <canvas class="wave-overlay" id="wave-canvas"></canvas>
+    <img class="tree-layer tree-colour" src="./tree-layer-2.jpg" alt="Tree background in color">
     <div class="pts-label" id="pts-label">0 / 500 pts</div>
   </div>
 
@@ -79,7 +76,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
     <span class="icon">⟳</span> Refresh
   </button>
   <div class="status" id="status"></div>
-  <div id="last-updated" style="text-align:center;font-size:.68rem;color:#bbb;margin-top:2px;min-height:14px"></div>
 </div>
 
 <script>
@@ -89,23 +85,6 @@ var TEAM_GOAL=500;
 var LOCAL_KEY='ed_team_v3_events';
 var POLL_INTERVAL=24*60*60*1000; // 24 hours
 var pollTimer=null;
-var lastUpdatedAt=null;
-var tickTimer=null;
-
-function updateLastUpdated(){
-  var el=document.getElementById('last-updated');
-  if(!el) return;
-  if(!lastUpdatedAt){ el.textContent=''; return; }
-  var mins=Math.floor((Date.now()-lastUpdatedAt)/60000);
-  if(mins<1) el.textContent='Last updated: just now';
-  else if(mins===1) el.textContent='Last updated: 1 min ago';
-  else el.textContent='Last updated: '+mins+' mins ago';
-}
-
-function startTick(){
-  if(tickTimer) clearInterval(tickTimer);
-  tickTimer=setInterval(updateLastUpdated,60000);
-}
 
 function setStatus(msg){
   var el=document.getElementById('status');
@@ -146,31 +125,23 @@ function legacyMembersToEvents(raw){
   return out;
 }
 
-// FIX: correctly handles both 'reset' and 'activity' event types.
-// Previously, reset events (which have no activityKey) were silently dropped
-// because the function returned null when activityKey was missing — even for resets.
-// This caused reset events to be ignored, and any activity events logged after a reset
-// to be double-counted (since the reset never cleared the dedup map).
 function normalizeEvent(ev){
   if(!ev||!ev.id||!ev.userKey) return null;
-  var type=ev.type==='reset'?'reset':'activity';
   var out={
     id:String(ev.id),
-    type:type,
+    type:ev.type==='reset'?'reset':'activity',
     userKey:String(ev.userKey),
     ts:Number(ev.ts||0)
   };
-  if(type==='activity'){
+  if(out.type==='activity'){
     out.activityKey=String(ev.activityKey||'');
     out.pts=Number(ev.pts||0);
-    // Drop activity events with no activityKey (genuinely malformed)
     if(!out.activityKey) return null;
   }
-  // Reset events pass through with no activityKey requirement
   return out;
 }
 
-// Derives total team points from the full event log, respecting resets and deduplication.
+// Mirrors deriveMembers in the activity log — dedup + reset aware
 function deriveTotal(events){
   var members={};
   var list=(events||[]).slice().sort(function(a,b){
@@ -184,13 +155,10 @@ function deriveTotal(events){
     if(!members[ev.userKey]) members[ev.userKey]={pts:0,done:{},lastResetAt:0};
     var m=members[ev.userKey];
     if(ev.type==='reset'){
-      // Clear this user's state entirely at the reset timestamp
       m.pts=0; m.done={}; m.lastResetAt=ev.ts;
       continue;
     }
-    // Skip activity events that predate the user's last reset
     if(m.lastResetAt && ev.ts<m.lastResetAt) continue;
-    // Deduplicate: each activityKey counts only once per user
     if(!m.done[ev.activityKey]){
       m.done[ev.activityKey]=true;
       m.pts+=ev.pts;
@@ -206,6 +174,7 @@ function parseRemoteResponse(text){
     var r=JSON.parse(text);
     var data=(r&&r.record!==undefined)?r.record:r;
     if(!data) return {};
+    // Convert legacy members-only format to events so totals are always accurate
     if(!Array.isArray(data.events)||!data.events.length){
       var legacyEvents=legacyMembersToEvents(data);
       return {events:legacyEvents};
@@ -225,10 +194,11 @@ function readLocal(){
 }
 
 function getTotalPoints(data){
+  // Always use event-log derivation for accuracy
   if(data&&Array.isArray(data.events)&&data.events.length){
     return deriveTotal(data.events);
   }
-  // Legacy fallback: sum members.pts directly
+  // Legacy fallback: members-based format
   var members=(data&&data.members)?data.members:{};
   var total=0;
   Object.keys(members).forEach(function(k){
@@ -259,87 +229,9 @@ function updateLevels(total){
   if(curEl) curEl.classList.add('cur');
 }
 
-// ── Liquid wave fill ──────────────────────────────────────────────────────────
-var waveTargetPct=0;   // 0–100, where we want the fill to settle
-var waveCurPct=0;      // current animated fill level
-var wavePhase=0;       // drives horizontal wave oscillation
-var waveRAF=null;
-
-function initWave(){
-  var canvas=document.getElementById('wave-canvas');
-  if(!canvas) return;
-  var cv=canvas.parentElement;
-  var colourImg=document.getElementById('tree-colour');
-  if(!colourImg) return;
-  var offscreen=null;
-
-  function buildOffscreen(){
-    if(!canvas.width||!canvas.height) return;
-    offscreen=document.createElement('canvas');
-    offscreen.width=canvas.width;
-    offscreen.height=canvas.height;
-    var oc=offscreen.getContext('2d');
-    oc.drawImage(colourImg,0,0,offscreen.width,offscreen.height);
-  }
-
-  function resize(){
-    canvas.width=cv.offsetWidth;
-    canvas.height=cv.offsetHeight;
-    if(colourImg.complete && colourImg.naturalWidth) buildOffscreen();
-  }
-  resize();
-  window.addEventListener('resize',resize);
-
-  if(colourImg.complete && colourImg.naturalWidth) buildOffscreen();
-  else colourImg.addEventListener('load',buildOffscreen);
-
-  function drawFrame(){
-    var W=canvas.width, H=canvas.height;
-    if(offscreen&&(offscreen.width!==W||offscreen.height!==H)) buildOffscreen();
-
-    // Ease current pct toward target
-    waveCurPct+=(waveTargetPct-waveCurPct)*0.04;
-
-    // Wave geometry: fillY is the mean waterline from the top
-    var fillY=H*(1-waveCurPct/100);
-    var amp=waveCurPct<2?0:Math.min(10,waveCurPct*0.18); // no wave at 0%
-    wavePhase+=0.018;
-
-    var ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,W,H);
-
-    if(waveCurPct>0.2 && offscreen){
-      // Build clipping wave path
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0,H);
-      // Draw wavy top edge left→right
-      var seg=W/4;
-      for(var x=0;x<=W;x++){
-        // Two overlapping sine waves for organic feel
-        var y=fillY
-          + Math.sin(x/seg*Math.PI*2 + wavePhase)*amp
-          + Math.sin(x/seg*Math.PI*1.3 + wavePhase*1.7)*amp*0.4;
-        if(x===0) ctx.lineTo(x,y);
-        else ctx.lineTo(x,y);
-      }
-      ctx.lineTo(W,H);
-      ctx.closePath();
-      ctx.clip();
-
-      // Draw the colour image inside the clipped region
-      ctx.drawImage(offscreen,0,0,W,H);
-      ctx.restore();
-    }
-
-    waveRAF=requestAnimationFrame(drawFrame);
-  }
-  drawFrame();
-}
-
 function updateTree(total){
   var pct=Math.max(0,Math.min(100,Math.round((total/TEAM_GOAL)*100)));
-  waveTargetPct=pct;
+  document.documentElement.style.setProperty('--clip-top',(100-pct)+'%');
   var pts=document.getElementById('pts-label');
   if(pts) pts.textContent=total+' / '+TEAM_GOAL+' pts';
   updateLevels(total);
@@ -370,8 +262,6 @@ function refreshTree(silent){
       var data=parseRemoteResponse(x.responseText);
       var total=getTotalPoints(data);
       updateTree(total);
-      lastUpdatedAt=Date.now();
-      updateLastUpdated();
       if(!silent){
         setStatus('Updated.');
         setTimeout(function(){ setStatus(''); },1500);
@@ -392,25 +282,11 @@ function refreshTree(silent){
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
   pollTimer=setInterval(function(){
-    refreshTree(true);
+    refreshTree(true); // silent background refresh
   }, POLL_INTERVAL);
 }
 
-// FIX: listen on BroadcastChannel so same-device activity log submissions
-// update the tree instantly without needing a manual refresh.
-function listenBroadcast(){
-  try{
-    var bc=new BroadcastChannel('ed_tree_sync');
-    bc.onmessage=function(e){
-      if(e&&e.data&&typeof e.data.pts==='number'){
-        updateTree(e.data.pts);
-      }
-    };
-  }catch(err){}
-}
-
-// FIX: also listen on localStorage events (cross-tab, same device)
-// so the tree updates when the activity log writes ed_team_v3_events.
+// Sync from same-device activity log submissions
 window.addEventListener('storage',function(e){
   if(e.key==='ed_pts_tick'||e.key===LOCAL_KEY){
     applyLocalFirst();
@@ -420,9 +296,6 @@ window.addEventListener('storage',function(e){
 applyLocalFirst();
 refreshTree(false);
 startPolling();
-startTick();
-listenBroadcast();
-window.addEventListener('load', initWave);
 </script>
 </body>
 </html>
