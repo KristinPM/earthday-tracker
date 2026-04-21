@@ -12,9 +12,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .hdr h1{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700;color:#1a1a1a}
 .hdr p{font-size:clamp(.9rem,1.5vw,1.2rem);color:#7a7a7a;margin-top:6px}
 .cv{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#f4f4f2}
-.tree-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
-.tree-bw{filter:grayscale(1) brightness(0.88) contrast(1.05);z-index:1}
-.tree-colour{z-index:2;clip-path:inset(100% 0 0 0);transition:clip-path 1.4s cubic-bezier(0.4,0,0.2,1)}
+
+/* Both image layers sit on top of each other, same size */
+.tree-layer{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;object-position:center;
+}
+
+/* Layer 1: grayscale — always visible underneath */
+.tree-bw{
+  filter:grayscale(1) brightness(0.88) contrast(1.05);
+  z-index:1;
+}
+
+/* Layer 2: full colour — clipped to reveal from bottom up */
+.tree-colour{
+  z-index:2;
+  /* Start fully hidden: inset(100% 0 0 0) = clip entire image from top */
+  clip-path:inset(100% 0 0 0);
+  transition:clip-path 1.4s cubic-bezier(0.4,0,0.2,1);
+}
+
 .pts-label{
   position:absolute;bottom:12px;left:14px;z-index:5;
   background:rgba(0,0,0,0.48);color:white;
@@ -49,7 +68,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   </div>
 
   <div class="cv">
+    <!-- Layer 1: black & white — always shows -->
     <img class="tree-layer tree-bw" src="./tree-layer-1.jpg" alt="Tree background in black and white">
+    <!-- Layer 2: full colour — revealed from bottom up via clip-path -->
     <img class="tree-layer tree-colour" id="tree-colour" src="./tree-layer-2.jpg" alt="Tree background in color">
     <div class="pts-label" id="pts-label">0 / 500 pts</div>
   </div>
@@ -83,11 +104,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 var JSONBIN_ID   = '69cff25faaba882197c08a39';
 var JSONBIN_KEY  = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
 var TEAM_GOAL    = 500;
-var LOCAL_KEY    = 'ed_team_v3_events'; // must match activitylog.html
+var LOCAL_KEY    = 'ed_team_v3_events';
 var POLL_INTERVAL = 24 * 60 * 60 * 1000;
 var pollTimer    = null;
-
-// Cached event list so we can merge rather than replace on every fetch
 var localEvents  = [];
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -103,7 +122,7 @@ function slug(s) {
     .replace(/\s/g, '-');
 }
 
-// ─── Event normalisation (mirrors activitylog.html) ───────────────────────────
+// ─── Event normalisation ──────────────────────────────────────────────────────
 function normalizeEvent(ev) {
   if (!ev || !ev.id || !ev.userKey) return null;
   var out = {
@@ -120,7 +139,7 @@ function normalizeEvent(ev) {
   return out;
 }
 
-// ─── Legacy format migration (mirrors activitylog.html) ───────────────────────
+// ─── Legacy format migration ──────────────────────────────────────────────────
 function legacyMembersToEvents(raw) {
   var out = [], seen = {};
   var members = (raw && raw.members) ? raw.members : {};
@@ -160,7 +179,7 @@ function legacyMembersToEvents(raw) {
   return out;
 }
 
-// ─── Merge two event lists (dedup by id, sort by ts then id) ─────────────────
+// ─── Merge two event lists ────────────────────────────────────────────────────
 function mergeEventLists(baseEvents, incomingEvents) {
   var map = {}, merged = [];
   function add(arr) {
@@ -180,7 +199,6 @@ function mergeEventLists(baseEvents, incomingEvents) {
 }
 
 // ─── Derive total from events, honouring resets ───────────────────────────────
-// This replaces the old deriveTotal which ignored reset events entirely.
 function deriveTotal(events) {
   var members = {};
   var list = (events || []).slice().sort(function (a, b) {
@@ -196,17 +214,10 @@ function deriveTotal(events) {
     var m = members[ev.userKey];
 
     if (ev.type === 'reset') {
-      // Wipe this member's accumulated state
-      m.pts         = 0;
-      m.done        = {};
-      m.lastResetAt = ev.ts;
+      m.pts = 0; m.done = {}; m.lastResetAt = ev.ts;
       continue;
     }
-
-    // Skip events that pre-date the most recent reset
     if (m.lastResetAt && ev.ts < m.lastResetAt) continue;
-
-    // Each activity key counts only once per member
     if (!m.done[ev.activityKey]) {
       m.done[ev.activityKey] = true;
       m.pts += ev.pts;
@@ -218,14 +229,13 @@ function deriveTotal(events) {
   return total;
 }
 
-// ─── Parse remote JSONBin response into a flat event array ───────────────────
+// ─── Parse remote JSONBin response ───────────────────────────────────────────
 function parseRemoteEvents(text) {
   try {
     var r    = JSON.parse(text);
     var data = (r && r.record !== undefined) ? r.record : r;
     if (!data) return [];
     if (Array.isArray(data.events) && data.events.length) return data.events;
-    // Fall back to legacy member format
     return legacyMembersToEvents(data);
   } catch (e) {}
   return [];
@@ -237,13 +247,12 @@ function readLocalEvents() {
     var raw = localStorage.getItem(LOCAL_KEY);
     if (!raw) return [];
     var parsed = JSON.parse(raw);
-    // activitylog.html stores { events: [...] }
     return Array.isArray(parsed.events) ? parsed.events : [];
   } catch (e) {}
   return [];
 }
 
-// ─── UI updates ───────────────────────────────────────────────────────────────
+// ─── UI: level badges ─────────────────────────────────────────────────────────
 function updateLevels(total) {
   var levels = [
     { min: 0,   el: 'lb0' },
@@ -263,26 +272,33 @@ function updateLevels(total) {
   if (curEl) curEl.classList.add('cur');
 }
 
+// ─── UI: tree colour reveal (BOTTOM UP) ──────────────────────────────────────
+// clip-path inset(T% 0 0 0):
+//   T = 100% → entire image clipped (hidden)
+//   T = 0%   → nothing clipped (fully visible)
+// As points rise, T falls → colour grows upward from the bottom.
 function updateTree(total) {
-  // pct = how much of the image is revealed from the bottom, 0→100
-  var pct         = Math.max(0, Math.min(100, (total / TEAM_GOAL) * 100));
-  var topInset    = (100 - pct).toFixed(2); // inset shrinks from top as pct grows
+  var pct      = Math.max(0, Math.min(100, (total / TEAM_GOAL) * 100));
+  var topInset = (100 - pct).toFixed(2);   // 100→0 as pts go 0→TEAM_GOAL
+
   var colourLayer = document.getElementById('tree-colour');
-  if (colourLayer) colourLayer.style.clipPath = 'inset(' + topInset + '% 0 0 0)';
+  if (colourLayer) {
+    colourLayer.style.clipPath = 'inset(' + topInset + '% 0 0 0)';
+  }
+
   var pts = document.getElementById('pts-label');
   if (pts) pts.textContent = total + ' / ' + TEAM_GOAL + ' pts';
+
   updateLevels(total);
 }
 
-// ─── Apply local cache first so the tree isn't blank while fetching ───────────
+// ─── Apply local cache immediately ────────────────────────────────────────────
 function applyLocalFirst() {
   localEvents = readLocalEvents();
-  if (localEvents.length) {
-    updateTree(deriveTotal(localEvents));
-  }
+  if (localEvents.length) updateTree(deriveTotal(localEvents));
 }
 
-// ─── Main refresh: fetch remote, merge with local, update UI ─────────────────
+// ─── Main refresh ─────────────────────────────────────────────────────────────
 function refreshTree(silent) {
   var btn = document.getElementById('refresh-btn');
   if (!silent && btn) btn.classList.add('spinning');
@@ -298,23 +314,11 @@ function refreshTree(silent) {
     if (btn) btn.classList.remove('spinning');
     if (x.status === 200) {
       var remoteEvents = parseRemoteEvents(x.responseText);
-
-      // Merge remote into our local cache — never discard local events
       localEvents = mergeEventLists(localEvents, remoteEvents);
-
-      // Persist the merged result so future page loads are accurate
-      try {
-        localStorage.setItem(LOCAL_KEY, JSON.stringify({ events: localEvents }));
-      } catch (e) {}
-
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify({ events: localEvents })); } catch (e) {}
       updateTree(deriveTotal(localEvents));
-
-      if (!silent) {
-        setStatus('Updated.');
-        setTimeout(function () { setStatus(''); }, 1500);
-      }
+      if (!silent) { setStatus('Updated.'); setTimeout(function () { setStatus(''); }, 1500); }
     } else {
-      // Remote failed — keep showing whatever we have locally
       if (!silent) setStatus('Could not refresh right now.');
     }
   };
@@ -333,11 +337,10 @@ function startPolling() {
   pollTimer = setInterval(function () { refreshTree(true); }, POLL_INTERVAL);
 }
 
-// ─── Cross-tab sync: pick up changes made in the activity log tab ─────────────
+// ─── Cross-tab sync ───────────────────────────────────────────────────────────
 window.addEventListener('storage', function (e) {
   if (e.key === 'ed_pts_tick' || e.key === LOCAL_KEY) {
     var fresh = readLocalEvents();
-    // Merge rather than replace so we never lose events from the remote fetch
     localEvents = mergeEventLists(localEvents, fresh);
     updateTree(deriveTotal(localEvents));
   }
