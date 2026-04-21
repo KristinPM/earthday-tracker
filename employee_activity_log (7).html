@@ -523,7 +523,9 @@ function applyStore(raw){
 function parseRemoteResponse(text){
   try{
     var r=JSON.parse(text);
-    var data=(r&&Array.isArray(r.events))?r:(r&&r.record&&Array.isArray(r.record.events)?r.record:null);
+    // Unwrap JSONbin envelope if present
+    var data=(r&&r.record!==undefined)?r.record:r;
+    // data may be events-format {events:[]} or legacy members-format {members:{}}
     return hydrateStore(data||{events:[]});
   }catch(e){}
   return hydrateStore({events:[]});
