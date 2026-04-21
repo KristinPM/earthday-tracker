@@ -214,8 +214,6 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
   </div>
 </div>
 
-
-
 <div class="submit-flash" id="submit-flash"></div>
 
 <script>
@@ -525,7 +523,6 @@ function parseRemoteResponse(text){
     var r=JSON.parse(text);
     var data=(r&&r.record!==undefined)?r.record:r;
     if(!data) return hydrateStore({events:[]});
-    // If legacy members-only format, convert to events first so PUT never drops them
     if(!Array.isArray(data.events)||!data.events.length){
       var legacyEvents=legacyMembersToEvents(data);
       return hydrateStore({events:legacyEvents});
@@ -687,7 +684,6 @@ function renderTeam(){
   document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants yet</div>';
 }
 
-// Reads from derived member logs — deduped and reset-aware — not raw events
 function renderMyLog(){
   var el=document.getElementById('my-log');
   var entries=[];
@@ -748,6 +744,10 @@ function showFlash(msg,isError){
   setTimeout(function(){ flash.style.display='none'; },2200);
 }
 
+// FIX: merge remote events WITH existing local events before applying.
+// Previously, loadRemote replaced the store with only what JSONBin returned,
+// which dropped any local events not yet synced to the server — causing the
+// visible total to fall whenever a remote fetch completed.
 function loadRemote(cb){
   if(!JSONBIN_ID||!JSONBIN_KEY){
     if(cb) cb(false);
@@ -762,7 +762,9 @@ function loadRemote(cb){
     var ok=false;
     if(x.status===200){
       var remote=parseRemoteResponse(x.responseText);
-      applyStore({events:mergeEventLists(store.events,remote.events)});
+      // Always merge remote into current local events — never replace
+      var merged=mergeEventLists(store.events, remote.events);
+      applyStore({events:merged});
       syncMode='remote';
       ok=true;
     }
@@ -809,7 +811,8 @@ function persistNewEvents(newEvents, doneCb, attempt){
       return;
     }
     var remote=parseRemoteResponse(getReq.responseText);
-    var mergedEvents=mergeEventLists(remote.events,newEvents);
+    // Merge: remote + local store + new events — nothing gets dropped
+    var mergedEvents=mergeEventLists(mergeEventLists(remote.events, store.events), newEvents);
     applyStore({events:mergedEvents});
 
     var putReq=new XMLHttpRequest();
@@ -843,7 +846,9 @@ function persistNewEvents(newEvents, doneCb, attempt){
         for(var i=0;i<verified.events.length;i++) ids[verified.events[i].id]=true;
         for(var j=0;j<newEvents.length;j++) if(!ids[newEvents[j].id]) allPresent=false;
         if(allPresent){
-          applyStore(verified);
+          // Merge verified remote with local to keep everything
+          var finalMerged=mergeEventLists(verified.events, store.events);
+          applyStore({events:finalMerged});
           syncMode='remote';
           updateNotice();
           if(doneCb) doneCb(true);
@@ -1045,7 +1050,9 @@ window.addEventListener('storage',function(e){
   if(e.key===LOCAL_KEY||e.key===LOCAL_TICK_KEY){
     var local=readLocal();
     if(local){
-      store=local;
+      // Merge incoming local changes with current store rather than replacing
+      var merged=mergeEventLists(store.events, local.events);
+      store=hydrateStore({events:merged});
       refreshGate();
       if(currentUser) renderAll();
       else updateNotice();
