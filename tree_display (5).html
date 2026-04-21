@@ -79,218 +79,269 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 </div>
 
 <script>
-var JSONBIN_ID='69cff25faaba882197c08a39';
-var JSONBIN_KEY='$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
-var TEAM_GOAL=500;
-var LOCAL_KEY='ed_team_v3_events';
-var POLL_INTERVAL=24*60*60*1000;
-var pollTimer=null;
+// ─── Config ───────────────────────────────────────────────────────────────────
+var JSONBIN_ID   = '69cff25faaba882197c08a39';
+var JSONBIN_KEY  = '$2a$10$jg2aDiUfA7ZzIVCSZvwvJO8xwghElUb4w7Dx/9F2oYjQXj8xMn5SK';
+var TEAM_GOAL    = 500;
+var LOCAL_KEY    = 'ed_team_v3_events'; // must match activitylog.html
+var POLL_INTERVAL = 24 * 60 * 60 * 1000;
+var pollTimer    = null;
 
-function setStatus(msg){
-  var el=document.getElementById('status');
-  if(el) el.textContent=msg||'';
+// Cached event list so we can merge rather than replace on every fetch
+var localEvents  = [];
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  var el = document.getElementById('status');
+  if (el) el.textContent = msg || '';
 }
 
-function slug(s){
-  return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');
+function slug(s) {
+  return String(s || '').trim().toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w ]+/g, '')
+    .replace(/\s/g, '-');
 }
 
-function legacyMembersToEvents(raw){
-  var out=[], seen={};
-  var members=raw&&raw.members?raw.members:{};
-  Object.keys(members).forEach(function(k){
-    var m=members[k]||{};
-    var userKey=slug(m.name||k||'member');
-    var name=String(m.name||k||userKey);
-    var updatedAt=Number(m.updatedAt||Date.now());
-    var importedPts=0;
-    if(Array.isArray(m.log)&&m.log.length){
-      for(var i=0;i<m.log.length;i++){
-        var lg=m.log[i]||{};
-        var text=String(lg.text||'Imported activity');
-        var catId=String(lg.catId||'legacy');
-        var pts=Number(lg.pts||0);
-        var ts=Number(lg.ts||(updatedAt+i));
-        var activityKey=String(lg.activityKey||(catId+'|'+text));
-        var id=String(lg.id||('legacy_'+userKey+'_'+ts+'_'+slug(activityKey).slice(0,40)));
-        if(!seen[id]){seen[id]=true;out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:activityKey,text:text,catId:catId,pts:pts,ts:ts});importedPts+=pts;}
+// ─── Event normalisation (mirrors activitylog.html) ───────────────────────────
+function normalizeEvent(ev) {
+  if (!ev || !ev.id || !ev.userKey) return null;
+  var out = {
+    id:      String(ev.id),
+    type:    ev.type === 'reset' ? 'reset' : 'activity',
+    userKey: String(ev.userKey),
+    ts:      Number(ev.ts || 0)
+  };
+  if (out.type === 'activity') {
+    out.activityKey = String(ev.activityKey || '');
+    out.pts         = Number(ev.pts || 0);
+    if (!out.activityKey) return null;
+  }
+  return out;
+}
+
+// ─── Legacy format migration (mirrors activitylog.html) ───────────────────────
+function legacyMembersToEvents(raw) {
+  var out = [], seen = {};
+  var members = (raw && raw.members) ? raw.members : {};
+  Object.keys(members).forEach(function (k) {
+    var m          = members[k] || {};
+    var userKey    = slug(m.name || k || 'member');
+    var name       = String(m.name || k || userKey);
+    var updatedAt  = Number(m.updatedAt || Date.now());
+    var importedPts = 0;
+
+    if (Array.isArray(m.log) && m.log.length) {
+      for (var i = 0; i < m.log.length; i++) {
+        var lg          = m.log[i] || {};
+        var text        = String(lg.text || 'Imported activity');
+        var catId       = String(lg.catId || 'legacy');
+        var pts         = Number(lg.pts || 0);
+        var ts          = Number(lg.ts || (updatedAt + i));
+        var activityKey = String(lg.activityKey || (catId + '|' + text));
+        var id          = String(lg.id || ('legacy_' + userKey + '_' + ts + '_' + slug(activityKey).slice(0, 40)));
+        if (!seen[id]) {
+          seen[id] = true;
+          out.push({ id: id, type: 'activity', userKey: userKey, name: name, activityKey: activityKey, text: text, catId: catId, pts: pts, ts: ts });
+          importedPts += pts;
+        }
       }
     }
-    var memberPts=Number(m.pts||0);
-    if(memberPts>importedPts){
-      var carryId='legacycarry_'+userKey;
-      if(!seen[carryId]){seen[carryId]=true;out.push({id:carryId,type:'activity',userKey:userKey,name:name,activityKey:'legacy|carryover',text:'Imported prior points',catId:'legacy',pts:memberPts-importedPts,ts:updatedAt+999});}
+
+    var memberPts = Number(m.pts || 0);
+    if (memberPts > importedPts) {
+      var carryId = 'legacycarry_' + userKey;
+      if (!seen[carryId]) {
+        seen[carryId] = true;
+        out.push({ id: carryId, type: 'activity', userKey: userKey, name: name, activityKey: 'legacy|carryover', text: 'Imported prior points', catId: 'legacy', pts: memberPts - importedPts, ts: updatedAt + 999 });
+      }
     }
   });
   return out;
 }
 
-function normalizeEvent(ev){
-  if(!ev||!ev.id||!ev.userKey) return null;
-  var out={
-    id:String(ev.id),
-    type:ev.type==='reset'?'reset':'activity',
-    userKey:String(ev.userKey),
-    ts:Number(ev.ts||0)
-  };
-  if(out.type==='activity'){
-    out.activityKey=String(ev.activityKey||'');
-    out.pts=Number(ev.pts||0);
-    if(!out.activityKey) return null;
+// ─── Merge two event lists (dedup by id, sort by ts then id) ─────────────────
+function mergeEventLists(baseEvents, incomingEvents) {
+  var map = {}, merged = [];
+  function add(arr) {
+    (arr || []).forEach(function (ev) {
+      var n = normalizeEvent(ev);
+      if (n && !map[n.id]) { map[n.id] = true; merged.push(n); }
+    });
   }
-  return out;
-}
-
-function deriveTotal(events){
-  var members={};
-  var list=(events||[]).slice().sort(function(a,b){
-    var at=Number(a.ts||0),bt=Number(b.ts||0);
-    if(at!==bt) return at-bt;
+  add(baseEvents);
+  add(incomingEvents);
+  merged.sort(function (a, b) {
+    var at = Number(a.ts || 0), bt = Number(b.ts || 0);
+    if (at !== bt) return at - bt;
     return String(a.id).localeCompare(String(b.id));
   });
-  for(var i=0;i<list.length;i++){
-    var ev=normalizeEvent(list[i]);
-    if(!ev) continue;
-    if(!members[ev.userKey]) members[ev.userKey]={pts:0,done:{},lastResetAt:0};
-    var m=members[ev.userKey];
-    if(ev.type==='reset'){
-      m.pts=0; m.done={}; m.lastResetAt=ev.ts;
+  return merged;
+}
+
+// ─── Derive total from events, honouring resets ───────────────────────────────
+// This replaces the old deriveTotal which ignored reset events entirely.
+function deriveTotal(events) {
+  var members = {};
+  var list = (events || []).slice().sort(function (a, b) {
+    var at = Number(a.ts || 0), bt = Number(b.ts || 0);
+    if (at !== bt) return at - bt;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
+  for (var i = 0; i < list.length; i++) {
+    var ev = normalizeEvent(list[i]);
+    if (!ev) continue;
+    if (!members[ev.userKey]) members[ev.userKey] = { pts: 0, done: {}, lastResetAt: 0 };
+    var m = members[ev.userKey];
+
+    if (ev.type === 'reset') {
+      // Wipe this member's accumulated state
+      m.pts         = 0;
+      m.done        = {};
+      m.lastResetAt = ev.ts;
       continue;
     }
-    if(m.lastResetAt && ev.ts<m.lastResetAt) continue;
-    if(!m.done[ev.activityKey]){
-      m.done[ev.activityKey]=true;
-      m.pts+=ev.pts;
+
+    // Skip events that pre-date the most recent reset
+    if (m.lastResetAt && ev.ts < m.lastResetAt) continue;
+
+    // Each activity key counts only once per member
+    if (!m.done[ev.activityKey]) {
+      m.done[ev.activityKey] = true;
+      m.pts += ev.pts;
     }
   }
-  var total=0;
-  Object.keys(members).forEach(function(k){ total+=members[k].pts; });
+
+  var total = 0;
+  Object.keys(members).forEach(function (k) { total += members[k].pts; });
   return total;
 }
 
-function parseRemoteResponse(text){
-  try{
-    var r=JSON.parse(text);
-    var data=(r&&r.record!==undefined)?r.record:r;
-    if(!data) return {};
-    if(!Array.isArray(data.events)||!data.events.length){
-      var legacyEvents=legacyMembersToEvents(data);
-      return {events:legacyEvents};
-    }
-    return data;
-  }catch(e){}
-  return {};
+// ─── Parse remote JSONBin response into a flat event array ───────────────────
+function parseRemoteEvents(text) {
+  try {
+    var r    = JSON.parse(text);
+    var data = (r && r.record !== undefined) ? r.record : r;
+    if (!data) return [];
+    if (Array.isArray(data.events) && data.events.length) return data.events;
+    // Fall back to legacy member format
+    return legacyMembersToEvents(data);
+  } catch (e) {}
+  return [];
 }
 
-function readLocal(){
-  try{
-    var raw=localStorage.getItem(LOCAL_KEY);
-    if(!raw) return null;
-    return JSON.parse(raw)||null;
-  }catch(e){}
-  return null;
+// ─── Read cached events from localStorage ────────────────────────────────────
+function readLocalEvents() {
+  try {
+    var raw = localStorage.getItem(LOCAL_KEY);
+    if (!raw) return [];
+    var parsed = JSON.parse(raw);
+    // activitylog.html stores { events: [...] }
+    return Array.isArray(parsed.events) ? parsed.events : [];
+  } catch (e) {}
+  return [];
 }
 
-function getTotalPoints(data){
-  if(data&&Array.isArray(data.events)&&data.events.length){
-    return deriveTotal(data.events);
-  }
-  var members=(data&&data.members)?data.members:{};
-  var total=0;
-  Object.keys(members).forEach(function(k){
-    total+=Number((members[k]&&members[k].pts)||0);
-  });
-  return total;
-}
-
-function updateLevels(total){
-  var levels=[
-    {min:0,el:'lb0'},
-    {min:125,el:'lb1'},
-    {min:250,el:'lb2'},
-    {min:375,el:'lb3'},
-    {min:500,el:'lb4'}
+// ─── UI updates ───────────────────────────────────────────────────────────────
+function updateLevels(total) {
+  var levels = [
+    { min: 0,   el: 'lb0' },
+    { min: 125, el: 'lb1' },
+    { min: 250, el: 'lb2' },
+    { min: 375, el: 'lb3' },
+    { min: 500, el: 'lb4' }
   ];
-  var current=0;
-  for(var i=0;i<levels.length;i++){
-    var el=document.getElementById(levels[i].el);
-    if(!el) continue;
-    el.classList.remove('on','cur');
-    if(total>=levels[i].min){
-      el.classList.add('on');
-      current=i;
-    }
+  var current = 0;
+  for (var i = 0; i < levels.length; i++) {
+    var el = document.getElementById(levels[i].el);
+    if (!el) continue;
+    el.classList.remove('on', 'cur');
+    if (total >= levels[i].min) { el.classList.add('on'); current = i; }
   }
-  var curEl=document.getElementById(levels[current].el);
-  if(curEl) curEl.classList.add('cur');
+  var curEl = document.getElementById(levels[current].el);
+  if (curEl) curEl.classList.add('cur');
 }
 
-function updateTree(total){
-  // Opacity scales 0→1 as points go 0→TEAM_GOAL
-  var opacity=Math.max(0,Math.min(1,total/TEAM_GOAL));
-  var colourLayer=document.getElementById('tree-colour');
-  if(colourLayer) colourLayer.style.opacity=opacity;
-
-  var pts=document.getElementById('pts-label');
-  if(pts) pts.textContent=total+' / '+TEAM_GOAL+' pts';
+function updateTree(total) {
+  var opacity     = Math.max(0, Math.min(1, total / TEAM_GOAL));
+  var colourLayer = document.getElementById('tree-colour');
+  if (colourLayer) colourLayer.style.opacity = opacity;
+  var pts = document.getElementById('pts-label');
+  if (pts) pts.textContent = total + ' / ' + TEAM_GOAL + ' pts';
   updateLevels(total);
 }
 
-function applyLocalFirst(){
-  var local=readLocal();
-  if(local){
-    var total=getTotalPoints(local);
-    updateTree(total);
+// ─── Apply local cache first so the tree isn't blank while fetching ───────────
+function applyLocalFirst() {
+  localEvents = readLocalEvents();
+  if (localEvents.length) {
+    updateTree(deriveTotal(localEvents));
   }
 }
 
-function refreshTree(silent){
-  var btn=document.getElementById('refresh-btn');
-  if(!silent && btn) btn.classList.add('spinning');
-  if(!silent) setStatus('Refreshing...');
+// ─── Main refresh: fetch remote, merge with local, update UI ─────────────────
+function refreshTree(silent) {
+  var btn = document.getElementById('refresh-btn');
+  if (!silent && btn) btn.classList.add('spinning');
+  if (!silent) setStatus('Refreshing...');
 
-  var x=new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout=10000;
+  var x = new XMLHttpRequest();
+  x.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
+  x.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+  x.setRequestHeader('X-Bin-Meta', 'false');
+  x.timeout = 10000;
 
-  x.onload=function(){
-    if(btn) btn.classList.remove('spinning');
-    if(x.status===200){
-      var data=parseRemoteResponse(x.responseText);
-      var total=getTotalPoints(data);
-      updateTree(total);
-      if(!silent){
+  x.onload = function () {
+    if (btn) btn.classList.remove('spinning');
+    if (x.status === 200) {
+      var remoteEvents = parseRemoteEvents(x.responseText);
+
+      // Merge remote into our local cache — never discard local events
+      localEvents = mergeEventLists(localEvents, remoteEvents);
+
+      // Persist the merged result so future page loads are accurate
+      try {
+        localStorage.setItem(LOCAL_KEY, JSON.stringify({ events: localEvents }));
+      } catch (e) {}
+
+      updateTree(deriveTotal(localEvents));
+
+      if (!silent) {
         setStatus('Updated.');
-        setTimeout(function(){ setStatus(''); },1500);
+        setTimeout(function () { setStatus(''); }, 1500);
       }
-    }else{
-      if(!silent) setStatus('Could not refresh right now.');
+    } else {
+      // Remote failed — keep showing whatever we have locally
+      if (!silent) setStatus('Could not refresh right now.');
     }
   };
 
-  x.onerror=x.ontimeout=function(){
-    if(btn) btn.classList.remove('spinning');
-    if(!silent) setStatus('Could not refresh right now.');
+  x.onerror = x.ontimeout = function () {
+    if (btn) btn.classList.remove('spinning');
+    if (!silent) setStatus('Could not refresh right now.');
   };
 
   x.send();
 }
 
-function startPolling(){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer=setInterval(function(){
-    refreshTree(true);
-  }, POLL_INTERVAL);
+// ─── Polling ──────────────────────────────────────────────────────────────────
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(function () { refreshTree(true); }, POLL_INTERVAL);
 }
 
-window.addEventListener('storage',function(e){
-  if(e.key==='ed_pts_tick'||e.key===LOCAL_KEY){
-    applyLocalFirst();
+// ─── Cross-tab sync: pick up changes made in the activity log tab ─────────────
+window.addEventListener('storage', function (e) {
+  if (e.key === 'ed_pts_tick' || e.key === LOCAL_KEY) {
+    var fresh = readLocalEvents();
+    // Merge rather than replace so we never lose events from the remote fetch
+    localEvents = mergeEventLists(localEvents, fresh);
+    updateTree(deriveTotal(localEvents));
   }
 });
 
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 applyLocalFirst();
 refreshTree(false);
 startPolling();
