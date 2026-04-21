@@ -95,6 +95,36 @@ function slug(s){
   return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');
 }
 
+function legacyMembersToEvents(raw){
+  var out=[], seen={};
+  var members=raw&&raw.members?raw.members:{};
+  Object.keys(members).forEach(function(k){
+    var m=members[k]||{};
+    var userKey=slug(m.name||k||'member');
+    var name=String(m.name||k||userKey);
+    var updatedAt=Number(m.updatedAt||Date.now());
+    var importedPts=0;
+    if(Array.isArray(m.log)&&m.log.length){
+      for(var i=0;i<m.log.length;i++){
+        var lg=m.log[i]||{};
+        var text=String(lg.text||'Imported activity');
+        var catId=String(lg.catId||'legacy');
+        var pts=Number(lg.pts||0);
+        var ts=Number(lg.ts||(updatedAt+i));
+        var activityKey=String(lg.activityKey||(catId+'|'+text));
+        var id=String(lg.id||('legacy_'+userKey+'_'+ts+'_'+slug(activityKey).slice(0,40)));
+        if(!seen[id]){seen[id]=true;out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:activityKey,text:text,catId:catId,pts:pts,ts:ts});importedPts+=pts;}
+      }
+    }
+    var memberPts=Number(m.pts||0);
+    if(memberPts>importedPts){
+      var carryId='legacycarry_'+userKey;
+      if(!seen[carryId]){seen[carryId]=true;out.push({id:carryId,type:'activity',userKey:userKey,name:name,activityKey:'legacy|carryover',text:'Imported prior points',catId:'legacy',pts:memberPts-importedPts,ts:updatedAt+999});}
+    }
+  });
+  return out;
+}
+
 function normalizeEvent(ev){
   if(!ev||!ev.id||!ev.userKey) return null;
   var out={
@@ -143,7 +173,13 @@ function parseRemoteResponse(text){
   try{
     var r=JSON.parse(text);
     var data=(r&&r.record!==undefined)?r.record:r;
-    return data||{};
+    if(!data) return {};
+    // Convert legacy members-only format to events so totals are always accurate
+    if(!Array.isArray(data.events)||!data.events.length){
+      var legacyEvents=legacyMembersToEvents(data);
+      return {events:legacyEvents};
+    }
+    return data;
   }catch(e){}
   return {};
 }
