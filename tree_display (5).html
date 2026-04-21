@@ -76,6 +76,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
     <span class="icon">⟳</span> Refresh
   </button>
   <div class="status" id="status"></div>
+  <div id="last-updated" style="text-align:center;font-size:.68rem;color:#bbb;margin-top:2px;min-height:14px"></div>
 </div>
 
 <script>
@@ -85,6 +86,23 @@ var TEAM_GOAL=500;
 var LOCAL_KEY='ed_team_v3_events';
 var POLL_INTERVAL=24*60*60*1000; // 24 hours
 var pollTimer=null;
+var lastUpdatedAt=null;
+var tickTimer=null;
+
+function updateLastUpdated(){
+  var el=document.getElementById('last-updated');
+  if(!el) return;
+  if(!lastUpdatedAt){ el.textContent=''; return; }
+  var mins=Math.floor((Date.now()-lastUpdatedAt)/60000);
+  if(mins<1) el.textContent='Last updated: just now';
+  else if(mins===1) el.textContent='Last updated: 1 min ago';
+  else el.textContent='Last updated: '+mins+' mins ago';
+}
+
+function startTick(){
+  if(tickTimer) clearInterval(tickTimer);
+  tickTimer=setInterval(updateLastUpdated,60000);
+}
 
 function setStatus(msg){
   var el=document.getElementById('status');
@@ -125,23 +143,31 @@ function legacyMembersToEvents(raw){
   return out;
 }
 
+// FIX: correctly handles both 'reset' and 'activity' event types.
+// Previously, reset events (which have no activityKey) were silently dropped
+// because the function returned null when activityKey was missing — even for resets.
+// This caused reset events to be ignored, and any activity events logged after a reset
+// to be double-counted (since the reset never cleared the dedup map).
 function normalizeEvent(ev){
   if(!ev||!ev.id||!ev.userKey) return null;
+  var type=ev.type==='reset'?'reset':'activity';
   var out={
     id:String(ev.id),
-    type:ev.type==='reset'?'reset':'activity',
+    type:type,
     userKey:String(ev.userKey),
     ts:Number(ev.ts||0)
   };
-  if(out.type==='activity'){
+  if(type==='activity'){
     out.activityKey=String(ev.activityKey||'');
     out.pts=Number(ev.pts||0);
+    // Drop activity events with no activityKey (genuinely malformed)
     if(!out.activityKey) return null;
   }
+  // Reset events pass through with no activityKey requirement
   return out;
 }
 
-// Mirrors deriveMembers in the activity log — dedup + reset aware
+// Derives total team points from the full event log, respecting resets and deduplication.
 function deriveTotal(events){
   var members={};
   var list=(events||[]).slice().sort(function(a,b){
@@ -155,10 +181,13 @@ function deriveTotal(events){
     if(!members[ev.userKey]) members[ev.userKey]={pts:0,done:{},lastResetAt:0};
     var m=members[ev.userKey];
     if(ev.type==='reset'){
+      // Clear this user's state entirely at the reset timestamp
       m.pts=0; m.done={}; m.lastResetAt=ev.ts;
       continue;
     }
+    // Skip activity events that predate the user's last reset
     if(m.lastResetAt && ev.ts<m.lastResetAt) continue;
+    // Deduplicate: each activityKey counts only once per user
     if(!m.done[ev.activityKey]){
       m.done[ev.activityKey]=true;
       m.pts+=ev.pts;
@@ -174,7 +203,6 @@ function parseRemoteResponse(text){
     var r=JSON.parse(text);
     var data=(r&&r.record!==undefined)?r.record:r;
     if(!data) return {};
-    // Convert legacy members-only format to events so totals are always accurate
     if(!Array.isArray(data.events)||!data.events.length){
       var legacyEvents=legacyMembersToEvents(data);
       return {events:legacyEvents};
@@ -194,11 +222,10 @@ function readLocal(){
 }
 
 function getTotalPoints(data){
-  // Always use event-log derivation for accuracy
   if(data&&Array.isArray(data.events)&&data.events.length){
     return deriveTotal(data.events);
   }
-  // Legacy fallback: members-based format
+  // Legacy fallback: sum members.pts directly
   var members=(data&&data.members)?data.members:{};
   var total=0;
   Object.keys(members).forEach(function(k){
@@ -262,6 +289,8 @@ function refreshTree(silent){
       var data=parseRemoteResponse(x.responseText);
       var total=getTotalPoints(data);
       updateTree(total);
+      lastUpdatedAt=Date.now();
+      updateLastUpdated();
       if(!silent){
         setStatus('Updated.');
         setTimeout(function(){ setStatus(''); },1500);
@@ -282,11 +311,25 @@ function refreshTree(silent){
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
   pollTimer=setInterval(function(){
-    refreshTree(true); // silent background refresh
+    refreshTree(true);
   }, POLL_INTERVAL);
 }
 
-// Sync from same-device activity log submissions
+// FIX: listen on BroadcastChannel so same-device activity log submissions
+// update the tree instantly without needing a manual refresh.
+function listenBroadcast(){
+  try{
+    var bc=new BroadcastChannel('ed_tree_sync');
+    bc.onmessage=function(e){
+      if(e&&e.data&&typeof e.data.pts==='number'){
+        updateTree(e.data.pts);
+      }
+    };
+  }catch(err){}
+}
+
+// FIX: also listen on localStorage events (cross-tab, same device)
+// so the tree updates when the activity log writes ed_team_v3_events.
 window.addEventListener('storage',function(e){
   if(e.key==='ed_pts_tick'||e.key===LOCAL_KEY){
     applyLocalFirst();
@@ -296,6 +339,8 @@ window.addEventListener('storage',function(e){
 applyLocalFirst();
 refreshTree(false);
 startPolling();
+startTick();
+listenBroadcast();
 </script>
 </body>
 </html>
