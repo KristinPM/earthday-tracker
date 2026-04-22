@@ -80,7 +80,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 /* ── Animal positions & sizes ── */
 
 /* Butterfly 1 — gentle drift in canopy */
-.butterfly{ left:55%; bottom:44%; animation:butterfly-drift 10s ease-in-out infinite; }
+.butterfly{ left:55%; bottom:36%; animation:butterfly-drift 10s ease-in-out infinite; }
 .butterfly img{ width:160px; }
 
 /* Butterfly 2 — upper-left canopy area, offset animation */
@@ -186,6 +186,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   letter-spacing:.3px;
   text-shadow:0 1px 4px rgba(0,0,0,0.3);
 }
+.alive-badge-pts{
+  text-align:center;
+  margin-top:6px;
+  color:rgba(255,255,255,0.55);
+  font-size:clamp(.65rem,1.2vw,.75rem);
+  font-weight:600;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
 .alive-badge-icon{
   font-size:clamp(1.2rem,2.8vw,1.6rem);
   line-height:1;
@@ -261,6 +270,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
         <span class="alive-badge-icon">🌿</span>
       </div>
       <div class="alive-badge-thanks">Together, your commitment to a greener world brought our tree to life. Thank you!</div>
+      <div class="alive-badge-pts">— 1,000 pts reached —</div>
 
     </div>
 
