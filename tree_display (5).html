@@ -28,14 +28,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   transition:clip-path 1.4s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* ── Tree alive animations ── */
-/* Sway pivots from the base of the tree */
-@keyframes tree-sway{
-  0%,100%{ transform: rotate(0deg);   }
-  20%    { transform: rotate(0.8deg); }
-  50%    { transform: rotate(-0.6deg);}
-  70%    { transform: rotate(0.4deg); }
-}
 /* Subtle brightness pulse — like sunlight filtering through */
 @keyframes tree-breathe{
   0%,100%{ filter: brightness(1) saturate(1);   }
@@ -50,7 +42,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 }
 .tree-alive-wrap.alive{
   animation:
-    tree-sway    6s  ease-in-out infinite,
     tree-breathe 4s  ease-in-out infinite;
 }
 
@@ -67,31 +58,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .animal{ position:absolute; }
 .animal img{ display:block; }
 
-/* ── Bird realistic forward flight ──
-   Bird glides in from the left, follows a gentle arc across the sky
-   (rising slightly then dipping), exits right, flips, returns.
-   The GIF handles the wing flap — CSS moves the position. */
-@keyframes bird-fly{
-  /* Enter from off-screen left, facing right */
-  0%   { transform: translate(-220px,  20px) scaleX(1); opacity:0; }
-  5%   { opacity:1; }
-  /* Gentle rising arc across the sky */
-  30%  { transform: translate(25%,  -25px) scaleX(1); }
-  55%  { transform: translate(60%,  -15px) scaleX(1); }
-  /* Exit off right edge */
-  70%  { transform: translate(110%, -20px) scaleX(1); opacity:1; }
-  75%  { transform: translate(115%, -20px) scaleX(1); opacity:0; }
-  /* Reappear off right, now facing left */
-  76%  { transform: translate(115%, 10px) scaleX(-1); opacity:0; }
-  80%  { opacity:1; }
-  /* Glide back left */
-  92%  { transform: translate(10%,   5px) scaleX(-1); }
-  /* Exit off left */
-  98%  { transform: translate(-200px, 15px) scaleX(-1); opacity:1; }
-  99%  { transform: translate(-220px, 20px) scaleX(-1); opacity:0; }
-  100% { transform: translate(-220px, 20px) scaleX(1);  opacity:0; }
-}
-
 /* Butterfly subtle drift */
 @keyframes butterfly-drift{
   0%  {transform:translate(0px, 0px)}
@@ -102,19 +68,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   100%{transform:translate(0px, 0px)}
 }
 
+/* Second butterfly drift — offset phase so they move independently */
+@keyframes butterfly-drift-2{
+  0%  {transform:translate(0px, 0px)}
+  25% {transform:translate(-5%, 3%)}
+  50% {transform:translate(-2%, -4%)}
+  75% {transform:translate(3%,  2%)}
+  100%{transform:translate(0px, 0px)}
+}
+
 /* ── Animal positions & sizes ── */
 
-/* Bird — anchored top-left, animation moves it across */
-.bird{
-  left:0;
-  bottom:60%;
-  animation: bird-fly 22s ease-in-out infinite;
-}
-.bird img{ width:200px; }
-
-/* Butterfly — gentle drift in canopy */
+/* Butterfly 1 — gentle drift in canopy */
 .butterfly{ left:55%; bottom:44%; animation:butterfly-drift 10s ease-in-out infinite; }
 .butterfly img{ width:160px; }
+
+/* Butterfly 2 — upper-left canopy area, offset animation */
+.butterfly2{ left:22%; bottom:52%; animation:butterfly-drift-2 13s ease-in-out infinite; }
+.butterfly2 img{ width:130px; }
 
 /* Two deer side by side — bottom right */
 .deer1{ right:10%; bottom:0; }
@@ -224,7 +195,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   </div>
 
   <div class="cv">
-    <!-- Tree layers wrapped so sway + breathe apply to both together -->
+    <!-- Tree layers wrapped so breathe applies to both together -->
     <div class="tree-alive-wrap" id="tree-alive-wrap">
       <img class="tree-layer tree-bw" src="./tree-layer-1.jpg" alt="Tree background in black and white">
       <img class="tree-layer tree-colour" id="tree-colour" src="./tree-layer-2.jpg" alt="Tree background in color">
@@ -233,11 +204,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
     <!-- Creatures — visible only when team hits 1000 pts -->
     <div class="creature-layer" id="creature-layer">
 
-      <div class="animal bird">
-        <img src="./bird.gif" alt="swallow bird">
+      <div class="animal butterfly">
+        <img src="./butterfly.gif" alt="butterflies">
       </div>
 
-      <div class="animal butterfly">
+      <div class="animal butterfly2">
         <img src="./butterfly.gif" alt="butterflies">
       </div>
 
