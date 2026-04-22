@@ -41,37 +41,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .animal{ position:absolute; }
 .animal img{ display:block; }
 
-/* ── Movement animations ── */
-
-/* Birds slowed down — duration increased from 12/15/18s to 22/28/34s */
-@keyframes bird1-fly{
-  0%  {transform:translate(0px, 0px)  scaleX(1)}
-  30% {transform:translate(18%,-6%)   scaleX(1)}
-  50% {transform:translate(32%,-3%)   scaleX(1)}
-  51% {transform:translate(32%,-3%)   scaleX(-1)}
-  80% {transform:translate(12%,-8%)   scaleX(-1)}
-  99% {transform:translate(0px, 0px)  scaleX(-1)}
-  100%{transform:translate(0px, 0px)  scaleX(1)}
-}
-@keyframes bird2-fly{
-  0%  {transform:translate(0px,  0px) scaleX(-1)}
-  25% {transform:translate(-14%,-4%) scaleX(-1)}
-  50% {transform:translate(-24%, 2%) scaleX(-1)}
-  51% {transform:translate(-24%, 2%) scaleX(1)}
-  80% {transform:translate(-8%, -6%) scaleX(1)}
-  99% {transform:translate(0px,  0px) scaleX(1)}
-  100%{transform:translate(0px,  0px) scaleX(-1)}
-}
-@keyframes bird3-fly{
-  0%  {transform:translate(0px,  0px) scaleX(1)}
-  40% {transform:translate(12%,-10%) scaleX(1)}
-  60% {transform:translate(22%, -5%) scaleX(1)}
-  61% {transform:translate(22%, -5%) scaleX(-1)}
-  90% {transform:translate(5%,  -2%) scaleX(-1)}
-  99% {transform:translate(0px,  0px) scaleX(-1)}
-  100%{transform:translate(0px,  0px) scaleX(1)}
-}
-
+/* Butterfly gets a subtle drift — everything else is stationary */
 @keyframes butterfly-drift{
   0%  {transform:translate(0px, 0px)}
   20% {transform:translate(4%, -3%)}
@@ -83,25 +53,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 
 /* ── Animal positions & sizes ── */
 
-/* Birds — slowed to 22s / 28s / 34s */
-.bird1{ left:2%; bottom:62%; animation:bird1-fly 22s ease-in-out infinite; }
-.bird1 img{ width:280px; }
+/* Single bird — top area of tree, no movement, GIF handles animation */
+.bird{ left:10%; bottom:70%; }
+.bird img{ width:280px; }
 
-.bird2{ left:45%; bottom:68%; animation:bird2-fly 28s ease-in-out infinite; }
-.bird2 img{ width:260px; }
-
-.bird3{ left:20%; bottom:72%; animation:bird3-fly 34s ease-in-out infinite; }
-.bird3 img{ width:270px; }
-
-/* Butterfly — gentle drift */
+/* Butterfly — gentle drift in canopy area */
 .butterfly{ left:55%; bottom:44%; animation:butterfly-drift 10s ease-in-out infinite; }
 .butterfly img{ width:160px; }
 
-/* Deer — stationary, no animation */
+/* Deer — bottom right, stationary */
 .deer{ right:4%; bottom:0; }
 .deer img{ width:140px; }
 
-/* Squirrel — stationary, eating nut */
+/* Squirrel — bottom left, stationary */
 .squirrel{ left:18%; bottom:0; }
 .squirrel img{ width:75px; }
 
@@ -156,14 +120,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
     <!-- Creatures — visible only when team hits 1000 pts -->
     <div class="creature-layer" id="creature-layer">
 
-      <div class="animal bird1">
-        <img src="./bird.gif" alt="flying bird">
-      </div>
-      <div class="animal bird2">
-        <img src="./bird.gif" alt="flying bird">
-      </div>
-      <div class="animal bird3">
-        <img src="./bird.gif" alt="flying bird">
+      <div class="animal bird">
+        <img src="./bird.gif" alt="bird">
       </div>
 
       <div class="animal butterfly">
