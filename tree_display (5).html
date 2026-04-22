@@ -53,15 +53,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 
 /* ── Animal positions & sizes ── */
 
-/* Single bird — upper sky, stationary, GIF handles animation */
-.bird{ left:10%; bottom:70%; }
-.bird img{ width:280px; }
+/* Bird — moved down from 70% to 58% bottom so it isn't cut off at top */
+.bird{ left:10%; bottom:58%; }
+.bird img{ width:200px; }
 
 /* Butterfly — gentle drift in canopy area */
 .butterfly{ left:55%; bottom:44%; animation:butterfly-drift 10s ease-in-out infinite; }
 .butterfly img{ width:160px; }
 
-/* Two deer — side by side on the ground, right side */
+/* Two deer side by side — bottom right */
 .deer1{ right:10%; bottom:0; }
 .deer1 img{ width:120px; }
 
@@ -124,14 +124,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
     <div class="creature-layer" id="creature-layer">
 
       <div class="animal bird">
-        <img src="./bird.gif" alt="bird">
+        <img src="./bird.gif" alt="swallow bird">
       </div>
 
       <div class="animal butterfly">
         <img src="./butterfly.gif" alt="butterflies">
       </div>
 
-      <!-- Two deer side by side — standing and sitting -->
       <div class="animal deer1">
         <img src="./deer1.gif" alt="standing deer">
       </div>
