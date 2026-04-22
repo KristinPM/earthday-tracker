@@ -98,6 +98,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .squirrel{ left:18%; bottom:0; }
 .squirrel img{ width:75px; }
 
+/* Fox — runs across the bottom, flips and returns */
+@keyframes fox-run{
+  0%   { transform: translate(-160px, 0) scaleX(1); opacity:0; }
+  5%   { opacity:1; }
+  45%  { transform: translate(85vw, 0) scaleX(1); opacity:1; }
+  50%  { transform: translate(90vw, 0) scaleX(1); opacity:0; }
+  51%  { transform: translate(90vw, 0) scaleX(-1); opacity:0; }
+  56%  { opacity:1; }
+  95%  { transform: translate(-130px, 0) scaleX(-1); opacity:1; }
+  99%  { transform: translate(-160px, 0) scaleX(-1); opacity:0; }
+  100% { transform: translate(-160px, 0) scaleX(1);  opacity:0; }
+}
+.fox{ left:0; bottom:2px; animation: fox-run 18s ease-in-out infinite; }
+.fox img{ width:110px; }
+
 /* ── "Tree is alive!" badge — centered, large, animated ── */
 @keyframes badge-glow{
   0%,100%{ box-shadow: 0 0 12px 3px rgba(99,153,34,0.5), 0 0 30px 8px rgba(99,153,34,0.25); }
@@ -221,6 +236,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 
       <div class="animal squirrel">
         <img src="./squirrel.gif" alt="squirrel eating a nut">
+      </div>
+
+      <div class="animal fox">
+        <img src="./fox.gif" alt="running fox">
       </div>
 
     </div>
