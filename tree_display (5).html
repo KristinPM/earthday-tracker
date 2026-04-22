@@ -42,6 +42,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .animal img{ display:block; }
 
 /* ── Movement animations ── */
+
+/* Birds slowed down — duration increased from 12/15/18s to 22/28/34s */
 @keyframes bird1-fly{
   0%  {transform:translate(0px, 0px)  scaleX(1)}
   30% {transform:translate(18%,-6%)   scaleX(1)}
@@ -69,6 +71,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   99% {transform:translate(0px,  0px) scaleX(-1)}
   100%{transform:translate(0px,  0px) scaleX(1)}
 }
+
 @keyframes butterfly-drift{
   0%  {transform:translate(0px, 0px)}
   20% {transform:translate(4%, -3%)}
@@ -77,33 +80,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   80% {transform:translate(1%,  1%)}
   100%{transform:translate(0px, 0px)}
 }
-@keyframes deer-graze{
-  0%,100%{transform:translateX(0)}
-  40%    {transform:translateX(14px)}
-  70%    {transform:translateX(6px)}
-}
 
 /* ── Animal positions & sizes ── */
 
-/* Birds — up in the sky, large canvas so bird itself reads well */
-.bird1{ left:2%; bottom:62%; animation:bird1-fly 12s ease-in-out infinite; }
+/* Birds — slowed to 22s / 28s / 34s */
+.bird1{ left:2%; bottom:62%; animation:bird1-fly 22s ease-in-out infinite; }
 .bird1 img{ width:280px; }
 
-.bird2{ left:45%; bottom:68%; animation:bird2-fly 15s ease-in-out infinite; }
+.bird2{ left:45%; bottom:68%; animation:bird2-fly 28s ease-in-out infinite; }
 .bird2 img{ width:260px; }
 
-.bird3{ left:20%; bottom:72%; animation:bird3-fly 18s ease-in-out infinite; }
+.bird3{ left:20%; bottom:72%; animation:bird3-fly 34s ease-in-out infinite; }
 .bird3 img{ width:270px; }
 
-/* Butterfly — single GIF, already contains multiple butterflies */
+/* Butterfly — gentle drift */
 .butterfly{ left:55%; bottom:44%; animation:butterfly-drift 10s ease-in-out infinite; }
 .butterfly img{ width:160px; }
 
-/* Deer — bottom right on the ground */
-.deer{ right:4%; bottom:0; animation:deer-graze 8s ease-in-out infinite; }
+/* Deer — stationary, no animation */
+.deer{ right:4%; bottom:0; }
 .deer img{ width:140px; }
 
-/* Squirrel — bottom left, sitting still eating a nut */
+/* Squirrel — stationary, eating nut */
 .squirrel{ left:18%; bottom:0; }
 .squirrel img{ width:75px; }
 
@@ -168,7 +166,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
         <img src="./bird.gif" alt="flying bird">
       </div>
 
-      <!-- Single butterfly GIF — already contains multiple butterflies -->
       <div class="animal butterfly">
         <img src="./butterfly.gif" alt="butterflies">
       </div>
