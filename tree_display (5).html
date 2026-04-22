@@ -88,14 +88,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 .butterfly2 img{ width:130px; }
 
 /* Two deer side by side — bottom right */
-.deer1{ right:10%; bottom:0; }
+.deer1{ right:10%; bottom:0; z-index:2; }
 .deer1 img{ width:120px; }
 
-.deer2{ right:22%; bottom:0; }
+.deer2{ right:22%; bottom:0; z-index:2; }
 .deer2 img{ width:100px; }
 
 /* Squirrel — bottom left, stationary */
-.squirrel{ left:18%; bottom:0; }
+.squirrel{ left:18%; bottom:0; z-index:3; }
 .squirrel img{ width:75px; }
 
 /* Fox — runs across the bottom, flips and returns */
@@ -110,7 +110,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
   99%  { transform: translate(-160px, 0) scaleX(1); opacity:0; }
   100% { transform: translate(-160px, 0) scaleX(-1); opacity:0; }
 }
-.fox{ left:0; bottom:2px; animation: fox-run 18s ease-in-out infinite; }
+.fox{ left:0; bottom:2px; animation: fox-run 18s ease-in-out infinite; z-index:1; }
 .fox img{ width:110px; }
 
 /* ── "Tree is alive!" badge — centered, large, animated ── */
