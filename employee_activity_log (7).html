@@ -747,7 +747,7 @@ function loadRemote(cb) {
   if (!JSONBIN_ID || !JSONBIN_KEY) { if (cb) cb(false); return; }
   var x = new XMLHttpRequest();
   x.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
-x.setRequestHeader('X-Access-Key', JSONBIN_KEY);
+x.setRequestHeader('X-Master-Key', JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta', 'false');
   x.timeout = 10000;
   x.onload = function () {
@@ -782,7 +782,7 @@ function persistNewEvents(newEvents, doneCb, attempt) {
 
   var getReq = new XMLHttpRequest();
   getReq.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
-  getReq.setRequestHeader('X-Access-Key', JSONBIN_KEY);
+  getReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
   getReq.timeout = 10000;
 
   getReq.onload = function () {
@@ -811,7 +811,7 @@ function persistNewEvents(newEvents, doneCb, attempt) {
     var putReq = new XMLHttpRequest();
     putReq.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
     putReq.setRequestHeader('Content-Type', 'application/json');
-    putReq.setRequestHeader('X-Access-Key', JSONBIN_KEY);
+    putReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
     if (binVersion) putReq.setRequestHeader('X-Bin-Version', binVersion);
     putReq.timeout = 15000;
 
@@ -835,7 +835,7 @@ function persistNewEvents(newEvents, doneCb, attempt) {
       
       verifyReq.setRequestHeader('X-Bin-Meta', 'false');
       verifyReq.timeout = 10000;
-verifyReq.setRequestHeader('X-Access-Key', JSONBIN_KEY);
+verifyReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
       verifyReq.onload = function () {
         if (verifyReq.status !== 200) {
           syncMode = 'error'; updateNotice();
