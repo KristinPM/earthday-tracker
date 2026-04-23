@@ -747,7 +747,7 @@ function loadRemote(cb) {
   if (!JSONBIN_ID || !JSONBIN_KEY) { if (cb) cb(false); return; }
   var x = new XMLHttpRequest();
   x.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
-  x.setRequestHeader('X-Master-Key', JSONBIN_KEY);
+x.setRequestHeader('X-Access-Key', JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta', 'false');
   x.timeout = 10000;
   x.onload = function () {
