@@ -982,6 +982,9 @@ document.getElementById('chip-row').addEventListener('click', function (e) {
   var c = e.target.closest('.chip');
   if (!c) return;
   document.getElementById('name-in').value = c.dataset.name;
+  if (currentUser && slug(currentUser) === slug(c.dataset.name)) {
+    renderAll(); return;
+  }
   startSession();
 });
 document.getElementById('panel').addEventListener('click', function (e) {
