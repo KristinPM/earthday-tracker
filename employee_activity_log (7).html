@@ -1025,6 +1025,7 @@ try { bc = new BroadcastChannel('ed_tree_sync'); } catch (e) {}
   refreshGate();
   updateNotice();
   loadRemote();
+  setInterval(function () { loadRemote(); }, 10 * 60 * 1000);
 })();
 </script>
 </body>
