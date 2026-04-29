@@ -397,6 +397,10 @@ function renderPanel(){
 }
 function setTag(t){activeTag=t;renderPanel();}
 
+function nextLevelName(lv){
+  for(var i=0;i<LEVELS.length-1;i++){if(LEVELS[i].name===lv.name)return LEVELS[i+1].name;}
+  return '';
+}
 function renderStats(){
   var total=sumTeamPoints();
   var keys=Object.keys(store.members||{});
@@ -406,7 +410,7 @@ function renderStats(){
   document.getElementById('s-acts').textContent=totalActs;
   document.getElementById('s-lvl').textContent=lv.name;
   var pct=100,lbl='Champion reached';
-  if(lv.next!==null){pct=Math.max(0,Math.min(100,Math.round(((total-lv.min)/(lv.next-lv.min))*100)));lbl=total+' / '+lv.next+' pts to '+LEVELS[LEVELS.indexOf(lv)+1].name;}
+  if(lv.next!==null){pct=Math.max(0,Math.min(100,Math.round(((total-lv.min)/(lv.next-lv.min))*100)));lbl=total+' / '+lv.next+' pts to '+nextLevelName(lv);}
   document.getElementById('pb').style.width=pct+'%';
   document.getElementById('pb-lbl').textContent=lbl;
   document.getElementById('pb-pct').textContent=pct+'%';
@@ -442,31 +446,77 @@ function renderAll(){
   renderStats();renderCategories();renderPanel();renderTeam();renderLog();
 }
 
+function applyRemoteText(responseText){
+  try{
+    var raw=JSON.parse(responseText);
+    console.log('[archive] raw response keys:', Object.keys(raw));
+    // JSONBin v3 wraps in {record:...} unless X-Bin-Meta:false header is honoured
+    var data=(raw && raw.record !== undefined) ? raw.record : raw;
+    console.log('[archive] data keys:', Object.keys(data||{}));
+    var events=[];
+    if(data && Array.isArray(data.events) && data.events.length){
+      events=data.events;
+      console.log('[archive] found',events.length,'events');
+    } else if(data && data.members){
+      events=legacyMembersToEvents(data);
+      console.log('[archive] legacy migration, got',events.length,'events');
+    } else {
+      console.warn('[archive] unexpected data shape, no events found');
+    }
+    var merged=mergeEventLists(store.events, events);
+    store=hydrateStore({events:merged});
+    console.log('[archive] store members after hydrate:', Object.keys(store.members), 'total pts:', sumTeamPoints());
+    return true;
+  } catch(e){
+    console.error('[archive] parse error:', e);
+    return false;
+  }
+}
+
 function loadRemote(){
   var notice=document.getElementById('sync-notice');
   var x=new XMLHttpRequest();
   x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
   x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
   x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout=10000;
+  x.timeout=12000;
   x.onload=function(){
+    console.log('[archive] XHR status:', x.status, 'response length:', x.responseText.length);
     if(x.status===200){
-      var remote=parseRemoteResponse(x.responseText);
-      var merged=mergeEventLists(store.events,remote.events);
-      store=hydrateStore({events:merged});
-      notice.textContent='📁 Archived — final results loaded.';
+      var ok=applyRemoteText(x.responseText);
+      notice.innerHTML= ok
+        ? '&#128196; Archived &mdash; final results loaded.'
+        : '&#9888;&#65039; Data loaded but could not be parsed. Showing cached results.';
     }else{
-      notice.textContent='⚠️ Could not load from shared data. Showing cached results.';
+      console.error('[archive] HTTP error:', x.status, x.responseText.slice(0,200));
+      notice.innerHTML='&#9888;&#65039; Could not load from shared data (HTTP '+x.status+'). Showing cached results.';
     }
     renderAll();
   };
-  x.onerror=x.ontimeout=function(){notice.textContent='⚠️ Could not reach shared data. Showing cached results.';renderAll();};
+  x.onerror=function(){
+    console.error('[archive] XHR network error');
+    notice.innerHTML='&#9888;&#65039; Network error. Showing cached results.';
+    renderAll();
+  };
+  x.ontimeout=function(){
+    console.error('[archive] XHR timeout');
+    notice.innerHTML='&#9888;&#65039; Request timed out. Showing cached results.';
+    renderAll();
+  };
   x.send();
 }
 
-// Load local cache first for instant display
+// Boot: try local cache for instant paint, then always load remote as authoritative source
 (function(){
-  try{var raw=localStorage.getItem(LOCAL_KEY);if(raw){store=hydrateStore(JSON.parse(raw));renderAll();}}catch(e){}
+  try{
+    var raw=localStorage.getItem(LOCAL_KEY);
+    if(raw){
+      var parsed=JSON.parse(raw);
+      store=hydrateStore(parsed);
+      console.log('[archive] local cache loaded, members:', Object.keys(store.members).length);
+      renderAll();
+    }
+  }catch(e){ console.warn('[archive] local cache read failed:', e); }
   loadRemote();
 })();
 </script>
