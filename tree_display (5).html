@@ -123,60 +123,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
 </div>
 
 <script>
-var JSONBIN_ID      = '69ea87d336566621a8e56b7c';
-var JSONBIN_KEY     = '$2a$10$k9UxTNSYG2aS7ztvbQcvteaqtSwCZ3mahxvblQw6Y6r8UvLvjOS/u';
+// ── Hardcoded final results — no network calls ────────────────────────────────
+var FINAL_TOTAL     = 1298;
 var TEAM_GOAL       = 500;
 var ALIVE_THRESHOLD = 1000;
-var LOCAL_KEY       = 'ed_team_v3_events';
-var localEvents     = [];
 
-function slug(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');}
-function normalizeEvent(ev){
-  if(!ev||!ev.id||!ev.userKey)return null;
-  var out={id:String(ev.id),type:ev.type==='reset'?'reset':'activity',userKey:String(ev.userKey),ts:Number(ev.ts||0)};
-  if(out.type==='activity'){out.activityKey=String(ev.activityKey||'');out.pts=Number(ev.pts||0);if(!out.activityKey)return null;}
-  return out;
-}
-function legacyMembersToEvents(raw){
-  var out=[],seen={};var members=(raw&&raw.members)?raw.members:{};
-  Object.keys(members).forEach(function(k){
-    var m=members[k]||{};var userKey=slug(m.name||k||'member');var name=String(m.name||k||userKey);var updatedAt=Number(m.updatedAt||Date.now());var importedPts=0;
-    if(Array.isArray(m.log)&&m.log.length){for(var i=0;i<m.log.length;i++){var lg=m.log[i]||{};var ts=Number(lg.ts||(updatedAt+i));var activityKey=String(lg.activityKey||(String(lg.catId||'legacy')+'|'+String(lg.text||'')));var id=String(lg.id||('legacy_'+userKey+'_'+ts+'_'+slug(activityKey).slice(0,40)));if(!seen[id]){seen[id]=true;out.push({id:id,type:'activity',userKey:userKey,activityKey:activityKey,pts:Number(lg.pts||0),ts:ts});importedPts+=Number(lg.pts||0);}}}
-    var memberPts=Number(m.pts||0);if(memberPts>importedPts){var carryId='legacycarry_'+userKey;if(!seen[carryId]){seen[carryId]=true;out.push({id:carryId,type:'activity',userKey:userKey,activityKey:'legacy|carryover',pts:memberPts-importedPts,ts:updatedAt+999});}}
-  });return out;
-}
-function mergeEventLists(baseEvents,incomingEvents){
-  var map={},merged=[];
-  function add(arr){(arr||[]).forEach(function(ev){var n=normalizeEvent(ev);if(n&&!map[n.id]){map[n.id]=true;merged.push(n);}});}
-  add(baseEvents);add(incomingEvents);
-  merged.sort(function(a,b){var at=Number(a.ts||0),bt=Number(b.ts||0);if(at!==bt)return at-bt;return String(a.id).localeCompare(String(b.id));});
-  return merged;
-}
-function deriveTotal(events){
-  var members={};
-  var list=(events||[]).slice().sort(function(a,b){var at=Number(a.ts||0),bt=Number(b.ts||0);if(at!==bt)return at-bt;return String(a.id).localeCompare(String(b.id));});
-  for(var i=0;i<list.length;i++){
-    var ev=normalizeEvent(list[i]);if(!ev)continue;
-    if(!members[ev.userKey])members[ev.userKey]={pts:0,done:{},lastResetAt:0};
-    var m=members[ev.userKey];
-    if(ev.type==='reset'){m.pts=0;m.done={};m.lastResetAt=ev.ts;continue;}
-    if(m.lastResetAt&&ev.ts<m.lastResetAt)continue;
-    if(!m.done[ev.activityKey]){m.done[ev.activityKey]=true;m.pts+=ev.pts;}
-  }
-  var total=0;Object.keys(members).forEach(function(k){total+=members[k].pts;});return total;
-}
-function parseRemoteEvents(text){
-  try{var r=JSON.parse(text);var data=(r&&r.record!==undefined)?r.record:r;if(!data)return[];if(Array.isArray(data.events)&&data.events.length)return data.events;return legacyMembersToEvents(data);}catch(e){}return[];
-}
-function readLocalEvents(){
-  try{var raw=localStorage.getItem(LOCAL_KEY);if(!raw)return[];var parsed=JSON.parse(raw);return Array.isArray(parsed.events)?parsed.events:[];}catch(e){}return[];
-}
 function updateLevels(total){
   var levels=[{min:0,el:'lb0'},{min:125,el:'lb1'},{min:250,el:'lb2'},{min:375,el:'lb3'},{min:500,el:'lb4'}];
   var current=0;
-  for(var i=0;i<levels.length;i++){var el=document.getElementById(levels[i].el);if(!el)continue;el.classList.remove('on','cur');if(total>=levels[i].min){el.classList.add('on');current=i;}}
+  for(var i=0;i<levels.length;i++){
+    var el=document.getElementById(levels[i].el);if(!el)continue;
+    el.classList.remove('on','cur');
+    if(total>=levels[i].min){el.classList.add('on');current=i;}
+  }
   var curEl=document.getElementById(levels[current].el);if(curEl)curEl.classList.add('cur');
 }
+
 function updateTree(total){
   var pct=Math.max(0,Math.min(100,(total/TEAM_GOAL)*100));
   var topInset=(100-pct).toFixed(2);
@@ -192,37 +154,12 @@ function updateTree(total){
     if(creatures)creatures.classList.add('alive');
     if(badge)badge.classList.add('show');
     if(treeWrap)treeWrap.classList.add('alive');
-  }else{
-    if(creatures)creatures.classList.remove('alive');
-    if(badge)badge.classList.remove('show');
-    if(treeWrap)treeWrap.classList.remove('alive');
   }
 }
 
-// Apply local cache immediately
-localEvents=readLocalEvents();
-if(localEvents.length)updateTree(deriveTotal(localEvents));
-
-// Load from remote once on page load — no polling, no refresh button
-(function(){
-  var x=new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout=10000;
-  x.onload=function(){
-    if(x.status===200){
-      var remoteEvents=parseRemoteEvents(x.responseText);
-      localEvents=mergeEventLists(localEvents,remoteEvents);
-      updateTree(deriveTotal(localEvents));
-      document.getElementById('status').textContent='Final results — event concluded.';
-    }else{
-      document.getElementById('status').textContent='Showing cached results.';
-    }
-  };
-  x.onerror=x.ontimeout=function(){document.getElementById('status').textContent='Showing cached results.';};
-  x.send();
-})();
+// Render immediately — no fetch needed
+updateTree(FINAL_TOTAL);
+document.getElementById('status').textContent='Final results — event concluded.';
 </script>
 </body>
 </html>
