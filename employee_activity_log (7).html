@@ -3,34 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Activity Log</title>
+<title>Activity Log — Event Ended</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-height:100vh;padding:0 0 48px}
 .page{max-width:760px;margin:0 auto;padding:24px 16px 0}
-.gate{background:white;border-radius:16px;border:.5px solid #e4e4e2;padding:36px 28px;text-align:center}
-.gate h2{font-size:2rem;font-weight:700;color:#1a1a1a;margin-bottom:8px}
-.gate p{font-size:.88rem;color:#888;margin-bottom:22px;line-height:1.6}
-.gate-row{display:flex;gap:10px;max-width:400px;margin:0 auto}
-.gate-row input{flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid #ddd;font-family:inherit;font-size:.9rem;color:#1a1a1a;outline:none}
-.gate-row input:focus{border-color:#639922}
-.btn-go{padding:11px 20px;background:#639922;color:white;border:none;border-radius:10px;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap}
-.btn-go:hover{background:#4e7a1a}
-.gate-err{color:#c0392b;font-size:.8rem;margin-top:8px;min-height:18px}
-.prev-wrap{margin-top:18px;max-width:420px;margin-left:auto;margin-right:auto;text-align:left;display:none}
-.prev-lbl{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
-.chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:5px 13px;border-radius:999px;border:.5px solid #ddd;background:#f7f7f5;font-size:.8rem;color:#555;cursor:pointer;font-family:inherit}
-.chip:hover{border-color:#639922;color:#639922;background:white}
+
+/* ── Archived banner ── */
+.archived-banner{
+  background:#f5f5f3;
+  border:.5px solid #ddd;
+  border-radius:12px;
+  padding:14px 18px;
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.archived-icon{font-size:1.4rem;flex-shrink:0}
+.archived-text h3{font-size:.88rem;font-weight:700;color:#555;margin-bottom:2px}
+.archived-text p{font-size:.78rem;color:#999;line-height:1.5}
+
 .who-bar{background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .who-name{font-size:.95rem;color:#1a1a1a;font-weight:700}
 .who-meta{font-size:.75rem;color:#888;margin-top:1px}
-.who-btns{display:flex;gap:7px;flex-wrap:wrap}
-.btn-xs{padding:5px 12px;border-radius:8px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;border:.5px solid #ddd;background:#f0f0ee;color:#555}
-.btn-xs:hover{background:#e8e8e6}
-.btn-xs:disabled{opacity:.7;cursor:not-allowed}
-.btn-xs.red{background:#fff5f5;border-color:#f5c6c6;color:#c0392b}
-.btn-xs.red:hover{background:#fee2e2}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
 .stat{background:white;border-radius:12px;padding:13px;text-align:center;border:.5px solid #e4e4e2}
 .stat-n{font-size:24px;font-weight:700;line-height:1}
@@ -63,12 +59,11 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 .ptitle{font-size:.95rem;color:#1a1a1a}
 .psub{font-size:11px;color:#aaa}
 .act-list{display:flex;flex-direction:column;gap:5px}
-.act{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:.5px solid #e8e8e6;background:#fafafa;cursor:pointer;transition:background .1s}
-.act:hover{background:#f0f0ee}
+.act{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:.5px solid #e8e8e6;background:#fafafa;cursor:default}
 .act.done{background:#EAF3DE;border-color:#97C459}
-.chk{width:18px;height:18px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.chk{width:18px;height:18px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .act.done .chk{background:#639922;border-color:#639922}
-.tick{width:7px;height:4px;border-left:2px solid white;border-bottom:2px solid white;transform:rotate(-45deg) translateY(-1px);opacity:0;transition:opacity .1s}
+.tick{width:7px;height:4px;border-left:2px solid white;border-bottom:2px solid white;transform:rotate(-45deg) translateY(-1px);opacity:0}
 .act.done .tick{opacity:1}
 .act-body{flex:1;min-width:0}
 .act-text{font-size:12px;color:#1a1a1a;line-height:1.4}
@@ -93,7 +88,6 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 .mbar-fill{height:100%;border-radius:999px;background:#639922;transition:width .3s}
 .mpts{font-size:11px;font-weight:700;color:#639922;min-width:45px;text-align:right;flex-shrink:0}
 .macts{font-size:10px;color:#aaa;min-width:55px;text-align:right;flex-shrink:0}
-.you-tag{font-size:9px;padding:1px 6px;background:#EAF3DE;color:#27500A;border-radius:999px;font-weight:700;flex-shrink:0}
 .log-card{background:white;border-radius:14px;border:.5px solid #e4e4e2;padding:16px 20px}
 .log-card h3{font-size:.9rem;color:#1a1a1a;margin-bottom:10px}
 .log-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f0f0ee;font-size:12px;color:#666;gap:7px}
@@ -108,73 +102,46 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 .badge-family{background:#EEEDFE;color:#3C3489}
 .badge-group{background:#FBEAF0;color:#72243E}
 .hidden{display:none}
-.notice{background:#e8f5e9;border-left:3px solid #639922;padding:10px 14px;border-radius:0 8px 8px 0;font-size:.78rem;color:#2e7d32;margin-bottom:14px;line-height:1.5}
-.notice.local{background:#fff8e1;border-left-color:#f9a825;color:#795548}
-.notice.error{background:#fff1f1;border-left-color:#c0392b;color:#8f2f24}
-.act.pending{background:#FFF8E7;border-color:#F0C040}
-.act.pending .chk{background:#F0C040;border-color:#F0C040}
-.act.pending .tick{opacity:1}
-.act.pending .act-text{color:#5C3D00}
-.act.pending .act-tag{color:#8A5E00}
-.act.pending .act-pts{color:#B07D00}
-.submit-bar{margin-top:0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:white;border-radius:12px;border:.5px solid #e4e4e2;padding:12px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.submit-bar.hidden{display:none}
-.submit-summary{font-size:.82rem;color:#555;line-height:1.4}
-.submit-summary strong{color:#1a1a1a}
-.btn-submit{padding:10px 22px;background:#639922;color:white;border:none;border-radius:10px;font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .12s}
-.btn-submit:hover{background:#4e7a1a}
-.btn-submit:disabled{background:#aaa;cursor:not-allowed}
-.btn-clear{padding:10px 14px;background:#f0f0ee;color:#555;border:.5px solid #ddd;border-radius:10px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
-.btn-clear:hover{background:#e4e4e2}
-.submit-flash{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27500A;color:white;padding:10px 22px;border-radius:10px;font-size:.88rem;font-weight:700;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.notice{background:#f5f5f3;border-left:3px solid #bbb;padding:10px 14px;border-radius:0 8px 8px 0;font-size:.78rem;color:#888;margin-bottom:14px;line-height:1.5}
+
+/* Archived overlay on activity items — prevent pointer events */
+.act-list{pointer-events:none}
+
 @media (max-width:680px){
-  .gate-row,.who-bar{flex-direction:column;align-items:stretch}
   .stats-row{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div class="page" id="gate-page">
-  <div class="gate">
-    <h2>&#127757; Activity Log</h2>
-    <p>Enter your name or identifier to log activities and earn points for the team tree.</p>
-    <div class="gate-row">
-      <input type="text" id="name-in" placeholder="Your name or identifier" maxlength="60"/>
-      <button class="btn-go" onclick="startSession()">Start</button>
-    </div>
-    <div class="gate-err" id="gate-err"></div>
-    <div class="prev-wrap" id="prev-wrap">
-      <div class="prev-lbl">Team members — click to sign in:</div>
-      <div class="chip-row" id="chip-row"></div>
+<div class="page" id="app-page">
+
+  <div class="archived-banner">
+    <div class="archived-icon">📁</div>
+    <div class="archived-text">
+      <h3>Event Ended — Read-Only Archive</h3>
+      <p>This activity log is now closed. All data is preserved below for reference. No new entries can be recorded.</p>
     </div>
   </div>
-</div>
 
-<div class="page hidden" id="app-page">
-  <div class="notice" id="sync-notice">&#128994; Loading...</div>
+  <div class="notice" id="sync-notice">⏳ Loading final results from shared data…</div>
 
   <div class="who-bar">
     <div>
-      <div class="who-name" id="who-name"></div>
-      <div class="who-meta" id="who-meta"></div>
-    </div>
-    <div class="who-btns">
-      <button class="btn-xs" id="refresh-btn" onclick="refreshFromServer()">Refresh</button>
-      <button class="btn-xs" onclick="switchUser()">Switch user</button>
-      <button class="btn-xs red" onclick="resetCurrentUser()">Reset my points</button>
+      <div class="who-name" id="who-name">Team Summary</div>
+      <div class="who-meta">Final results — event has concluded</div>
     </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-n sg" id="s-pts">0</div><div class="stat-l">My points</div></div>
-    <div class="stat"><div class="stat-n st" id="s-acts">0</div><div class="stat-l">Actions done</div></div>
-    <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">Seedling</div><div class="stat-l">My level</div></div>
+    <div class="stat"><div class="stat-n sg" id="s-pts">—</div><div class="stat-l">Total team pts</div></div>
+    <div class="stat"><div class="stat-n st" id="s-acts">—</div><div class="stat-l">Total actions</div></div>
+    <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">—</div><div class="stat-l">Team level</div></div>
   </div>
 
   <div class="lv-card">
-    <h3>My level progress</h3>
+    <h3>Team level progress — final</h3>
     <div class="pb-wrap"><div class="pb-fill" id="pb" style="width:0%"></div></div>
-    <div class="pb-meta"><span id="pb-lbl">0 / 125 pts to Sprout</span><span id="pb-pct">0%</span></div>
+    <div class="pb-meta"><span id="pb-lbl">Loading…</span><span id="pb-pct">0%</span></div>
     <div class="ms-row">
       <div class="ms cur" id="ms0"><div class="ms-dot"></div>Seedling<br>0</div>
       <div class="ms" id="ms1"><div class="ms-dot"></div>Sprout<br>125</div>
@@ -189,52 +156,37 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
     <div class="cats" id="cats"></div>
   </div>
 
-  <div class="submit-bar hidden" id="submit-bar">
-    <div class="submit-summary" id="submit-summary"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-clear" onclick="clearPending()">Clear</button>
-      <button class="btn-submit" id="btn-submit" onclick="submitActivities()">Log Activities</button>
-    </div>
-  </div>
-
-  <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see activities</p></div></div>
+  <div class="panel" id="panel"><div class="no-cat"><p>Select a category above to see logged activities</p></div></div>
 
   <div class="team-card">
     <h3>Team total</h3>
-    <div class="team-big" id="team-total">0</div>
-    <div class="team-sub" id="team-sub">0 participants</div>
+    <div class="team-big" id="team-total">—</div>
+    <div class="team-sub" id="team-sub">Loading…</div>
     <div class="tpb-wrap"><div class="tpb-fill" id="tpb" style="width:0%"></div></div>
-    <div class="tpb-lbl" id="tpb-lbl">0 / 500 pts team goal</div>
+    <div class="tpb-lbl" id="tpb-lbl">— / 500 pts team goal</div>
     <div class="mlist" id="mlist"></div>
   </div>
 
   <div class="log-card">
     <h3>Team activity log</h3>
-    <div id="my-log"><div class="empty">No activities logged yet</div></div>
+    <div id="my-log"><div class="empty">Loading…</div></div>
   </div>
 </div>
 
-<div class="submit-flash" id="submit-flash"></div>
-
 <script>
-// ─── Config ───────────────────────────────────────────────────────────────────
-var JSONBIN_ID       = '69ea87d336566621a8e56b7c';
-var JSONBIN_KEY      = '$2a$10$k9UxTNSYG2aS7ztvbQcvteaqtSwCZ3mahxvblQw6Y6r8UvLvjOS/u';
-var LOCAL_KEY        = 'ed_team_v3_events';
-var LEGACY_LOCAL_KEY = 'ed_team_v2';
-var LOCAL_TICK_KEY   = 'ed_pts_tick';
-var TEAM_GOAL        = 500;
-var MAX_RETRY        = 5;
+var JSONBIN_ID  = '69ea87d336566621a8e56b7c';
+var JSONBIN_KEY = '$2a$10$k9UxTNSYG2aS7ztvbQcvteaqtSwCZ3mahxvblQw6Y6r8UvLvjOS/u';
+var LOCAL_KEY   = 'ed_team_v3_events';
+var TEAM_GOAL   = 500;
 
 var LEVELS = [
-  { name: 'Seedling',  min: 0,   next: 125  },
-  { name: 'Sprout',    min: 125, next: 250  },
-  { name: 'Grower',    min: 250, next: 375  },
-  { name: 'Guardian',  min: 375, next: 500  },
-  { name: 'Champion',  min: 500, next: null }
+  {name:'Seedling',min:0,next:125},
+  {name:'Sprout',min:125,next:250},
+  {name:'Grower',min:250,next:375},
+  {name:'Guardian',min:375,next:500},
+  {name:'Champion',min:500,next:null}
 ];
 
-// ─── FULL category & activity data ───────────────────────────────────────────
 var CATS = [
   {id:'home',name:'Home & Energy',badge:'Easy',bc:'badge-easy',actions:[
     {text:'Unplug unused devices for a week',tag:'quick win',pts:3},
@@ -347,683 +299,174 @@ var CATS = [
 ];
 
 var CAT_NAMES = {};
-for (var ci = 0; ci < CATS.length; ci++) CAT_NAMES[CATS[ci].id] = CATS[ci].name;
+for(var ci=0;ci<CATS.length;ci++) CAT_NAMES[CATS[ci].id]=CATS[ci].name;
 
-// ─── State ────────────────────────────────────────────────────────────────────
-var store       = { events: [], members: {} };
-var currentUser = '';
-var activeCat   = null;
-var activeTag   = 'all';
-var pending     = {};
-var syncMode    = 'local';
-var bc          = null;
+var store = {events:[],members:{}};
+var activeCat = null;
+var activeTag = 'all';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function escH(s) {
-  return String(s || '').replace(/[&<>"']/g, function (m) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-  });
-}
-function slug(s) {
-  return String(s || '').trim().toLowerCase()
-    .replace(/\s+/g, ' ').replace(/[^\w ]+/g, '').replace(/\s/g, '-');
-}
-function userTemplate(name) {
-  return { name: name, pts: 0, acts: 0, done: {}, log: [], updatedAt: 0, lastResetAt: 0 };
-}
-
-// ─── Event normalisation ──────────────────────────────────────────────────────
-function normalizeEvent(ev) {
-  if (!ev || !ev.id || !ev.userKey) return null;
-  var out = {
-    id:      String(ev.id),
-    type:    ev.type === 'reset' ? 'reset' : 'activity',
-    userKey: String(ev.userKey),
-    name:    String(ev.name || ''),
-    ts:      Number(ev.ts || Date.now())
-  };
-  if (out.type === 'activity') {
-    out.activityKey = String(ev.activityKey || '');
-    out.text        = String(ev.text || '');
-    out.catId       = String(ev.catId || '');
-    out.pts         = Number(ev.pts || 0);
-    if (!out.activityKey || !out.text) return null;
-  }
+function escH(s){return String(s||'').replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+function slug(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[^\w ]+/g,'').replace(/\s/g,'-');}
+function normalizeEvent(ev){
+  if(!ev||!ev.id||!ev.userKey)return null;
+  var out={id:String(ev.id),type:ev.type==='reset'?'reset':'activity',userKey:String(ev.userKey),name:String(ev.name||''),ts:Number(ev.ts||0)};
+  if(out.type==='activity'){out.activityKey=String(ev.activityKey||'');out.text=String(ev.text||'');out.catId=String(ev.catId||'');out.pts=Number(ev.pts||0);if(!out.activityKey||!out.text)return null;}
   return out;
 }
-
-// ─── Legacy migration ─────────────────────────────────────────────────────────
-function legacyMembersToEvents(raw) {
-  var out = [], seen = {};
-  var members = (raw && raw.members) ? raw.members : {};
-  Object.keys(members).forEach(function (k) {
-    var m          = members[k] || {};
-    var userKey    = slug(m.name || k || 'member');
-    var name       = String(m.name || k || userKey);
-    var updatedAt  = Number(m.updatedAt || Date.now());
-    var importedPts = 0;
-
-    if (Array.isArray(m.log) && m.log.length) {
-      for (var i = 0; i < m.log.length; i++) {
-        var lg = m.log[i] || {};
-        var text        = String(lg.text || 'Imported activity');
-        var catId       = String(lg.catId || 'legacy');
-        var pts         = Number(lg.pts || 0);
-        var ts          = Number(lg.ts || (updatedAt + i));
-        var activityKey = String(lg.activityKey || (catId + '|' + text));
-        var id          = String(lg.id || ('legacy_' + userKey + '_' + ts + '_' + slug(activityKey).slice(0, 40)));
-        if (!seen[id]) {
-          seen[id] = true;
-          out.push({ id: id, type: 'activity', userKey: userKey, name: name, activityKey: activityKey, text: text, catId: catId, pts: pts, ts: ts });
-          importedPts += pts;
-        }
-      }
-    }
-
-    if ((!Array.isArray(m.log) || !m.log.length) && m.done && typeof m.done === 'object') {
-      Object.keys(m.done).forEach(function (activityKey, idx) {
-        var ts    = updatedAt + idx;
-        var parts = String(activityKey).split('|');
-        var catId = parts[0] || 'legacy';
-        var text  = parts.slice(1).join('|') || 'Imported activity';
-        var id    = 'legacydone_' + userKey + '_' + slug(activityKey).slice(0, 40);
-        if (!seen[id]) {
-          seen[id] = true;
-          out.push({ id: id, type: 'activity', userKey: userKey, name: name, activityKey: String(activityKey), text: text, catId: catId, pts: 0, ts: ts });
-        }
-      });
-    }
-
-    var memberPts = Number(m.pts || 0);
-    if (memberPts > importedPts) {
-      var carryId = 'legacycarry_' + userKey;
-      if (!seen[carryId]) {
-        seen[carryId] = true;
-        out.push({ id: carryId, type: 'activity', userKey: userKey, name: name, activityKey: 'legacy|carryover', text: 'Imported prior points', catId: 'legacy', pts: memberPts - importedPts, ts: updatedAt + 999 });
-      }
-    }
-  });
-  return out;
-}
-
-// ─── Derive member map from events ───────────────────────────────────────────
-function deriveMembers(events) {
-  var members = {};
-  var list = (events || []).slice().sort(function (a, b) {
-    var at = Number(a.ts || 0), bt = Number(b.ts || 0);
-    if (at !== bt) return at - bt;
-    return String(a.id).localeCompare(String(b.id));
-  });
-  for (var i = 0; i < list.length; i++) {
-    var ev = normalizeEvent(list[i]);
-    if (!ev) continue;
-    if (!members[ev.userKey]) members[ev.userKey] = userTemplate(ev.name || ev.userKey);
-    var m = members[ev.userKey];
-    if (ev.name) m.name = ev.name;
-    m.updatedAt = Math.max(m.updatedAt || 0, ev.ts || 0);
-    if (ev.type === 'reset') {
-      m.pts = 0; m.acts = 0; m.done = {}; m.log = []; m.lastResetAt = ev.ts || 0;
-      continue;
-    }
-    if (m.lastResetAt && ev.ts < m.lastResetAt) continue;
-    if (!m.done[ev.activityKey]) {
-      m.done[ev.activityKey] = true;
-      m.pts  += Number(ev.pts || 0);
-      m.acts += 1;
-      m.log.push({ id: ev.id, text: ev.text, pts: Number(ev.pts || 0), catId: ev.catId, ts: ev.ts });
-    }
+function userTemplate(name){return{name:name,pts:0,acts:0,done:{},log:[],updatedAt:0,lastResetAt:0};}
+function deriveMembers(events){
+  var members={};
+  var list=(events||[]).slice().sort(function(a,b){var at=Number(a.ts||0),bt=Number(b.ts||0);if(at!==bt)return at-bt;return String(a.id).localeCompare(String(b.id));});
+  for(var i=0;i<list.length;i++){
+    var ev=normalizeEvent(list[i]);if(!ev)continue;
+    if(!members[ev.userKey])members[ev.userKey]=userTemplate(ev.name||ev.userKey);
+    var m=members[ev.userKey];
+    if(ev.name)m.name=ev.name;
+    m.updatedAt=Math.max(m.updatedAt||0,ev.ts||0);
+    if(ev.type==='reset'){m.pts=0;m.acts=0;m.done={};m.log=[];m.lastResetAt=ev.ts||0;continue;}
+    if(m.lastResetAt&&ev.ts<m.lastResetAt)continue;
+    if(!m.done[ev.activityKey]){m.done[ev.activityKey]=true;m.pts+=Number(ev.pts||0);m.acts+=1;m.log.push({id:ev.id,text:ev.text,pts:Number(ev.pts||0),catId:ev.catId,ts:ev.ts});}
   }
-  Object.keys(members).forEach(function (k) {
-    members[k].log.sort(function (a, b) { return Number(a.ts || 0) - Number(b.ts || 0); });
-  });
   return members;
 }
-
-function hydrateStore(raw) {
-  var events = [], seen = {};
-  var src = (raw && Array.isArray(raw.events)) ? raw.events.slice() : [];
-  if ((!src || !src.length) && raw && raw.members) src = legacyMembersToEvents(raw);
-  for (var i = 0; i < src.length; i++) {
-    var ev = normalizeEvent(src[i]);
-    if (ev && !seen[ev.id]) { seen[ev.id] = true; events.push(ev); }
-  }
-  return { events: events, members: deriveMembers(events) };
+function legacyMembersToEvents(raw){
+  var out=[],seen={};var members=(raw&&raw.members)?raw.members:{};
+  Object.keys(members).forEach(function(k){
+    var m=members[k]||{};var userKey=slug(m.name||k||'member');var name=String(m.name||k||userKey);var updatedAt=Number(m.updatedAt||Date.now());var importedPts=0;
+    if(Array.isArray(m.log)&&m.log.length){for(var i=0;i<m.log.length;i++){var lg=m.log[i]||{};var text=String(lg.text||'Imported activity');var catId=String(lg.catId||'legacy');var pts=Number(lg.pts||0);var ts=Number(lg.ts||(updatedAt+i));var activityKey=String(lg.activityKey||(catId+'|'+text));var id=String(lg.id||('legacy_'+userKey+'_'+ts+'_'+slug(activityKey).slice(0,40)));if(!seen[id]){seen[id]=true;out.push({id:id,type:'activity',userKey:userKey,name:name,activityKey:activityKey,text:text,catId:catId,pts:pts,ts:ts});importedPts+=pts;}}}
+    var memberPts=Number(m.pts||0);if(memberPts>importedPts){var carryId='legacycarry_'+userKey;if(!seen[carryId]){seen[carryId]=true;out.push({id:carryId,type:'activity',userKey:userKey,name:name,activityKey:'legacy|carryover',text:'Imported prior points',catId:'legacy',pts:memberPts-importedPts,ts:updatedAt+999});}}
+  });return out;
 }
-
-// ─── Merge two event lists (dedup by id, sort by ts) ─────────────────────────
-function mergeEventLists(baseEvents, incomingEvents) {
-  var map = {}, merged = [];
-  function add(arr) {
-    (arr || []).forEach(function (ev) {
-      var n = normalizeEvent(ev);
-      if (n && !map[n.id]) { map[n.id] = true; merged.push(n); }
-    });
-  }
-  add(baseEvents);
-  add(incomingEvents);
-  merged.sort(function (a, b) {
-    var at = Number(a.ts || 0), bt = Number(b.ts || 0);
-    if (at !== bt) return at - bt;
-    return String(a.id).localeCompare(String(b.id));
-  });
+function hydrateStore(raw){
+  var events=[],seen={};var src=(raw&&Array.isArray(raw.events))?raw.events.slice():[];
+  if((!src||!src.length)&&raw&&raw.members)src=legacyMembersToEvents(raw);
+  for(var i=0;i<src.length;i++){var ev=normalizeEvent(src[i]);if(ev&&!seen[ev.id]){seen[ev.id]=true;events.push(ev);}}
+  return{events:events,members:deriveMembers(events)};
+}
+function mergeEventLists(baseEvents,incomingEvents){
+  var map={},merged=[];
+  function add(arr){(arr||[]).forEach(function(ev){var n=normalizeEvent(ev);if(n&&!map[n.id]){map[n.id]=true;merged.push(n);}});}
+  add(baseEvents);add(incomingEvents);
+  merged.sort(function(a,b){var at=Number(a.ts||0),bt=Number(b.ts||0);if(at!==bt)return at-bt;return String(a.id).localeCompare(String(b.id));});
   return merged;
 }
+function parseRemoteResponse(text){
+  try{var r=JSON.parse(text);var data=(r&&r.record!==undefined)?r.record:r;if(!data)return hydrateStore({events:[]});if(!Array.isArray(data.events)||!data.events.length)return hydrateStore({events:legacyMembersToEvents(data)});return hydrateStore(data);}catch(e){}return hydrateStore({events:[]});
+}
+function sumTeamPoints(){var total=0,keys=Object.keys(store.members||{});for(var i=0;i<keys.length;i++)total+=Number(store.members[keys[i]].pts||0);return total;}
+function levelForPoints(pts){var lv=LEVELS[0];for(var i=0;i<LEVELS.length;i++)if(pts>=LEVELS[i].min)lv=LEVELS[i];return lv;}
 
-// ─── Storage ──────────────────────────────────────────────────────────────────
-function readLocal() {
-  try {
-    var raw = localStorage.getItem(LOCAL_KEY);
-    if (raw) return hydrateStore(JSON.parse(raw));
-  } catch (e) {}
-  try {
-    var legacyRaw = localStorage.getItem(LEGACY_LOCAL_KEY);
-    if (legacyRaw) return hydrateStore(JSON.parse(legacyRaw));
-  } catch (e) {}
-  return null;
+function renderCategories(){
+  var el=document.getElementById('cats'),h='';
+  for(var i=0;i<CATS.length;i++){var c=CATS[i];h+='<button class="cat-pill'+(activeCat&&activeCat.id===c.id?' active':'')+'" onclick="selectCategory(\''+c.id+'\')">'+escH(c.name)+'</button>';}
+  el.innerHTML=h;
 }
-function writeLocal() {
-  try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify({ events: store.events }));
-    localStorage.setItem(LOCAL_TICK_KEY, String(Date.now()));
-  } catch (e) {}
+function selectCategory(id){
+  for(var i=0;i<CATS.length;i++)if(CATS[i].id===id){activeCat=CATS[i];break;}
+  activeTag='all';renderCategories();renderPanel();
 }
-function broadcastTotal() {
-  var total = sumTeamPoints();
-  try {
-    if (!bc) bc = new BroadcastChannel('ed_tree_sync');
-    bc.postMessage({ pts: total, ts: Date.now() });
-  } catch (e) {}
+function tagsForCat(cat){var map={},out=[];for(var i=0;i<cat.actions.length;i++)map[cat.actions[i].tag]=true;for(var k in map)out.push(k);return out;}
+function renderPanel(){
+  var panel=document.getElementById('panel');
+  if(!activeCat){panel.innerHTML='<div class="no-cat"><p>Select a category above to see logged activities</p></div>';return;}
+  var tags=tagsForCat(activeCat);
+  var h='<div class="ph"><div class="ptitle">'+escH(activeCat.name)+' <span class="badge '+activeCat.bc+'">'+escH(activeCat.badge)+'</span></div><div class="psub">Showing what team members completed</div></div>';
+  h+='<div class="filter-row">';
+  h+='<button class="ftag'+(activeTag==='all'?' active':'')+'" onclick="setTag(\'all\')">All</button>';
+  for(var i=0;i<tags.length;i++)h+='<button class="ftag'+(activeTag===tags[i]?' active':'')+'" onclick="setTag(\''+escH(tags[i])+'\')">'+escH(tags[i])+'</button>';
+  h+='</div><div class="act-list">';
+  // aggregate: how many members did each action?
+  var doneCount={};
+  var keys=Object.keys(store.members||{});
+  for(var m=0;m<keys.length;m++){var mem=store.members[keys[m]];Object.keys(mem.done||{}).forEach(function(k){doneCount[k]=(doneCount[k]||0)+1;});}
+  for(var j=0;j<activeCat.actions.length;j++){
+    var a=activeCat.actions[j];
+    if(activeTag!=='all'&&a.tag!==activeTag)continue;
+    var key=activeCat.id+'|'+a.text;
+    var cnt=doneCount[key]||0;
+    var done=cnt>0;
+    var cls='act'+(done?' done':'');
+    var ptsLbl=done?cnt+' member'+(cnt>1?'s':''):'Not logged';
+    h+='<div class="'+cls+'">';
+    h+='<div class="chk"><div class="tick"></div></div>';
+    h+='<div class="act-body"><div class="act-text">'+escH(a.text)+'</div><div class="act-tag">'+escH(a.tag)+'</div></div>';
+    h+='<div class="act-pts">'+ptsLbl+'</div></div>';
+  }
+  h+='</div>';
+  panel.innerHTML=h;
 }
-function saveLocalAndBroadcast() { writeLocal(); broadcastTotal(); }
+function setTag(t){activeTag=t;renderPanel();}
 
-function applyStore(raw) {
-  store = hydrateStore(raw || { events: [] });
-  saveLocalAndBroadcast();
-  return store;
+function renderStats(){
+  var total=sumTeamPoints();
+  var keys=Object.keys(store.members||{});
+  var totalActs=0;for(var i=0;i<keys.length;i++)totalActs+=Number(store.members[keys[i]].acts||0);
+  var lv=levelForPoints(total);
+  document.getElementById('s-pts').textContent=total;
+  document.getElementById('s-acts').textContent=totalActs;
+  document.getElementById('s-lvl').textContent=lv.name;
+  var pct=100,lbl='Champion reached';
+  if(lv.next!==null){pct=Math.max(0,Math.min(100,Math.round(((total-lv.min)/(lv.next-lv.min))*100)));lbl=total+' / '+lv.next+' pts to '+LEVELS[LEVELS.indexOf(lv)+1].name;}
+  document.getElementById('pb').style.width=pct+'%';
+  document.getElementById('pb-lbl').textContent=lbl;
+  document.getElementById('pb-pct').textContent=pct+'%';
+  for(var i=0;i<5;i++)document.getElementById('ms'+i).className='ms';
+  var mins=[0,125,250,375,500],cur=0;
+  for(var j=0;j<mins.length;j++){if(total>=mins[j]){cur=j;document.getElementById('ms'+j).classList.add('on');}}
+  document.getElementById('ms'+cur).classList.add('cur');
+}
+function renderTeam(){
+  var keys=Object.keys(store.members||{}),total=0,list=[];
+  for(var i=0;i<keys.length;i++){var m=store.members[keys[i]];total+=m.pts;list.push({name:m.name,pts:m.pts,acts:m.acts});}
+  list.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:a.name.localeCompare(b.name);});
+  document.getElementById('team-total').textContent=total;
+  document.getElementById('team-sub').textContent=list.length+' participant'+(list.length===1?'':'s');
+  document.getElementById('tpb').style.width=Math.min(100,Math.round((total/TEAM_GOAL)*100))+'%';
+  document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
+  var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
+  var h='';
+  for(var j=0;j<list.length;j++){var item=list[j];var wp=Math.round((item.pts/maxPts)*100);h+='<div class="mrow"><span class="mname">'+escH(item.name)+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+wp+'%"></div></div><span class="mpts">'+item.pts+' pts</span><span class="macts">'+item.acts+' actions</span></div>';}
+  document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants</div>';
+}
+function renderLog(){
+  var el=document.getElementById('my-log'),entries=[];
+  var keys=Object.keys(store.members||{});
+  for(var i=0;i<keys.length;i++){var m=store.members[keys[i]],log=m.log||[];for(var j=0;j<log.length;j++)entries.push({name:m.name||keys[i],text:log[j].text||'',pts:Number(log[j].pts||0),catId:log[j].catId||'',ts:Number(log[j].ts||0)});}
+  entries.sort(function(a,b){return Number(b.ts||0)-Number(a.ts||0);});
+  if(!entries.length){el.innerHTML='<div class="empty">No activities logged</div>';return;}
+  var h='';
+  for(var i=0;i<entries.length;i++){var ev=entries[i];h+='<div class="log-entry"><span class="le-text">'+escH((ev.name||'User')+': '+(ev.text||''))+'</span><span class="le-cat">'+escH(CAT_NAMES[ev.catId]||ev.catId)+'</span><span class="le-pts">+'+ev.pts+' pts</span></div>';}
+  el.innerHTML=h;
+}
+function renderAll(){
+  renderStats();renderCategories();renderPanel();renderTeam();renderLog();
 }
 
-// ─── Remote response parser ───────────────────────────────────────────────────
-function parseRemoteResponse(text) {
-  try {
-    var r    = JSON.parse(text);
-    var data = (r && r.record !== undefined) ? r.record : r;
-    if (!data) return hydrateStore({ events: [] });
-    if (!Array.isArray(data.events) || !data.events.length) {
-      return hydrateStore({ events: legacyMembersToEvents(data) });
+function loadRemote(){
+  var notice=document.getElementById('sync-notice');
+  var x=new XMLHttpRequest();
+  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
+  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
+  x.setRequestHeader('X-Bin-Meta','false');
+  x.timeout=10000;
+  x.onload=function(){
+    if(x.status===200){
+      var remote=parseRemoteResponse(x.responseText);
+      var merged=mergeEventLists(store.events,remote.events);
+      store=hydrateStore({events:merged});
+      notice.textContent='📁 Archived — final results loaded.';
+    }else{
+      notice.textContent='⚠️ Could not load from shared data. Showing cached results.';
     }
-    return hydrateStore(data);
-  } catch (e) {}
-  return hydrateStore({ events: [] });
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function sumTeamPoints() {
-  var total = 0, keys = Object.keys(store.members || {});
-  for (var i = 0; i < keys.length; i++) total += Number(store.members[keys[i]].pts || 0);
-  return total;
-}
-function getUser(name) {
-  var key = slug(name);
-  if (!store.members[key]) store.members[key] = userTemplate(name);
-  return store.members[key];
-}
-function levelForPoints(pts) {
-  var lv = LEVELS[0];
-  for (var i = 0; i < LEVELS.length; i++) if (pts >= LEVELS[i].min) lv = LEVELS[i];
-  return lv;
-}
-function makeEventId(userKey, activityKey, ts) {
-  return 'evt_' + userKey + '_' + String(ts) + '_' + slug(activityKey).slice(0, 40) + '_' + Math.random().toString(36).slice(2, 8);
-}
-function makeResetId(userKey, ts) {
-  return 'reset_' + userKey + '_' + String(ts) + '_' + Math.random().toString(36).slice(2, 8);
-}
-
-// ─── UI ───────────────────────────────────────────────────────────────────────
-function updateNotice() {
-  var el = document.getElementById('sync-notice');
-  if (syncMode === 'remote')  { el.className = 'notice';       el.innerHTML = '&#128994; Shared team data synced.'; }
-  else if (syncMode === 'saving') { el.className = 'notice';   el.innerHTML = '&#128336; Saving new activity entries to the shared tracker...'; }
-  else if (syncMode === 'error')  { el.className = 'notice error'; el.innerHTML = '&#9888;&#65039; Save failed. Your selections are still on this device. Click Refresh and try again.'; }
-  else                            { el.className = 'notice local'; el.innerHTML = '&#128993; Using cached data until shared data loads.'; }
-}
-function refreshGate() {
-  var keys  = Object.keys(store.members || {});
-  var wrap  = document.getElementById('prev-wrap');
-  if (!keys.length) { wrap.style.display = 'none'; document.getElementById('chip-row').innerHTML = ''; return; }
-  keys.sort(function (a, b) {
-    var ap = Number(store.members[a].pts || 0), bp = Number(store.members[b].pts || 0);
-    if (bp !== ap) return bp - ap;
-    return String(store.members[a].name || '').localeCompare(String(store.members[b].name || ''));
-  });
-  var h = '';
-  for (var i = 0; i < keys.length; i++) {
-    var m = store.members[keys[i]];
-    h += '<button class="chip" data-name="' + escH(m.name) + '">' + escH(m.name) + ' · ' + m.pts + ' pts</button>';
-  }
-  document.getElementById('chip-row').innerHTML = h;
-  wrap.style.display = 'block';
-}
-function renderCategories() {
-  var el = document.getElementById('cats'), h = '';
-  for (var i = 0; i < CATS.length; i++) {
-    var c = CATS[i];
-    h += '<button class="cat-pill' + (activeCat && activeCat.id === c.id ? ' active' : '') + '" onclick="selectCategory(\'' + c.id + '\')">' + escH(c.name) + '</button>';
-  }
-  el.innerHTML = h;
-}
-function selectCategory(id) {
-  for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) { activeCat = CATS[i]; break; }
-  activeTag = 'all';
-  renderCategories();
-  renderPanel(getUser(currentUser));
-}
-function tagsForCat(cat) {
-  var map = {}, out = [];
-  for (var i = 0; i < cat.actions.length; i++) map[cat.actions[i].tag] = true;
-  for (var k in map) out.push(k);
-  return out;
-}
-function renderPanel(d) {
-  var panel = document.getElementById('panel');
-  if (!activeCat) { panel.innerHTML = '<div class="no-cat"><p>Select a category above to see activities</p></div>'; updateSubmitBar(); return; }
-  var tags = tagsForCat(activeCat);
-  var h = '<div class="ph"><div class="ptitle">' + escH(activeCat.name) + ' <span class="badge ' + activeCat.bc + '">' + escH(activeCat.badge) + '</span></div><div class="psub">Choose activities, then log them</div></div>';
-  h += '<div class="filter-row">';
-  h += '<button class="ftag' + (activeTag === 'all' ? ' active' : '') + '" data-tag="all">All</button>';
-  for (var i = 0; i < tags.length; i++) h += '<button class="ftag' + (activeTag === tags[i] ? ' active' : '') + '" data-tag="' + escH(tags[i]) + '">' + escH(tags[i]) + '</button>';
-  h += '</div><div class="act-list">';
-  for (var j = 0; j < activeCat.actions.length; j++) {
-    var a    = activeCat.actions[j];
-    if (activeTag !== 'all' && a.tag !== activeTag) continue;
-    var key  = activeCat.id + '|' + a.text;
-    var done = !!d.done[key];
-    var pend = !!pending[key];
-    var cls  = 'act' + (done ? ' done' : (pend ? ' pending' : ''));
-    var ptsLbl = done ? 'Done' : ('+' + a.pts + ' pts');
-    h += '<div class="' + cls + '" data-key="' + escH(key) + '" data-pts="' + a.pts + '" data-text="' + escH(a.text) + '">';
-    h += '<div class="chk"><div class="tick"></div></div>';
-    h += '<div class="act-body"><div class="act-text">' + escH(a.text) + '</div><div class="act-tag">' + escH(a.tag) + '</div></div>';
-    h += '<div class="act-pts">' + ptsLbl + '</div></div>';
-  }
-  h += '</div>';
-  panel.innerHTML = h;
-  updateSubmitBar();
-}
-function renderStats(d) {
-  document.getElementById('who-name').textContent = d.name;
-  document.getElementById('who-meta').textContent = 'Saved points stay attached to this name across refreshes.';
-  document.getElementById('s-pts').textContent  = d.pts;
-  document.getElementById('s-acts').textContent = d.acts;
-  var lv = levelForPoints(d.pts);
-  document.getElementById('s-lvl').textContent = lv.name;
-  var pct = 100, lbl = 'Champion reached';
-  if (lv.next !== null) {
-    pct = Math.max(0, Math.min(100, Math.round(((d.pts - lv.min) / (lv.next - lv.min)) * 100)));
-    if (lv.name === 'Seedling')  lbl = d.pts + ' / 125 pts to Sprout';
-    if (lv.name === 'Sprout')    lbl = d.pts + ' / 250 pts to Grower';
-    if (lv.name === 'Grower')    lbl = d.pts + ' / 375 pts to Guardian';
-    if (lv.name === 'Guardian')  lbl = d.pts + ' / 500 pts to Champion';
-  }
-  document.getElementById('pb').style.width = pct + '%';
-  document.getElementById('pb-lbl').textContent = lbl;
-  document.getElementById('pb-pct').textContent = pct + '%';
-  for (var i = 0; i < 5; i++) document.getElementById('ms' + i).className = 'ms';
-  var mins = [0, 125, 250, 375, 500], cur = 0;
-  for (var j = 0; j < mins.length; j++) {
-    if (d.pts >= mins[j]) { cur = j; document.getElementById('ms' + j).classList.add('on'); }
-  }
-  document.getElementById('ms' + cur).classList.add('cur');
-}
-function renderTeam() {
-  var keys = Object.keys(store.members || {}), total = 0, list = [];
-  for (var i = 0; i < keys.length; i++) {
-    var m = store.members[keys[i]];
-    total += m.pts;
-    list.push({ name: m.name, pts: m.pts, acts: m.acts });
-  }
-  list.sort(function (a, b) { return b.pts !== a.pts ? b.pts - a.pts : a.name.localeCompare(b.name); });
-  document.getElementById('team-total').textContent = total;
-  document.getElementById('team-sub').textContent   = list.length + ' participant' + (list.length === 1 ? '' : 's');
-  document.getElementById('tpb').style.width = Math.min(100, Math.round((total / TEAM_GOAL) * 100)) + '%';
-  document.getElementById('tpb-lbl').textContent = total + ' / ' + TEAM_GOAL + ' pts team goal';
-  var maxPts = list.length && list[0].pts > 0 ? list[0].pts : 1;
-  var h = '';
-  for (var j = 0; j < list.length; j++) {
-    var item = list[j];
-    var isMe = slug(item.name) === slug(currentUser);
-    var wp   = Math.round((item.pts / maxPts) * 100);
-    h += '<div class="mrow"><span class="mname">' + escH(item.name) + (isMe ? ' <span class="you-tag">you</span>' : '') + '</span><div class="mbar-wrap"><div class="mbar-fill" style="width:' + wp + '%"></div></div><span class="mpts">' + item.pts + ' pts</span><span class="macts">' + item.acts + ' actions</span></div>';
-  }
-  document.getElementById('mlist').innerHTML = h || '<div class="empty">No participants yet</div>';
-}
-function renderMyLog() {
-  var el = document.getElementById('my-log'), entries = [];
-  var keys = Object.keys(store.members || {});
-  for (var i = 0; i < keys.length; i++) {
-    var m = store.members[keys[i]], log = m.log || [];
-    for (var j = 0; j < log.length; j++) {
-      entries.push({ name: m.name || keys[i], text: log[j].text || '', pts: Number(log[j].pts || 0), catId: log[j].catId || '', ts: Number(log[j].ts || 0) });
-    }
-  }
-  entries.sort(function (a, b) { return Number(b.ts || 0) - Number(a.ts || 0); });
-  if (!entries.length) { el.innerHTML = '<div class="empty">No activities logged yet</div>'; return; }
-  var h = '';
-  for (var i = 0; i < entries.length; i++) {
-    var ev = entries[i];
-    h += '<div class="log-entry"><span class="le-text">' + escH((ev.name || 'User') + ': ' + (ev.text || '')) + '</span><span class="le-cat">' + escH(CAT_NAMES[ev.catId] || ev.catId) + '</span><span class="le-pts">+' + ev.pts + ' pts</span></div>';
-  }
-  el.innerHTML = h;
-}
-function renderAll() {
-  if (!currentUser) return;
-  var d = getUser(currentUser);
-  renderStats(d);
-  renderCategories();
-  renderPanel(d);
-  renderTeam();
-  renderMyLog();
-  updateNotice();
-}
-function updateSubmitBar() {
-  var keys = Object.keys(pending), bar = document.getElementById('submit-bar');
-  if (!keys.length) { bar.classList.add('hidden'); return; }
-  bar.classList.remove('hidden');
-  var totalPts = 0;
-  for (var i = 0; i < keys.length; i++) totalPts += pending[keys[i]].pts;
-  document.getElementById('submit-summary').innerHTML = '<strong>' + keys.length + ' activit' + (keys.length === 1 ? 'y' : 'ies') + ' selected</strong> &mdash; +' + totalPts + ' pts';
-}
-function clearPending() { pending = {}; renderPanel(getUser(currentUser)); }
-function showFlash(msg, isError) {
-  var flash = document.getElementById('submit-flash');
-  flash.textContent = msg;
-  flash.style.background = isError ? '#8f2f24' : '#27500A';
-  flash.style.display = 'block';
-  setTimeout(function () { flash.style.display = 'none'; }, 2200);
-}
-
-// ─── Remote load ──────────────────────────────────────────────────────────────
-function loadRemote(cb) {
-  if (!JSONBIN_ID || !JSONBIN_KEY) { if (cb) cb(false); return; }
-  var x = new XMLHttpRequest();
-  x.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
-x.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-  x.setRequestHeader('X-Bin-Meta', 'false');
-  x.timeout = 10000;
-  x.onload = function () {
-    var ok = false;
-    if (x.status === 200) {
-      var remote = parseRemoteResponse(x.responseText);
-      var merged = mergeEventLists(store.events, remote.events);
-      applyStore({ events: merged });
-      syncMode = 'remote';
-      ok = true;
-    }
-    updateNotice(); refreshGate();
-    if (currentUser) renderAll();
-    if (cb) cb(ok);
+    renderAll();
   };
-  x.onerror = x.ontimeout = function () { updateNotice(); if (cb) cb(false); };
+  x.onerror=x.ontimeout=function(){notice.textContent='⚠️ Could not reach shared data. Showing cached results.';renderAll();};
   x.send();
 }
 
-// ─── persistNewEvents ─────────────────────────────────────────────────────────
-function persistNewEvents(newEvents, doneCb, attempt) {
-  attempt = attempt || 1;
-  if (attempt > MAX_RETRY) {
-    syncMode = 'error';
-    updateNotice();
-    if (doneCb) doneCb(false);
-    return;
-  }
-
-  syncMode = 'saving';
-  updateNotice();
-
-  var getReq = new XMLHttpRequest();
-  getReq.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
-  getReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-  getReq.timeout = 10000;
-
-  getReq.onload = function () {
-    if (getReq.status !== 200) {
-      syncMode = 'error'; updateNotice();
-      if (doneCb) doneCb(false);
-      return;
-    }
-
-    var binVersion = getReq.getResponseHeader('X-Bin-Version');
-
-    var remoteData;
-    try {
-      var raw = JSON.parse(getReq.responseText);
-      remoteData = parseRemoteResponse(JSON.stringify(raw.record !== undefined ? raw.record : raw));
-    } catch (e) {
-      remoteData = hydrateStore({ events: [] });
-    }
-
-    var mergedEvents = mergeEventLists(
-      mergeEventLists(remoteData.events, store.events),
-      newEvents
-    );
-    applyStore({ events: mergedEvents });
-
-    var putReq = new XMLHttpRequest();
-    putReq.open('PUT', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID, true);
-    putReq.setRequestHeader('Content-Type', 'application/json');
-    putReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-    if (binVersion) putReq.setRequestHeader('X-Bin-Version', binVersion);
-    putReq.timeout = 15000;
-
-    putReq.onload = function () {
-      if (putReq.status === 409) {
-        var delay = attempt * 800 + Math.floor(Math.random() * 600);
-        setTimeout(function () {
-          persistNewEvents(newEvents, doneCb, attempt + 1);
-        }, delay);
-        return;
-      }
-
-      if (!(putReq.status >= 200 && putReq.status < 300)) {
-        syncMode = 'error'; updateNotice();
-        if (doneCb) doneCb(false);
-        return;
-      }
-
-      var verifyReq = new XMLHttpRequest();
-      verifyReq.open('GET', 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', true);
-      
-      verifyReq.setRequestHeader('X-Bin-Meta', 'false');
-      verifyReq.timeout = 10000;
-verifyReq.setRequestHeader('X-Master-Key', JSONBIN_KEY);
-      verifyReq.onload = function () {
-        if (verifyReq.status !== 200) {
-          syncMode = 'error'; updateNotice();
-          if (doneCb) doneCb(false);
-          return;
-        }
-        var verified    = parseRemoteResponse(verifyReq.responseText);
-        var allPresent  = true;
-        var ids         = {};
-        for (var i = 0; i < verified.events.length; i++) ids[verified.events[i].id] = true;
-        for (var j = 0; j < newEvents.length; j++) if (!ids[newEvents[j].id]) allPresent = false;
-
-        if (allPresent) {
-          var finalMerged = mergeEventLists(verified.events, store.events);
-          applyStore({ events: finalMerged });
-          syncMode = 'remote'; updateNotice();
-          if (doneCb) doneCb(true);
-        } else if (attempt < MAX_RETRY) {
-          persistNewEvents(newEvents, doneCb, attempt + 1);
-        } else {
-          syncMode = 'error'; updateNotice();
-          if (doneCb) doneCb(false);
-        }
-      };
-      verifyReq.onerror = verifyReq.ontimeout = function () {
-        syncMode = 'error'; updateNotice();
-        if (doneCb) doneCb(false);
-      };
-      verifyReq.send();
-    };
-
-    putReq.onerror = putReq.ontimeout = function () {
-      syncMode = 'error'; updateNotice();
-      if (doneCb) doneCb(false);
-    };
-
-    putReq.send(JSON.stringify({ events: mergedEvents }));
-  };
-
-  getReq.onerror = getReq.ontimeout = function () {
-    syncMode = 'error'; updateNotice();
-    if (doneCb) doneCb(false);
-  };
-
-  getReq.send();
-}
-
-// ─── User-facing actions ──────────────────────────────────────────────────────
-function refreshFromServer() {
-  var btn = document.getElementById('refresh-btn');
-  btn.disabled = true; btn.textContent = 'Refreshing...';
-  loadRemote(function () {
-    refreshGate();
-    if (currentUser) renderAll();
-    btn.disabled = false; btn.textContent = 'Refresh';
-  });
-}
-
-function submitActivities() {
-  var keys = Object.keys(pending);
-  if (!keys.length) return;
-  var btn        = document.getElementById('btn-submit');
-  var refreshBtn = document.getElementById('refresh-btn');
-  btn.disabled = true; refreshBtn.disabled = true; btn.textContent = 'Saving...';
-
-  loadRemote(function () {
-    var userKey  = slug(currentUser);
-    var d        = getUser(currentUser);
-    var tsBase   = Date.now();
-    var newEvents = [];
-
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i], item = pending[key];
-      if (!d.done[key]) {
-        newEvents.push({
-          id:          makeEventId(userKey, key, tsBase + i),
-          type:        'activity',
-          userKey:     userKey,
-          name:        currentUser,
-          activityKey: key,
-          text:        item.text,
-          catId:       item.catId,
-          pts:         Number(item.pts || 0),
-          ts:          tsBase + i
-        });
-      }
-    }
-
-    if (!newEvents.length) {
-      pending = {}; renderAll();
-      btn.disabled = false; refreshBtn.disabled = false; btn.textContent = 'Log Activities';
-      showFlash('All selected activities were already logged for this name.', true);
-      return;
-    }
-
-    persistNewEvents(newEvents, function (success) {
-      pending = {}; refreshGate(); renderAll();
-      btn.disabled = false; refreshBtn.disabled = false; btn.textContent = 'Log Activities';
-      showFlash(success ? '✓ Activities logged and merged to team total!' : 'Save failed — click Refresh and try again.', !success);
-    });
-  });
-}
-
-function startSession() {
-  var n = document.getElementById('name-in').value.trim();
-  if (!n) { document.getElementById('gate-err').textContent = 'Please enter your name to continue.'; return; }
-  currentUser = n;
-  document.getElementById('gate-err').textContent = '';
-  document.getElementById('gate-page').classList.add('hidden');
-  document.getElementById('app-page').classList.remove('hidden');
-  activeCat = null; activeTag = 'all'; pending = {};
-  loadRemote(function () { getUser(currentUser); saveLocalAndBroadcast(); refreshGate(); renderAll(); });
-}
-
-function switchUser() {
-  currentUser = ''; activeCat = null; activeTag = 'all'; pending = {};
-  document.getElementById('app-page').classList.add('hidden');
-  document.getElementById('gate-page').classList.remove('hidden');
-  document.getElementById('name-in').value = '';
-  document.getElementById('gate-err').textContent = '';
-  refreshGate();
-}
-
-function resetCurrentUser() {
-  if (!currentUser) return;
-  if (!confirm('Reset your saved points and activity log for this name?')) return;
-  var btn = document.getElementById('refresh-btn');
-  btn.disabled = true;
-  loadRemote(function () {
-    var userKey = slug(currentUser);
-    var resetEvent = { id: makeResetId(userKey, Date.now()), type: 'reset', userKey: userKey, name: currentUser, ts: Date.now() };
-    persistNewEvents([resetEvent], function (success) {
-      pending = {}; refreshGate(); renderAll(); btn.disabled = false;
-      showFlash(success ? '✓ Your points were reset' : 'Reset failed — click Refresh and try again.', !success);
-    });
-  });
-}
-
-// ─── Event listeners ──────────────────────────────────────────────────────────
-document.getElementById('name-in').addEventListener('keydown', function (e) {
-  if (e.key === 'Enter') startSession();
-});
-document.getElementById('chip-row').addEventListener('click', function (e) {
-  var c = e.target.closest('.chip');
-  if (!c) return;
-  document.getElementById('name-in').value = c.dataset.name;
-  if (currentUser && slug(currentUser) === slug(c.dataset.name)) {
-    renderAll(); return;
-  }
-  startSession();
-});
-document.getElementById('panel').addEventListener('click', function (e) {
-  if (!currentUser || !activeCat) return;
-  var ftag = e.target.closest('.ftag');
-  if (ftag) { activeTag = ftag.dataset.tag; renderPanel(getUser(currentUser)); return; }
-  var act = e.target.closest('.act');
-  if (!act || !act.dataset.key) return;
-  var key = act.dataset.key;
-  var d   = getUser(currentUser);
-  if (d.done[key]) return;
-  if (pending[key]) delete pending[key];
-  else pending[key] = { pts: parseInt(act.dataset.pts, 10), text: act.dataset.text, catId: activeCat.id };
-  renderPanel(d);
-});
-
-// Cross-tab sync
-window.addEventListener('storage', function (e) {
-  if (e.key === LOCAL_KEY || e.key === LOCAL_TICK_KEY) {
-    var local = readLocal();
-    if (local) {
-      var merged = mergeEventLists(store.events, local.events);
-      store = hydrateStore({ events: merged });
-      refreshGate();
-      if (currentUser) renderAll();
-      else updateNotice();
-    }
-  }
-});
-
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-try { bc = new BroadcastChannel('ed_tree_sync'); } catch (e) {}
-
-(function () {
-  var local = readLocal();
-  if (local) { store = local; syncMode = 'local'; }
-  else        { store = hydrateStore({ events: [] }); }
-  refreshGate();
-  updateNotice();
+// Load local cache first for instant display
+(function(){
+  try{var raw=localStorage.getItem(LOCAL_KEY);if(raw){store=hydrateStore(JSON.parse(raw));renderAll();}}catch(e){}
   loadRemote();
 })();
 </script>
