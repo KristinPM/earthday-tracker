@@ -133,9 +133,9 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
   </div>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-n sg" id="s-pts">—</div><div class="stat-l">Total team pts</div></div>
-    <div class="stat"><div class="stat-n st" id="s-acts">—</div><div class="stat-l">Total actions</div></div>
-    <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">—</div><div class="stat-l">Team level</div></div>
+    <div class="stat"><div class="stat-n sg" id="s-pts">1,298</div><div class="stat-l">Final team pts</div></div>
+    <div class="stat"><div class="stat-n st" id="s-acts">24</div><div class="stat-l">Participants</div></div>
+    <div class="stat"><div class="stat-n sa" id="s-lvl" style="font-size:17px">Champion</div><div class="stat-l">Team level</div></div>
   </div>
 
   <div class="lv-card">
@@ -174,10 +174,7 @@ body{font-family:"Aptos","Segoe UI",Arial,sans-serif;background:transparent;min-
 </div>
 
 <script>
-var JSONBIN_ID  = '69ea87d336566621a8e56b7c';
-var JSONBIN_KEY = '$2a$10$k9UxTNSYG2aS7ztvbQcvteaqtSwCZ3mahxvblQw6Y6r8UvLvjOS/u';
-var LOCAL_KEY   = 'ed_team_v3_events';
-var TEAM_GOAL   = 500;
+var TEAM_GOAL = 500;
 
 var LEVELS = [
   {name:'Seedling',min:0,next:125},
@@ -397,127 +394,43 @@ function renderPanel(){
 }
 function setTag(t){activeTag=t;renderPanel();}
 
-function nextLevelName(lv){
-  for(var i=0;i<LEVELS.length-1;i++){if(LEVELS[i].name===lv.name)return LEVELS[i+1].name;}
-  return '';
-}
+// ── Hardcoded final results — no network calls ────────────────────────────────
+var FINAL_TOTAL = 1298;
+var FINAL_PARTICIPANTS = 24;
+var FINAL_ACTIONS = 0; // not shown in simplified view
+
 function renderStats(){
-  var total=sumTeamPoints();
-  var keys=Object.keys(store.members||{});
-  var totalActs=0;for(var i=0;i<keys.length;i++)totalActs+=Number(store.members[keys[i]].acts||0);
-  var lv=levelForPoints(total);
-  document.getElementById('s-pts').textContent=total;
-  document.getElementById('s-acts').textContent=totalActs;
-  document.getElementById('s-lvl').textContent=lv.name;
-  var pct=100,lbl='Champion reached';
-  if(lv.next!==null){pct=Math.max(0,Math.min(100,Math.round(((total-lv.min)/(lv.next-lv.min))*100)));lbl=total+' / '+lv.next+' pts to '+nextLevelName(lv);}
-  document.getElementById('pb').style.width=pct+'%';
-  document.getElementById('pb-lbl').textContent=lbl;
-  document.getElementById('pb-pct').textContent=pct+'%';
-  for(var i=0;i<5;i++)document.getElementById('ms'+i).className='ms';
-  var mins=[0,125,250,375,500],cur=0;
-  for(var j=0;j<mins.length;j++){if(total>=mins[j]){cur=j;document.getElementById('ms'+j).classList.add('on');}}
-  document.getElementById('ms'+cur).classList.add('cur');
+  // Team exceeded Champion (500+), show Champion level
+  document.getElementById('s-pts').textContent = FINAL_TOTAL;
+  document.getElementById('s-acts').textContent = FINAL_PARTICIPANTS + ' participants';
+  document.getElementById('s-lvl').textContent = 'Champion';
+  document.getElementById('pb').style.width = '100%';
+  document.getElementById('pb-lbl').textContent = 'Champion reached — goal exceeded!';
+  document.getElementById('pb-pct').textContent = '100%';
+  for(var i=0;i<5;i++){
+    var el=document.getElementById('ms'+i);
+    el.className='ms on';
+  }
+  document.getElementById('ms4').classList.add('cur');
 }
 function renderTeam(){
-  var keys=Object.keys(store.members||{}),total=0,list=[];
-  for(var i=0;i<keys.length;i++){var m=store.members[keys[i]];total+=m.pts;list.push({name:m.name,pts:m.pts,acts:m.acts});}
-  list.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:a.name.localeCompare(b.name);});
-  document.getElementById('team-total').textContent=total;
-  document.getElementById('team-sub').textContent=list.length+' participant'+(list.length===1?'':'s');
-  document.getElementById('tpb').style.width=Math.min(100,Math.round((total/TEAM_GOAL)*100))+'%';
-  document.getElementById('tpb-lbl').textContent=total+' / '+TEAM_GOAL+' pts team goal';
-  var maxPts=list.length&&list[0].pts>0?list[0].pts:1;
-  var h='';
-  for(var j=0;j<list.length;j++){var item=list[j];var wp=Math.round((item.pts/maxPts)*100);h+='<div class="mrow"><span class="mname">'+escH(item.name)+'</span><div class="mbar-wrap"><div class="mbar-fill" style="width:'+wp+'%"></div></div><span class="mpts">'+item.pts+' pts</span><span class="macts">'+item.acts+' actions</span></div>';}
-  document.getElementById('mlist').innerHTML=h||'<div class="empty">No participants</div>';
+  document.getElementById('team-total').textContent = FINAL_TOTAL;
+  document.getElementById('team-sub').textContent = FINAL_PARTICIPANTS + ' participants';
+  document.getElementById('tpb').style.width = '100%';
+  document.getElementById('tpb-lbl').textContent = FINAL_TOTAL + ' / ' + TEAM_GOAL + ' pts team goal — goal exceeded!';
+  document.getElementById('mlist').innerHTML = '<div class="empty">Final team total: ' + FINAL_TOTAL + ' points across ' + FINAL_PARTICIPANTS + ' participants.</div>';
 }
 function renderLog(){
-  var el=document.getElementById('my-log'),entries=[];
-  var keys=Object.keys(store.members||{});
-  for(var i=0;i<keys.length;i++){var m=store.members[keys[i]],log=m.log||[];for(var j=0;j<log.length;j++)entries.push({name:m.name||keys[i],text:log[j].text||'',pts:Number(log[j].pts||0),catId:log[j].catId||'',ts:Number(log[j].ts||0)});}
-  entries.sort(function(a,b){return Number(b.ts||0)-Number(a.ts||0);});
-  if(!entries.length){el.innerHTML='<div class="empty">No activities logged</div>';return;}
-  var h='';
-  for(var i=0;i<entries.length;i++){var ev=entries[i];h+='<div class="log-entry"><span class="le-text">'+escH((ev.name||'User')+': '+(ev.text||''))+'</span><span class="le-cat">'+escH(CAT_NAMES[ev.catId]||ev.catId)+'</span><span class="le-pts">+'+ev.pts+' pts</span></div>';}
-  el.innerHTML=h;
+  document.getElementById('my-log').innerHTML = '<div class="empty">Activity log archived. Final score: ' + FINAL_TOTAL + ' pts.</div>';
 }
 function renderAll(){
   renderStats();renderCategories();renderPanel();renderTeam();renderLog();
 }
 
-function applyRemoteText(responseText){
-  try{
-    var raw=JSON.parse(responseText);
-    console.log('[archive] raw response keys:', Object.keys(raw));
-    // JSONBin v3 wraps in {record:...} unless X-Bin-Meta:false header is honoured
-    var data=(raw && raw.record !== undefined) ? raw.record : raw;
-    console.log('[archive] data keys:', Object.keys(data||{}));
-    var events=[];
-    if(data && Array.isArray(data.events) && data.events.length){
-      events=data.events;
-      console.log('[archive] found',events.length,'events');
-    } else if(data && data.members){
-      events=legacyMembersToEvents(data);
-      console.log('[archive] legacy migration, got',events.length,'events');
-    } else {
-      console.warn('[archive] unexpected data shape, no events found');
-    }
-    var merged=mergeEventLists(store.events, events);
-    store=hydrateStore({events:merged});
-    console.log('[archive] store members after hydrate:', Object.keys(store.members), 'total pts:', sumTeamPoints());
-    return true;
-  } catch(e){
-    console.error('[archive] parse error:', e);
-    return false;
-  }
-}
-
-function loadRemote(){
-  var notice=document.getElementById('sync-notice');
-  var x=new XMLHttpRequest();
-  x.open('GET','https://api.jsonbin.io/v3/b/'+JSONBIN_ID+'/latest',true);
-  x.setRequestHeader('X-Master-Key',JSONBIN_KEY);
-  x.setRequestHeader('X-Bin-Meta','false');
-  x.timeout=12000;
-  x.onload=function(){
-    console.log('[archive] XHR status:', x.status, 'response length:', x.responseText.length);
-    if(x.status===200){
-      var ok=applyRemoteText(x.responseText);
-      notice.innerHTML= ok
-        ? '&#128196; Archived &mdash; final results loaded.'
-        : '&#9888;&#65039; Data loaded but could not be parsed. Showing cached results.';
-    }else{
-      console.error('[archive] HTTP error:', x.status, x.responseText.slice(0,200));
-      notice.innerHTML='&#9888;&#65039; Could not load from shared data (HTTP '+x.status+'). Showing cached results.';
-    }
-    renderAll();
-  };
-  x.onerror=function(){
-    console.error('[archive] XHR network error');
-    notice.innerHTML='&#9888;&#65039; Network error. Showing cached results.';
-    renderAll();
-  };
-  x.ontimeout=function(){
-    console.error('[archive] XHR timeout');
-    notice.innerHTML='&#9888;&#65039; Request timed out. Showing cached results.';
-    renderAll();
-  };
-  x.send();
-}
-
-// Boot: try local cache for instant paint, then always load remote as authoritative source
+// Boot — no network calls, render immediately
 (function(){
-  try{
-    var raw=localStorage.getItem(LOCAL_KEY);
-    if(raw){
-      var parsed=JSON.parse(raw);
-      store=hydrateStore(parsed);
-      console.log('[archive] local cache loaded, members:', Object.keys(store.members).length);
-      renderAll();
-    }
-  }catch(e){ console.warn('[archive] local cache read failed:', e); }
-  loadRemote();
+  document.getElementById('sync-notice').innerHTML = '&#128196; Archived &mdash; final results: <strong>' + FINAL_TOTAL + ' pts</strong>.';
+  renderAll();
 })();
 </script>
 </body>
